@@ -15,26 +15,6 @@ export const cakeOrderOptions = {
       basePrice: 100,
     },
   ],
-  fillings: [
-    {
-      _id: 'filling-vanilla-buttercream',
-      name: 'Vanilla Buttercream',
-      description: 'Smooth, simple, and not too sweet.',
-      priceModifier: 0,
-    },
-    {
-      _id: 'filling-strawberry-compote',
-      name: 'Strawberry Compote',
-      description: 'Cooked strawberry filling between the layers.',
-      priceModifier: 8,
-    },
-    {
-      _id: 'filling-cookies-cream',
-      name: 'Cookies and Cream',
-      description: 'Crushed cookie filling folded into buttercream.',
-      priceModifier: 6,
-    },
-  ],
   frostings: [
     {
       _id: 'frosting-american-buttercream',

@@ -60,12 +60,6 @@ export async function fetchCakeOrderOptions() {
         servings,
         basePrice
       },
-      "fillings": *[_type == "cakeFilling" && isActive != false] | order(sortOrder asc, name asc) {
-        _id,
-        name,
-        description,
-        priceModifier
-      },
       "frostings": *[_type == "cakeFrosting" && isActive != false] | order(sortOrder asc, name asc) {
         _id,
         name,

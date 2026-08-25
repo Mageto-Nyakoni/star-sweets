@@ -30,7 +30,6 @@ const priceLabel = (amount = 0, base = false) => {
 };
 
 const firstSizeId = orderOptions.sizes?.[0]?._id;
-const firstFillingId = orderOptions.fillings?.[0]?._id;
 const firstFrostingId = orderOptions.frostings?.[0]?._id;
 const firstTierId = orderOptions.tiers?.[0]?._id;
 ---
@@ -178,7 +177,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
               <textarea
                 name="customFlavorRequest"
                 rows="4"
-                placeholder="Tell me the flavor, filling, inspiration, or dietary detail you have in mind."
+                placeholder="Tell me the flavor, inspiration, or dietary detail you have in mind."
               ></textarea>
             </label>
             <p class="field-note">Custom flavors are subject to baker approval and may affect the final price.</p>
@@ -196,33 +195,41 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
           <div class="section-copy">
             <p class="step-label">4</p>
             <div>
-              <h2 id="finish-heading">Fillings, frosting, and add-ons</h2>
-              <p>Select one filling, one frosting, and any extras you want.</p>
+              <h2 id="finish-heading">Filling, frosting, and add-ons</h2>
+              <p>Describe your filling or let the baker choose, then select frosting and extras.</p>
             </div>
           </div>
 
-          <fieldset>
-            <legend>Filling</legend>
-            <div class="option-grid compact">
-              {orderOptions.fillings.map((filling) => (
-                <label class="choice-card">
-                  <input
-                    type="radio"
-                    name="cakeFilling"
-                    value={filling._id}
-                    data-label={filling.name}
-                    data-price={filling.priceModifier}
-                    checked={filling._id === firstFillingId}
-                  />
-                  <span>
-                    <strong>{filling.name}</strong>
-                    {filling.description && <small>{filling.description}</small>}
-                  </span>
-                  <em>{priceLabel(filling.priceModifier)}</em>
-                </label>
-              ))}
-            </div>
+          <fieldset class="flavor-tabs">
+            <legend>Choose one filling path</legend>
+            <label>
+              <input type="radio" name="fillingPath" value="custom" checked />
+              <span>Custom request</span>
+            </label>
+            <label>
+              <input type="radio" name="fillingPath" value="surprise" />
+              <span>Surprise me</span>
+            </label>
           </fieldset>
+
+          <div class="flavor-panel" data-filling-panel="custom">
+            <label>
+              <span>Custom filling request</span>
+              <textarea
+                name="customFillingRequest"
+                rows="4"
+                placeholder="Tell me what filling you would like between the cake layers."
+              ></textarea>
+            </label>
+            <p class="field-note">Custom fillings are subject to baker approval and may affect the final price.</p>
+          </div>
+
+          <div class="flavor-panel hidden" data-filling-panel="surprise">
+            <div class="notice-box">
+              <strong>Baker's choice selected.</strong>
+              <p>I will choose a filling that works with your flavor direction and may email you before confirming.</p>
+            </div>
+          </div>
 
           <fieldset>
             <legend>Frosting</legend>
@@ -336,7 +343,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
           <h2 id="summary-heading">Estimate</h2>
           <output id="order-total" for="cake-builder">$0</output>
           <p class="summary-note">
-            Custom flavors, special sourcing, and complex design details may need a follow-up quote.
+            Custom flavors, fillings, special sourcing, and complex design details may need a follow-up quote.
           </p>
 
           <dl id="summary-lines" class="summary-lines"></dl>
@@ -347,6 +354,29 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
             Review cake request
           </button>
         </div>
+
+        <section class="pricing-explainer" aria-labelledby="pricing-explainer-heading">
+          <p class="pricing-explainer-kicker">Behind the price</p>
+          <h2 id="pricing-explainer-heading">Wondering what goes into the price?</h2>
+          <p class="pricing-explainer-placeholder">
+            [Add a short introduction explaining what customers are paying for when they
+            order a custom cake from you.]
+          </p>
+          <div class="pricing-explainer-points">
+            <p>
+              <strong>[Ingredients]</strong>
+              <span>[Explain the ingredients or special sourcing you use.]</span>
+            </p>
+            <p>
+              <strong>[Time and craft]</strong>
+              <span>[Explain the preparation, baking, decorating, and finishing time.]</span>
+            </p>
+            <p>
+              <strong>[Custom design]</strong>
+              <span>[Explain how personalization and design complexity affect the price.]</span>
+            </p>
+          </div>
+        </section>
       </aside>
     </form>
 
@@ -398,6 +428,19 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         }
       }
 
+      function setFillingPath() {
+        const path = checked('fillingPath')?.value || 'custom';
+        form.querySelectorAll('[data-filling-panel]').forEach((panel) => {
+          panel.classList.toggle('hidden', panel.dataset.fillingPanel !== path);
+        });
+
+        const customInput = form.elements.customFillingRequest;
+        customInput.disabled = path !== 'custom';
+        if (path !== 'custom') {
+          customInput.value = '';
+        }
+      }
+
       function addSummaryLine(label, value, amount) {
         const dt = document.createElement('dt');
         const dd = document.createElement('dd');
@@ -409,16 +452,15 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       function updateEstimate() {
         const size = checked('cakeSize');
         const tier = checked('tierOption');
-        const filling = checked('cakeFilling');
         const frosting = checked('cakeFrosting');
         const flavorPath = checked('flavorPath')?.value || 'custom';
+        const fillingPath = checked('fillingPath')?.value || 'custom';
         const addOns = checkedAll('addOns');
         const gallery = checkedAll('inspirationSelections');
 
         const total = [
           priceOf(size),
           priceOf(tier),
-          priceOf(filling),
           priceOf(frosting),
           ...addOns.map(priceOf),
         ].reduce((sum, value) => sum + value, 0);
@@ -432,7 +474,11 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
           flavorPath === 'surprise' ? "Baker's choice" : 'Custom request',
           0
         );
-        addSummaryLine('Filling', labelOf(filling), priceOf(filling));
+        addSummaryLine(
+          'Filling',
+          fillingPath === 'surprise' ? "Baker's choice" : 'Custom request',
+          0
+        );
         addSummaryLine('Frosting', labelOf(frosting), priceOf(frosting));
         addSummaryLine(
           'Add-ons',
@@ -477,6 +523,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.trim();
         const flavorPath = checked('flavorPath')?.value;
+        const fillingPath = checked('fillingPath')?.value;
 
         if (!name) errors.push('Name is required.');
         if (!eventDate) errors.push('Event date is required.');
@@ -484,6 +531,10 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         if (!flavorPath) errors.push('Choose a flavor path.');
         if (flavorPath === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
           errors.push('Add a custom flavor request.');
+        }
+        if (!fillingPath) errors.push('Choose a filling path.');
+        if (fillingPath === 'custom' && !form.elements.customFillingRequest.value.trim()) {
+          errors.push('Add a custom filling request.');
         }
 
         const fileError = validateFiles();
@@ -494,6 +545,9 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       form.addEventListener('change', (event) => {
         if (event.target.name === 'flavorPath') {
           setFlavorPath();
+        }
+        if (event.target.name === 'fillingPath') {
+          setFillingPath();
         }
         if (event.target === fileInput) {
           const fileError = validateFiles();
@@ -519,6 +573,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       });
 
       setFlavorPath();
+      setFillingPath();
       updateEstimate();
     </script>
   </main>

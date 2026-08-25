@@ -51,10 +51,19 @@ export const cakeOrder = defineType({
       hidden: ({ document }) => Boolean(document?.customFlavorRequest),
     }),
     defineField({
-      name: 'cakeFilling',
-      title: 'Cake Filling',
-      type: 'reference',
-      to: [{ type: 'cakeFilling' }],
+      name: 'customFillingRequest',
+      title: 'Custom Filling Request',
+      type: 'text',
+      rows: 3,
+      description: 'Custom fillings may need baker approval and a follow-up quote.',
+      hidden: ({ document }) => document?.letBakerChooseFilling,
+    }),
+    defineField({
+      name: 'letBakerChooseFilling',
+      title: 'Let Baker Choose Filling',
+      type: 'boolean',
+      initialValue: false,
+      hidden: ({ document }) => Boolean(document?.customFillingRequest),
     }),
     defineField({
       name: 'cakeFrosting',
