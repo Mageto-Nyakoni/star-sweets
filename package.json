@@ -2,6 +2,9 @@
   "name": "star-sweets",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -11,10 +14,10 @@
     "sanity:import:seed": "sanity dataset import sanity.seed.ndjson production --replace"
   },
   "dependencies": {
-    "@astrojs/tailwind": "^5.1.3",
-    "@astrojs/vercel": "^7.8.2",
+    "@astrojs/tailwind": "^6.0.2",
+    "@astrojs/vercel": "^9.0.5",
     "@sanity/client": "^6.22.5",
-    "astro": "^4.16.18",
+    "astro": "^5.18.2",
     "daisyui": "^4.12.23",
     "sanity": "^6.10.1",
     "tailwindcss": "^3.4.17"

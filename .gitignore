@@ -8,3 +8,5 @@ tmp/
 npm-debug.log*
 public/CroppedLogo.jpeg
 public/StarSweetsLogo.png
+.vercel
+.env*
