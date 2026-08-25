@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="star-sweets">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Sweets — Microbakery Blog</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- DaisyUI -->
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        'ss-pink':    '#F5BFD0',
+        'ss-pink-dk': '#E899B4',
+        'ss-pink-lt': '#FDE8EF',
+        'ss-maroon':  '#8C1A1A',
+        'ss-red':     '#C4536A',
+        'ss-cherry':  '#3A1520',
+        'ss-berry':   '#6B2535',
+        'ss-mist':    '#9B7B85',
+        'ss-cream':   '#FAF5EE',
+        'ss-blush':   '#F5EAE8',
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans:    ['"DM Sans"', 'system-ui', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+
+<style>
+  /* ── DaisyUI Theme Override ── */
+  [data-theme="star-sweets"],
+  :root {
+    --p:  340 75% 86%;
+    --pf: 340 60% 76%;
+    --pc: 340 50% 20%;
+    --s:  0 68% 32%;
+    --sf: 0 70% 22%;
+    --sc: 0 0% 98%;
+    --a:  345 55% 55%;
+    --af: 345 56% 43%;
+    --ac: 0 0% 98%;
+    --n:  340 40% 17%;
+    --nf: 340 42% 11%;
+    --nc: 0 0% 98%;
+    --b1: 340 40% 97%;
+    --b2: 340 32% 93%;
+    --b3: 340 22% 87%;
+    --bc: 340 40% 17%;
+    --rounded-btn: 9999px;
+    --rounded-box: 0.75rem;
+    --rounded-badge: 9999px;
+    --animation-btn: 0.18s;
+  }
+
+  /* ── Base ── */
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background-color: #FAF5EE;
+    color: #3A1520;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  /* ── Stripe BG (like the logo) ── */
+  .stripe-bg {
+    background-color: #FAF5EE;
+    background-image: repeating-linear-gradient(
+      90deg,
+      #F5BFD0 0px, #F5BFD0 36px,
+      #FAF5EE 36px, #FAF5EE 72px
+    );
+  }
+
+  /* ── Section Header ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    color: #8C1A1A;
+  }
+
+  .section-title em {
+    font-style: italic;
+    color: #C4536A;
+  }
+
+  /* Ornamental rule */
+  .title-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .title-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #F5BFD0, transparent);
+  }
+
+  /* ── Nav ── */
+  .navbar-ss {
+    background: rgba(250,245,238,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #F5EAE8;
+  }
+
+  /* ── Founder Card ── */
+  .founder-card {
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    cursor: pointer;
+  }
+  .founder-card:hover {
+    box-shadow: 0 20px 56px rgba(140,26,26,0.12);
+    transform: translateY(-2px);
+  }
+
+  /* Artisanal photo frame */
+  .photo-frame {
+    border-radius: 48% 52% 38% 62% / 44% 40% 60% 56%;
+    overflow: hidden;
+    border: 3px solid #F5BFD0;
+    box-shadow: 0 0 0 6px #FDE8EF, 0 0 0 8px #F5BFD0;
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 260px;
+  }
+
+  /* ── Recipe Card ── */
+  .recipe-card {
+    transition: box-shadow 0.22s ease, transform 0.22s ease;
+    background: white;
+    border: 1px solid #F5EAE8;
+  }
+  .recipe-card:hover {
+    box-shadow: 0 10px 32px rgba(140,26,26,0.10);
+    transform: translateY(-3px);
+  }
+
+  /* Placeholder striped image */
+  .card-img-placeholder {
+    background-color: #F5EAE8;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #F5EAE8 0, #F5EAE8 8px,
+      #FDE8EF 8px, #FDE8EF 16px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-img-placeholder span {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #9B7B85;
+    background: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  /* Mukbang thumbnail */
+  .mukbang-thumb {
+    background-color: #3A1520;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #3A1520 0, #3A1520 10px,
+      #6B2535 10px, #6B2535 20px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Play button */
+  .play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(245,191,208,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .mukbang-card:hover .play-btn {
+    transform: scale(1.1);
+    background: #F5BFD0;
+  }
+
+  /* ── Social Icon hover ── */
+  .social-icon {
+    color: #9B7B85;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 8px;
+    transition: color 0.18s, background 0.18s;
+  }
+  .social-icon:hover { color: #8C1A1A; background: #FDE8EF; }
+
+  /* ── Load More ── */
+  .btn-load {
+    border: 1.5px solid #8C1A1A;
+    color: #8C1A1A;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 10px 32px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    font-size: 14px;
+  }
+  .btn-load:hover { background: #8C1A1A; color: white; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #FAF5EE; }
+  ::-webkit-scrollbar-thumb { background: #F5BFD0; border-radius: 99px; }
+
+  /* Hidden cards (Load More) */
+  .hidden-card { display: none; }
+  .hidden-card.shown { display: block; }
+
+  /* Logo image sizing */
+  .nav-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════
+     STICKY NAV
+═══════════════════════════════════════ -->
+<nav id="navbar" class="navbar-ss fixed top-0 left-0 right-0 z-50 transition-shadow duration-300">
+  <div class="max-w-6xl mx-auto w-full px-6 h-16 flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2 group">
+      <img src="StarSweetsLogo.png" alt="Star Sweets" class="nav-logo">
+    </a>
+
+    <!-- Center links (desktop) -->
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#sweets" class="text-sm text-ss-berry hover:text-ss-maroon transition-colors font-medium">Sweets</a>
+      <a href="#savory" class="text-sm text-ss-berry hover:text-ss-maroon transition-colors font-medium">Savory</a>
+      <a href="#mukbangs" class="text-sm text-ss-berry hover:text-ss-maroon transition-colors font-medium">Mukbangs</a>
+      <a href="#about" class="text-sm text-ss-berry hover:text-ss-maroon transition-colors font-medium">About</a>
+    </div>
+
+    <!-- Social Icons -->
+    <div class="flex items-center gap-1">
+      <!-- Instagram -->
+      <a href="#" class="social-icon" aria-label="Instagram">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
+      <!-- TikTok -->
+      <a href="#" class="social-icon" aria-label="TikTok">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.19 8.19 0 004.79 1.52V6.74a4.85 4.85 0 01-1.02-.05z"/>
+        </svg>
+      </a>
+      <!-- YouTube -->
+      <a href="#" class="social-icon" aria-label="YouTube">
+        <svg width="22" height="16" viewBox="0 0 24 17" fill="currentColor">
+          <path d="M23.5 2.6A3 3 0 0021.4.5C19.5 0 12 0 12 0S4.5 0 2.6.5A3 3 0 00.5 2.6C0 4.5 0 8.5 0 8.5s0 4 .5 5.9A3 3 0 002.6 16.5C4.5 17 12 17 12 17s7.5 0 9.4-.5a3 3 0 002.1-2.1C24 12.5 24 8.5 24 8.5s0-4-.5-5.9zM9.5 12.1V4.9l6.3 3.6-6.3 3.6z"/>
+        </svg>
+      </a>
+
+      <!-- Mobile menu -->
+      <button class="md:hidden social-icon ml-2" onclick="toggleMobileMenu()" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="hidden md:hidden border-t border-ss-blush bg-ss-cream/95 px-6 py-4 flex flex-col gap-3">
+    <a href="#sweets" class="text-sm text-ss-berry font-medium py-1" onclick="toggleMobileMenu()">Sweets</a>
+    <a href="#savory" class="text-sm text-ss-berry font-medium py-1" onclick="toggleMobileMenu()">Savory</a>
+    <a href="#mukbangs" class="text-sm text-ss-berry font-medium py-1" onclick="toggleMobileMenu()">Mukbangs</a>
+    <a href="#about" class="text-sm text-ss-berry font-medium py-1" onclick="toggleMobileMenu()">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     FOUNDER INTRO CARD (collapsible)
+═══════════════════════════════════════ -->
+<section id="about" class="px-6 pt-24 pb-0">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Collapsed trigger bar -->
+    <div
+      id="founder-trigger"
+      onclick="toggleFounder()"
+      class="flex items-center justify-between px-8 py-5 bg-white border border-ss-blush cursor-pointer select-none"
+      style="border-radius:16px 16px 0 0;transition:background 0.2s;"
+      onmouseenter="this.style.background='#FDE8EF'"
+      onmouseleave="this.style.background='white'"
+    >
+      <div class="flex items-center gap-4">
+        <div style="width:36px;height:36px;border-radius:50%;background:#F5BFD0;border:2px solid #FDE8EF;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:#8C1A1A;font-weight:700;flex-shrink:0;">S</div>
+        <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#3A1520;letter-spacing:-0.01em;">The <em style="font-style:italic;color:#8C1A1A;">Chef</em></span>
+        <span class="hidden sm:block" style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#9B7B85;font-weight:500;">★ &nbsp; meet the baker</span>
+      </div>
+      <div id="founder-chevron" style="transition:transform 0.35s ease;color:#9B7B85;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <!-- Expandable body -->
+    <div
+      id="founder-body"
+      style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1);border:1px solid #F5EAE8;border-top:none;border-radius:0 0 16px 16px;background:white;"
+    >
+      <div class="flex flex-col md:flex-row">
+        <div class="md:w-1/3 bg-ss-pink-lt flex items-center justify-center p-10 md:p-12">
+          <div class="photo-frame">
+            <div class="card-img-placeholder w-full h-full min-h-[220px] flex items-center justify-center">
+              <span>founder photo</span>
+            </div>
+          </div>
+        </div>
+        <div class="md:w-2/3 p-10 md:p-14 flex flex-col justify-center">
+          <p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#9B7B85;font-weight:600;margin-bottom:10px;">★ &nbsp; Your host &amp; baker</p>
+          <h2 style="font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:700;color:#3A1520;line-height:1.1;margin-bottom:16px;">
+            Hi, I'm <em style="font-style:italic;color:#8C1A1A;">Stella.</em>
+          </h2>
+          <p class="text-ss-berry leading-relaxed mb-3" style="font-size:15px;font-weight:300;max-width:480px;">
+            I started Star Sweets out of my tiny apartment kitchen in 2025, armed with a hand mixer, a well-worn copy of <em>Bouchon Bakery</em>, and an embarrassing number of butter wrappers.
+          </p>
+          <p class="text-ss-berry leading-relaxed mb-3" style="font-size:15px;font-weight:300;max-width:480px;">
+            Every recipe here is tested until it's <strong class="font-medium text-ss-cherry">genuinely unforgettable</strong> — whether that's a Wednesday-night brownie or a weekend croissant project.
+          </p>
+          <p class="text-ss-berry leading-relaxed" style="font-size:15px;font-weight:300;max-width:480px;">
+            Pull up a chair. There's always something in the oven.
+          </p>
+          <div class="mt-8">
+            <a href="#" class="btn-load">Read My Story</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SWEETS SECTION
+═══════════════════════════════════════ -->
+<section id="sweets" class="py-16 px-6 bg-white/60">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Section header -->
+    <div class="mb-10">
+      <div class="title-rule mb-3">
+        <h2 class="section-title text-4xl md:text-5xl font-bold whitespace-nowrap">
+          <em>Sweets</em>
+        </h2>
+      </div>
+      <p class="text-ss-mist text-sm font-light mt-1" style="letter-spacing:0.04em;">Pastries, cookies, cakes &amp; confections</p>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="sweets-grid"></div>
+
+    <!-- Load More -->
+    <div class="flex justify-center mt-10">
+      <button class="btn-load" onclick="loadMore('sweets', this)">Load More Recipes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SAVORY SECTION
+═══════════════════════════════════════ -->
+<section id="savory" class="py-16 px-6">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="mb-10">
+      <div class="title-rule mb-3">
+        <h2 class="section-title text-4xl md:text-5xl font-bold whitespace-nowrap">
+          <em>Savory</em>
+        </h2>
+      </div>
+      <p class="text-ss-mist text-sm font-light mt-1" style="letter-spacing:0.04em;">Tarts, galettes, flatbreads &amp; bites</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="savory-grid"></div>
+
+    <div class="flex justify-center mt-10">
+      <button class="btn-load" onclick="loadMore('savory', this)">Load More Recipes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     MUKBANGS SECTION
+═══════════════════════════════════════ -->
+<section id="mukbangs" class="py-16 px-6 bg-ss-cherry">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="mb-10">
+      <div class="flex items-center gap-4 mb-3">
+        <h2 style="font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,48px);font-weight:700;color:#F5BFD0;line-height:1;font-style:italic;">Mukbangs</h2>
+        <div style="flex:1;height:1px;background:linear-gradient(to right, rgba(245,191,208,0.3), transparent);"></div>
+      </div>
+      <p style="font-size:13px;color:rgba(245,191,208,0.6);font-weight:300;letter-spacing:0.06em;">Watch me eat — a lot.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="mukbang-grid"></div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════ -->
+<footer class="stripe-bg py-14 px-6">
+  <div class="max-w-6xl mx-auto text-center">
+    <div class="flex justify-center mb-4">
+      <img src="StarSweetsLogo.png" alt="Star Sweets" style="height:56px;width:auto;object-fit:contain;">
+    </div>
+    <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#9B7B85;font-weight:500;margin-bottom:20px;">est. 2025 · Small-batch baking</p>
+
+    <div class="flex justify-center gap-4 mb-8">
+      <a href="#" class="social-icon" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+      <a href="#" class="social-icon" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.19 8.19 0 004.79 1.52V6.74a4.85 4.85 0 01-1.02-.05z"/></svg></a>
+      <a href="#" class="social-icon" aria-label="YouTube"><svg width="22" height="16" viewBox="0 0 24 17" fill="currentColor"><path d="M23.5 2.6A3 3 0 0021.4.5C19.5 0 12 0 12 0S4.5 0 2.6.5A3 3 0 00.5 2.6C0 4.5 0 8.5 0 8.5s0 4 .5 5.9A3 3 0 002.6 16.5C4.5 17 12 17 12 17s7.5 0 9.4-.5a3 3 0 002.1-2.1C24 12.5 24 8.5 24 8.5s0-4-.5-5.9zM9.5 12.1V4.9l6.3 3.6-6.3 3.6z"/></svg></a>
+    </div>
+
+    <p style="font-size:12px;color:#9B7B85;">© 2025 Star Sweets. All rights reserved. Made with ♥ and brown butter.</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════ -->
+<script>
+// ── Data ──────────────────────────────────────
+const sweetsData = [
+  { title: 'Brown Butter Financiers',    cat: 'Pastry',       time: '45 min',      diff: 'Easy' },
+  { title: 'Strawberry Cream Puffs',     cat: 'Choux',        time: '1 hr 20 min', diff: 'Medium' },
+  { title: 'Lavender Honey Madeleines',  cat: 'Cookies',      time: '35 min',      diff: 'Easy' },
+  { title: 'Matcha Shortbread Cookies',  cat: 'Cookies',      time: '50 min',      diff: 'Easy' },
+  { title: 'Raspberry Rose Tart',        cat: 'Tarts',        time: '2 hrs',       diff: 'Advanced' },
+  { title: 'Salted Caramel Brownies',    cat: 'Bars',         time: '55 min',      diff: 'Easy' },
+  { title: 'Vanilla Bean Crème Brûlée',  cat: 'Custards',     time: '1 hr 30 min', diff: 'Medium' },
+  { title: 'Lemon Blueberry Scones',     cat: 'Scones',       time: '40 min',      diff: 'Easy' },
+  { title: 'Pistachio Croissants',       cat: 'Viennoiserie', time: '3 hrs',       diff: 'Advanced' },
+  { title: 'Earl Grey Chiffon Cake',     cat: 'Cakes',        time: '1 hr 15 min', diff: 'Medium' },
+  { title: 'Chocolate Soufflé',          cat: 'Custards',     time: '50 min',      diff: 'Advanced' },
+  { title: 'Mango Panna Cotta',          cat: 'No-Bake',      time: '20 min',      diff: 'Easy' },
+];
+
+const savoryData = [
+  { title: 'Truffle Mushroom Galette',   cat: 'Galettes',   time: '1 hr 10 min', diff: 'Medium' },
+  { title: 'Roasted Tomato Focaccia',    cat: 'Bread',      time: '3 hrs',       diff: 'Medium' },
+  { title: 'Caramelized Onion Quiche',   cat: 'Quiche',     time: '1 hr 30 min', diff: 'Medium' },
+  { title: 'Burrata Flatbread',          cat: 'Flatbreads', time: '45 min',      diff: 'Easy' },
+  { title: 'Spanakopita Triangles',      cat: 'Pastry',     time: '1 hr',        diff: 'Medium' },
+  { title: 'Leek & Gruyère Tart',        cat: 'Tarts',      time: '1 hr 20 min', diff: 'Medium' },
+  { title: 'Prosciutto Wrapped Figs',    cat: 'Bites',      time: '15 min',      diff: 'Easy' },
+  { title: 'Zucchini Herb Fritters',     cat: 'Fritters',   time: '30 min',      diff: 'Easy' },
+  { title: 'Smoked Salmon Blinis',       cat: 'Blinis',     time: '40 min',      diff: 'Medium' },
+  { title: 'Sun-Dried Tomato Straws',    cat: 'Pastry',     time: '35 min',      diff: 'Easy' },
+  { title: 'Beet Hummus Flatbread',      cat: 'Flatbreads', time: '25 min',      diff: 'Easy' },
+  { title: 'Corn & Ricotta Galette',     cat: 'Galettes',   time: '1 hr',        diff: 'Medium' },
+];
+
+const mukbangData = [
+  { title: 'NYC Dessert Tour — 12 Stops in One Day',    views: '1.2M views', duration: '42 min' },
+  { title: 'Japanese Bakery Haul ✨ Everything I Ate',  views: '890K views', duration: '28 min' },
+  { title: '10,000 Calorie Bake Day Challenge',          views: '2.4M views', duration: '1 hr 4 min' },
+  { title: 'Paris Patisserie Crawl — Part 1',           views: '640K views', duration: '35 min' },
+  { title: 'Viral TikTok Sweets — Tested & Rated',      views: '1.8M views', duration: '22 min' },
+  { title: 'Holiday Cookie Box Spectacular 🎄',          views: '980K views', duration: '50 min' },
+];
+
+// ── Difficulty colors ──
+const diffColors = {
+  Easy:     { bg: '#FDE8EF', text: '#6B2535' },
+  Medium:   { bg: '#F5BFD0', text: '#3A1520' },
+  Advanced: { bg: '#8C1A1A', text: '#FAF5EE' },
+};
+
+// ── Icons ──
+const clockIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 15.5 14"/></svg>`;
+const starIcon  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+const eyeIcon   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const playIcon  = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#8C1A1A"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+// ── Render Recipe Card ──
+function recipeCard(item, hidden = false) {
+  const dc = diffColors[item.diff] || diffColors.Easy;
+  return `
+  <div class="recipe-card rounded-2xl overflow-hidden cursor-pointer ${hidden ? 'hidden-card' : ''}">
+    <div class="card-img-placeholder" style="aspect-ratio:4/3;">
+      <span>${item.cat} photo</span>
+    </div>
+    <div style="padding:18px 20px 16px;">
+      <div style="margin-bottom:10px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;background:#FDE8EF;color:#8C1A1A;padding:3px 10px;border-radius:999px;">${item.cat}</span>
+      </div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#3A1520;line-height:1.25;margin-bottom:14px;">${item.title}</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #F5EAE8;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#9B7B85;font-weight:400;">
+          ${clockIcon} ${item.time}
+        </span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:${dc.bg};color:${dc.text};">
+          ${starIcon} ${item.diff}
+        </span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Render Mukbang Card ──
+function mukbangCard(item) {
+  return `
+  <div class="mukbang-card recipe-card rounded-2xl overflow-hidden cursor-pointer" style="background:#3A1520;border-color:#6B2535;">
+    <div class="mukbang-thumb" style="aspect-ratio:16/9;position:relative;">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(-45deg,#3A1520 0,#3A1520 10px,#6B2535 10px,#6B2535 20px);">
+        <div class="play-btn">${playIcon}</div>
+      </div>
+      <span style="position:absolute;bottom:10px;right:10px;background:rgba(58,21,32,0.85);color:#F5BFD0;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;">${item.duration}</span>
+    </div>
+    <div style="padding:16px 18px 14px;">
+      <h3 style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:#F5BFD0;line-height:1.3;margin-bottom:10px;">${item.title}</h3>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(245,191,208,0.6);">
+        ${eyeIcon} ${item.views}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Populate Grids ──
+function populateGrid(containerId, data, showCount) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = data.map((item, i) => recipeCard(item, i >= showCount)).join('');
+}
+
+function populateMukbangs() {
+  const el = document.getElementById('mukbang-grid');
+  if (!el) return;
+  el.innerHTML = mukbangData.map(item => mukbangCard(item)).join('');
+}
+
+populateGrid('sweets-grid', sweetsData, 9);
+populateGrid('savory-grid', savoryData, 9);
+populateMukbangs();
+
+// ── Load More ──
+function loadMore(section, btn) {
+  const grid = document.getElementById(`${section}-grid`);
+  const hidden = grid.querySelectorAll('.hidden-card:not(.shown)');
+  let shown = 0;
+  hidden.forEach(card => {
+    if (shown < 3) { card.classList.add('shown'); shown++; }
+  });
+  if (grid.querySelectorAll('.hidden-card:not(.shown)').length === 0) {
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+    btn.textContent = 'All Recipes Loaded';
+  }
+}
+
+// ── Navbar shadow on scroll ──
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  nav.style.boxShadow = window.scrollY > 10 ? '0 2px 20px rgba(140,26,26,0.08)' : 'none';
+});
+
+// ── Mobile menu ──
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+}
+
+// ── Toggle Founder Card ──
+function toggleFounder() {
+  const body = document.getElementById('founder-body');
+  const chevron = document.getElementById('founder-chevron');
+  const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+  if (isOpen) {
+    body.style.maxHeight = '0';
+    chevron.style.transform = 'rotate(0deg)';
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
+</script>
+
+</body>
+</html>
