@@ -1,0 +1,34 @@
+/* ── Navbar ── */
+.navbar-ss {
+  background: rgba(250, 245, 238, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ss-blush);
+}
+
+.nav-logo {
+  width: 86px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.footer-logo {
+  width: min(240px, 72vw);
+  height: auto;
+  object-fit: contain;
+}
+
+/* ── Social icon buttons ── */
+.social-icon {
+  color: var(--ss-mist);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  transition: color 0.18s, background 0.18s;
+}
+.social-icon:hover {
+  color: var(--ss-maroon);
+  background: var(--ss-pink-lt);
+}

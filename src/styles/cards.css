@@ -1,0 +1,92 @@
+/* ── Recipe Card ── */
+.recipe-card {
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  background: white;
+  border: 1px solid var(--ss-blush);
+  border-radius: 0.25rem;
+}
+.recipe-card:hover {
+  box-shadow: 0 10px 32px rgba(140, 26, 26, 0.10);
+  transform: translateY(-3px);
+}
+
+.card-img-placeholder {
+  background-color: var(--ss-blush);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--ss-blush)   0,  var(--ss-blush)   8px,
+    var(--ss-pink-lt) 8px, var(--ss-pink-lt) 16px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-img-placeholder span {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--ss-mist);
+  background: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── Difficulty badges (BEM modifiers) ── */
+.diff-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; }
+.diff-badge--easy     { background: #ECFDF5; color: #065F46; }
+.diff-badge--medium   { background: #FEF3C7; color: #92400E; }
+.diff-badge--advanced { background: #FEE2E2; color: #991B1B; }
+
+/* ── Mukbang Card ── */
+.mukbang-card {
+  overflow: hidden;
+  border-radius: 0.25rem;
+}
+
+.mukbang-thumb {
+  background-color: var(--ss-cherry);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--ss-cherry) 0,  var(--ss-cherry) 10px,
+    var(--ss-berry)  10px, var(--ss-berry) 20px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(245, 191, 208, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+.mukbang-card:hover .play-btn {
+  transform: scale(1.1);
+  background: var(--ss-pink);
+}
+
+/* ── Load More button ── */
+.btn-load {
+  border: 1.5px solid var(--ss-maroon);
+  color: var(--ss-maroon);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 10px 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  font-size: 14px;
+}
+.btn-load:hover    { background: var(--ss-maroon); color: white; }
+.btn-load:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Load More hidden-card state ── */
+.hidden-card       { display: none; }
+.hidden-card.shown { display: block; }

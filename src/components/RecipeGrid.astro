@@ -1,0 +1,61 @@
+---
+import RecipeCard from './RecipeCard.astro';
+
+interface Recipe {
+  _id:        string;
+  title:      string;
+  category:   string;
+  time:       string;
+  difficulty: 'Easy' | 'Medium' | 'Advanced';
+  imageUrl?:  string;
+}
+
+interface Props {
+  gridId:       string;
+  recipes:      Recipe[];
+  initialShow?: number;
+}
+
+const { gridId, recipes, initialShow = 6 } = Astro.props;
+const hasMore = recipes.length > initialShow;
+---
+
+<div id={gridId} class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {recipes.map((recipe, i) => (
+    <RecipeCard {...recipe} hidden={i >= initialShow} />
+  ))}
+</div>
+
+{hasMore && (
+  <div class="flex justify-center mt-10">
+    <button
+      class="btn-load"
+      data-grid={gridId}
+      data-batch="3"
+    >
+      Load More Recipes
+    </button>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button[data-grid]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gridId = btn.dataset.grid!;
+      const batch  = parseInt(btn.dataset.batch ?? '3', 10);
+      const grid   = document.getElementById(gridId);
+      if (!grid) return;
+
+      const hidden = Array.from(
+        grid.querySelectorAll<HTMLElement>('.hidden-card:not(.shown)')
+      );
+
+      hidden.slice(0, batch).forEach(card => card.classList.add('shown'));
+
+      if (hidden.length <= batch) {
+        btn.disabled = true;
+        btn.textContent = 'All loaded';
+      }
+    });
+  });
+</script>

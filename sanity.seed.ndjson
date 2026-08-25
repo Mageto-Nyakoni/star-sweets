@@ -1,0 +1,2 @@
+{"_id":"cakeSize-6-inch-3-layer","_type":"cakeSize","name":"6 inch, 3 layers","servings":"Serves 8-12","basePrice":75,"isActive":true,"sortOrder":10}
+{"_id":"cakeSize-9-inch-3-layer","_type":"cakeSize","name":"9 inch, 3 layers","servings":"Serves 18-24","basePrice":100,"isActive":true,"sortOrder":20}

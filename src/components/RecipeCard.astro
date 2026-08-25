@@ -1,0 +1,53 @@
+---
+interface Props {
+  title:      string;
+  category:   string;
+  time:       string;
+  difficulty: 'Easy' | 'Medium' | 'Advanced';
+  imageUrl?:  string;
+  hidden?:    boolean;
+}
+
+const { title, category, time, difficulty, imageUrl, hidden = false } = Astro.props;
+
+const diffClass: Record<string, string> = {
+  Easy:     'diff-badge diff-badge--easy',
+  Medium:   'diff-badge diff-badge--medium',
+  Advanced: 'diff-badge diff-badge--advanced',
+};
+---
+
+<article class:list={['recipe-card overflow-hidden', { 'hidden-card': hidden }]}>
+  <!-- Thumbnail -->
+  <div class="card-img-placeholder h-48">
+    {imageUrl
+      ? <img src={imageUrl} alt={title} class="w-full h-full object-cover" loading="lazy" />
+      : <span>{category}</span>
+    }
+  </div>
+
+  <!-- Body -->
+  <div class="p-4">
+    <span class="text-xs font-medium uppercase tracking-widest text-ss-mist">{category}</span>
+    <h3 class="font-display font-semibold text-base text-ss-cherry mt-1 mb-3 leading-snug">{title}</h3>
+
+    <div class="flex items-center justify-between">
+      <!-- Time -->
+      <span class="flex items-center gap-1 text-xs text-ss-mist">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        {time}
+      </span>
+
+      <!-- Difficulty -->
+      <span class={diffClass[difficulty] ?? diffClass.Easy}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" class="inline mr-1">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        {difficulty}
+      </span>
+    </div>
+  </div>
+</article>

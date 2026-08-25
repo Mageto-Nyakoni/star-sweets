@@ -1,0 +1,13 @@
+/* Star Sweets design tokens — imported by global.css */
+:root {
+  --ss-pink:    #F5BFD0;
+  --ss-pink-dk: #E899B4;
+  --ss-pink-lt: #FDE8EF;
+  --ss-maroon:  #8C1A1A;
+  --ss-red:     #C4536A;
+  --ss-cherry:  #3A1520;
+  --ss-berry:   #6B2535;
+  --ss-mist:    #9B7B85;
+  --ss-cream:   #FAF5EE;
+  --ss-blush:   #F5EAE8;
+}

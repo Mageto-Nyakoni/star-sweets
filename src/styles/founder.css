@@ -1,0 +1,20 @@
+/* ── Founder card ── */
+.founder-card {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  cursor: pointer;
+}
+.founder-card:hover {
+  box-shadow: 0 20px 56px rgba(140, 26, 26, 0.12);
+  transform: translateY(-2px);
+}
+
+/* ── Artisanal organic photo frame ── */
+.photo-frame {
+  border-radius: 48% 52% 38% 62% / 44% 40% 60% 56%;
+  overflow: hidden;
+  border: 3px solid var(--ss-pink);
+  box-shadow: 0 0 0 6px var(--ss-pink-lt), 0 0 0 8px var(--ss-pink);
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 260px;
+}

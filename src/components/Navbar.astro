@@ -1,0 +1,97 @@
+---
+// No props — this is a global site nav.
+---
+
+<header>
+  <nav
+    id="navbar"
+    class="navbar-ss fixed top-0 inset-x-0 z-40 h-16 px-6 flex items-center justify-between"
+    aria-label="Main navigation"
+  >
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2">
+      <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" class="nav-logo" />
+    </a>
+
+    <!-- Desktop links -->
+    <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-ss-maroon">
+      <li><a href="/#past-work" class="hover:opacity-70 transition-opacity">Past work</a></li>
+      <li><a href="/about"     class="hover:opacity-70 transition-opacity">About</a></li>
+      <li><a href="/order"     class="nav-order-link">Order</a></li>
+    </ul>
+
+    <!-- Social icons + mobile toggle -->
+    <div class="flex items-center gap-1">
+      <a
+        href="https://www.instagram.com/star.sweets25?utm_source=ig_web_button_share_sheet&igsi=ZDNlZDc0MzIxNw=="
+        class="social-icon"
+        aria-label="Star Sweets on Instagram"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+          <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
+
+      <!-- Hamburger (mobile) -->
+      <button id="mobile-menu-btn" class="social-icon md:hidden ml-2" aria-label="Toggle menu" aria-expanded="false">
+        <svg id="icon-menu"  xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="hidden">
+          <line x1="18" y1="6"  x2="6"  y2="18"/>
+          <line x1="6"  y1="6"  x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile dropdown -->
+  <div
+    id="mobile-menu"
+    class="fixed top-16 inset-x-0 z-30 hidden px-6 py-5 bg-white/95 backdrop-blur-sm border-b border-ss-blush"
+  >
+    <ul class="flex flex-col gap-4 text-sm font-medium text-ss-maroon">
+      <li><a href="/#past-work" class="block py-1">Past work</a></li>
+      <li><a href="/about"     class="block py-1">About</a></li>
+      <li><a href="/order"     class="block py-1">Order</a></li>
+    </ul>
+  </div>
+</header>
+
+<script>
+  const navbar    = document.getElementById('navbar')!;
+  const menu      = document.getElementById('mobile-menu')!;
+  const btn       = document.getElementById('mobile-menu-btn')!;
+  const iconMenu  = document.getElementById('icon-menu')!;
+  const iconClose = document.getElementById('icon-close')!;
+
+  // Navbar shadow on scroll
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('shadow-sm', window.scrollY > 10);
+  });
+
+  // Mobile menu toggle
+  btn.addEventListener('click', () => {
+    const open = !menu.classList.contains('hidden');
+    menu.classList.toggle('hidden', open);
+    btn.setAttribute('aria-expanded', String(!open));
+    iconMenu.classList.toggle('hidden', !open);
+    iconClose.classList.toggle('hidden', open);
+  });
+
+  // Close menu when a link inside it is tapped
+  menu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+      iconMenu.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+    });
+  });
+</script>

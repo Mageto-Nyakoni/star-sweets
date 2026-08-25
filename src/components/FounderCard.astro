@@ -1,0 +1,119 @@
+---
+// No props — founder content is hardcoded editorial copy.
+---
+
+<section id="about" class="py-20">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="founder-card rounded-2xl overflow-hidden bg-white border border-ss-blush" id="founder-card">
+
+      <!-- Collapsed header (always visible) -->
+      <button
+        id="founder-toggle-btn"
+        class="w-full p-6 flex items-center justify-between text-left"
+        aria-expanded="false"
+        aria-controls="founder-bio"
+      >
+        <div class="flex items-center gap-4">
+          <!-- Small avatar -->
+          <div class="photo-frame w-16 h-16 shrink-0">
+            <div class="w-full h-full bg-ss-blush flex items-center justify-content-center">
+              <span class="text-xs text-ss-mist font-mono">photo</span>
+            </div>
+          </div>
+          <div>
+            <p class="font-display text-xl font-semibold text-ss-maroon">Emily N.</p>
+            <p class="text-sm text-ss-mist">Baker &amp; Dentist & Bakery Owner</p>
+          </div>
+        </div>
+        <svg
+          id="founder-chevron"
+          xmlns="http://www.w3.org/2000/svg"
+          width="20" height="20"
+          fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2"
+          class="text-ss-mist shrink-0 transition-transform duration-300"
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      <!-- Expandable bio -->
+      <div
+        id="founder-bio"
+        style="height: 0; overflow: hidden; transition: height 0.35s ease;"
+        aria-hidden="true"
+      >
+        <div class="px-6 pb-10 grid md:grid-cols-2 gap-8 items-center">
+          <!-- Full photo -->
+          <div class="flex justify-center">
+            <div class="photo-frame">
+              <div class="w-full h-full bg-ss-blush flex items-center justify-center">
+                <span class="text-xs text-ss-mist font-mono">260 × 260</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bio copy -->
+          <div>
+            <h2 class="section-title text-2xl font-semibold mb-4">Meet <em>The Chef</em></h2>
+            <p class="text-sm text-ss-berry leading-relaxed mb-4">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+              ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+              laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+              in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+              cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            </p>
+            <p class="text-sm text-ss-berry leading-relaxed mb-6">
+              I love my boyfriend i think
+            </p>
+
+            <!-- Social links -->
+            <div class="flex items-center gap-3">
+              <a
+                href="https://www.instagram.com/star.sweets25?utm_source=ig_web_button_share_sheet&igsi=ZDNlZDc0MzIxNw=="
+                class="social-icon"
+                aria-label="Star Sweets on Instagram"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const btn     = document.getElementById('founder-toggle-btn')!;
+  const bio     = document.getElementById('founder-bio')!;
+  const chevron = document.getElementById('founder-chevron')!;
+
+  btn.addEventListener('click', () => {
+    const isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+    if (isOpen) {
+      bio.style.height  = bio.scrollHeight + 'px';
+      requestAnimationFrame(() => { bio.style.height = '0'; });
+      btn.setAttribute('aria-expanded', 'false');
+      bio.setAttribute('aria-hidden', 'true');
+      chevron.style.transform = '';
+    } else {
+      bio.style.height = bio.scrollHeight + 'px';
+      bio.addEventListener('transitionend', () => {
+        bio.style.height = 'auto';
+      }, { once: true });
+      btn.setAttribute('aria-expanded', 'true');
+      bio.setAttribute('aria-hidden', 'false');
+      chevron.style.transform = 'rotate(180deg)';
+    }
+  });
+</script>

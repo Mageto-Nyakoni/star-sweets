@@ -1,0 +1,12 @@
+---
+interface Props {
+  id:    string;
+  label: string;
+}
+
+const { id, label } = Astro.props;
+---
+<div class="title-rule mb-8" id={id}>
+  <h2 class="section-title text-3xl md:text-4xl font-semibold whitespace-nowrap"
+      set:html={label} />
+</div>

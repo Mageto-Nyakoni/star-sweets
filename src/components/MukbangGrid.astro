@@ -1,0 +1,21 @@
+---
+import MukbangCard from './MukbangCard.astro';
+
+interface Mukbang {
+  _id:           string;
+  title:         string;
+  views:         string;
+  duration:      string;
+  thumbnailUrl?: string;
+}
+
+interface Props {
+  mukbangs: Mukbang[];
+}
+
+const { mukbangs } = Astro.props;
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {mukbangs.map(m => <MukbangCard {...m} />)}
+</div>

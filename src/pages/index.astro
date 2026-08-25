@@ -1,0 +1,101 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
+
+let galleryItems = fallbackOrderOptions.gallery;
+
+const { isSanityConfigured, fetchCakeOrderOptions } = await import('../lib/sanity.js');
+
+if (isSanityConfigured()) {
+  try {
+    const orderOptions = await fetchCakeOrderOptions();
+    galleryItems = orderOptions.gallery?.length ? orderOptions.gallery : fallbackOrderOptions.gallery;
+  } catch {
+    galleryItems = fallbackOrderOptions.gallery;
+  }
+}
+
+const featuredImage = galleryItems.find((item) => item.imageUrl)?.imageUrl;
+const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` : undefined;
+---
+
+<Layout
+  title="Star Sweets - Custom Cakes and Baked Goods"
+  description="Star Sweets creates custom celebration cakes and baked goods made for your moment."
+>
+  <Navbar />
+
+  <main class="home-page">
+    <section class:list={['home-hero', { 'has-image': featuredImage }]} style={heroStyle} aria-labelledby="home-title">
+      <div class="home-hero-inner">
+        <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" />
+        <p class="home-eyebrow">Custom cake orders</p>
+        <h1 id="home-title">Star Sweets</h1>
+        <p class="home-hero-copy placement-copy">
+          [Add a short introduction to Star Sweets and the kinds of orders you offer.]
+        </p>
+        <div class="home-actions">
+          <a href="/order" class="home-button home-button-primary">Order a custom cake</a>
+          <a href="#past-work" class="home-button home-button-secondary">See past work</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="past-work" class="work-section" aria-labelledby="work-title">
+      <div class="home-section-heading">
+        <div>
+          <p class="home-eyebrow">Made by Star Sweets</p>
+          <h2 id="work-title">Previous orders and baked goods</h2>
+        </div>
+        <p class="placement-copy">[Add a short sentence introducing your previous work.]</p>
+      </div>
+
+      <div class="work-grid">
+        {galleryItems.slice(0, 6).map((item, index) => (
+          <article class:list={['work-item', `work-item-${(index % 3) + 1}`]}>
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} />
+            ) : (
+              <div class="work-placeholder" aria-hidden="true">
+                <img src="/StarSweets-logo-trimmed.png" alt="" />
+              </div>
+            )}
+            <div class="work-caption">
+              <h3>{item.caption}</h3>
+              {Array.isArray(item.tags) && item.tags.length > 0 && <p>{item.tags.join(' / ')}</p>}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="home-order-band" aria-labelledby="order-cta-title">
+      <div>
+        <p class="home-eyebrow">Made for your celebration</p>
+        <h2 id="order-cta-title">Have a cake idea in mind?</h2>
+      </div>
+      <p>Choose your size, fillings, finish, and inspiration to get a live starting estimate.</p>
+      <a href="/order" class="home-button home-button-light">Build your cake</a>
+    </section>
+
+    <section class="home-about" aria-labelledby="about-preview-title">
+      <div class="home-about-mark">
+        <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
+      </div>
+      <div class="home-about-copy">
+        <p class="home-eyebrow">Meet the baker</p>
+        <h2 id="about-preview-title" class="placement-heading">[Add a short heading about yourself]</h2>
+        <p class="placement-copy">
+          [Add a two or three sentence introduction about who you are, your background,
+          and what you want customers to know about you.]
+        </p>
+        <a href="/about" class="home-text-link">More about me <span aria-hidden="true">&rarr;</span></a>
+      </div>
+    </section>
+
+  </main>
+
+  <SiteFooter />
+</Layout>

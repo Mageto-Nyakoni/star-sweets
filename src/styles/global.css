@@ -1,0 +1,26 @@
+/* Import order matters: tokens first, then component styles, then Tailwind layers */
+@import './theme.css';
+@import './navbar.css';
+@import './cards.css';
+@import './sections.css';
+@import './founder.css';
+@import './home.css';
+@import './order.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background-color: var(--ss-cream);
+  color: var(--ss-cherry);
+  /* Subtle noise texture */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--ss-cream); }
+::-webkit-scrollbar-thumb { background: var(--ss-pink); border-radius: 99px; }

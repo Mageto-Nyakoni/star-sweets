@@ -1,0 +1,10 @@
+.DS_Store
+.claude/
+.env
+.astro/
+dist/
+node_modules/
+tmp/
+npm-debug.log*
+public/CroppedLogo.jpeg
+public/StarSweetsLogo.png

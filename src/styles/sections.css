@@ -1,0 +1,32 @@
+/* ── Stripe background (matches logo pattern) ── */
+.stripe-bg {
+  background-color: var(--ss-cream);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--ss-pink)  0px,  var(--ss-pink)  36px,
+    var(--ss-cream) 36px, var(--ss-cream) 72px
+  );
+}
+
+/* ── Section heading ── */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--ss-maroon);
+}
+.section-title em {
+  font-style: italic;
+  color: var(--ss-red);
+}
+
+/* ── Ornamental rule after heading ── */
+.title-rule {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.title-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--ss-pink), transparent);
+}
