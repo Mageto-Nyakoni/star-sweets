@@ -89,7 +89,7 @@ function escapeHtml(value: string) {
 function orderRows(rows: Array<[string, string | undefined]>) {
   return rows
     .filter(([, value]) => Boolean(value))
-    .map(([label, value]) => `<tr><td style="padding:6px 12px 6px 0;color:#6b554f"><strong>${escapeHtml(label)}</strong></td><td style="padding:6px 0">${escapeHtml(value || '')}</td></tr>`)
+    .map(([label, value]) => `<tr><td style="width:34%;padding:11px 14px;border-bottom:1px solid #ead8d7;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.45;vertical-align:top"><strong>${escapeHtml(label)}</strong></td><td style="padding:11px 14px;border-bottom:1px solid #ead8d7;color:#3a1520;font-family:Arial,sans-serif;font-size:14px;line-height:1.45;vertical-align:top">${escapeHtml(value || '')}</td></tr>`)
     .join('');
 }
 
@@ -121,6 +121,110 @@ function minimumEventDate() {
   const now = new Date();
   const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   return new Date(todayUtc + MIN_EVENT_LEAD_DAYS * MS_PER_DAY);
+}
+
+function displayEventDate(value: string) {
+  const date = dateOnlyToUtc(value);
+  if (!date) return value;
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
+function emailShell({
+  preheader,
+  eyebrow,
+  title,
+  intro,
+  content,
+}: {
+  preheader: string;
+  eyebrow: string;
+  title: string;
+  intro: string;
+  content: string;
+}) {
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#faf5ee;color:#3a1520">
+    <span style="display:none!important;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(preheader)}</span>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#faf5ee">
+      <tr>
+        <td align="center" style="padding:32px 16px">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#ffffff;border:1px solid #ead8d7;border-radius:18px;overflow:hidden">
+            <tr>
+              <td style="height:7px;background:#8c1a1a;font-size:0;line-height:0">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 18px">
+                <p style="margin:0 0 22px;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:bold;letter-spacing:.2px">Star Sweets</p>
+                <p style="margin:0 0 8px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.7px;text-transform:uppercase">${escapeHtml(eyebrow)}</p>
+                <h1 style="margin:0 0 12px;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.15;font-weight:normal">${escapeHtml(title)}</h1>
+                <p style="margin:0;color:#6b2535;font-family:Arial,sans-serif;font-size:15px;line-height:1.65">${escapeHtml(intro)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 32px 32px">${content}</td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px;background:#f5eae8;color:#9b7b85;font-family:Arial,sans-serif;font-size:12px;line-height:1.5;text-align:center">Star Sweets &middot; Made thoughtfully for every celebration</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+function adminEmailTemplate({
+  customerName,
+  eventDate,
+  rows,
+  orderLink,
+}: {
+  customerName: string;
+  eventDate: string;
+  rows: string;
+  orderLink: string;
+}) {
+  const formattedDate = displayEventDate(eventDate);
+  const studioButton = orderLink
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px"><tr><td style="border-radius:999px;background:#8c1a1a"><a href="${escapeHtml(orderLink)}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none">Open in Sanity Studio</a></td></tr></table>`
+    : '';
+
+  return emailShell({
+    preheader: `New cake request from ${customerName} for ${formattedDate}.`,
+    eyebrow: 'New cake request',
+    title: 'A new celebration is taking shape.',
+    intro: `${customerName} sent a cake request for ${formattedDate}. Review the details below and follow up to confirm availability and final pricing.`,
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fffaf7">${rows}</table>${studioButton}`,
+  });
+}
+
+function customerEmailTemplate({
+  customerName,
+  eventDate,
+  calculatedTotal,
+}: {
+  customerName: string;
+  eventDate: string;
+  calculatedTotal: number;
+}) {
+  const formattedDate = displayEventDate(eventDate);
+  const estimate = dollars(calculatedTotal);
+
+  return emailShell({
+    preheader: `We received your Star Sweets cake request for ${formattedDate}.`,
+    eyebrow: 'Request received',
+    title: 'Your cake request is in!',
+    intro: `Thanks, ${customerName}. Your request has been received, and I will follow up soon to confirm the details and final price.`,
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Starting estimate</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">Custom flavors, fillings, sourcing, and design details may affect the final quote. Nothing is confirmed until we follow up with you.</div>`,
+  });
 }
 
 async function sendBrevoEmail(apiKey: string, message: BrevoMessage) {
@@ -312,8 +416,8 @@ export const POST: APIRoute = async ({ request }) => {
         sender: { name: 'Star Sweets', email: fromEmail },
         to: notificationEmail.split(',').map((address) => address.trim()).filter(Boolean).map((address) => ({ email: address })),
         replyTo: email ? { email } : undefined,
-        subject: `New cake request from ${customerName} for ${eventDate}`,
-        htmlContent: `<h1 style="color:#8c1a1a">New Star Sweets cake request</h1><table>${rows}</table>${orderLink ? `<p><a href="${escapeHtml(orderLink)}">Open this order in Sanity Studio</a></p>` : ''}`,
+        subject: `New Cake request From ${customerName} for ${eventDate}`,
+        htmlContent: adminEmailTemplate({ customerName, eventDate, rows, orderLink }),
       });
 
       if (email) {
@@ -322,7 +426,7 @@ export const POST: APIRoute = async ({ request }) => {
             sender: { name: 'Star Sweets', email: fromEmail },
             to: [{ email, name: customerName }],
             subject: 'Star Sweets received your cake request',
-            htmlContent: `<h1 style="color:#8c1a1a">Your cake request is in!</h1><p>Thanks for reaching out to Star Sweets. I received your request for ${escapeHtml(eventDate)} and will follow up soon to confirm the details and final price.</p><p>Your current starting estimate is <strong>${escapeHtml(dollars(calculatedTotal))}</strong>.</p>`,
+            htmlContent: customerEmailTemplate({ customerName, eventDate, calculatedTotal }),
           });
         } catch (error) {
           console.error('Customer confirmation email failed:', error instanceof Error ? error.message : error);
