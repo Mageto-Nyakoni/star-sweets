@@ -8,6 +8,8 @@ const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_EVENT_LEAD_DAYS = 4;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const PRODUCTION_ORDER_ORIGINS = new Set([
   'https://star-sweets.co',
   'https://www.star-sweets.co',
@@ -89,6 +91,36 @@ function orderRows(rows: Array<[string, string | undefined]>) {
     .filter(([, value]) => Boolean(value))
     .map(([label, value]) => `<tr><td style="padding:6px 12px 6px 0;color:#6b554f"><strong>${escapeHtml(label)}</strong></td><td style="padding:6px 0">${escapeHtml(value || '')}</td></tr>`)
     .join('');
+}
+
+function dateOnlyToUtc(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, monthIndex, day));
+
+  if (
+    date.getUTCFullYear() !== year
+    || date.getUTCMonth() !== monthIndex
+    || date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+function formatDateOnly(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function minimumEventDate() {
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return new Date(todayUtc + MIN_EVENT_LEAD_DAYS * MS_PER_DAY);
 }
 
 async function sendBrevoEmail(apiKey: string, message: BrevoMessage) {
@@ -190,7 +222,12 @@ export const POST: APIRoute = async ({ request }) => {
     if (!customerName || !eventDate || !sizeId) throw new FormError('Please complete your name, event date, and cake size.');
     if (!email && !phone) throw new FormError('Please provide an email address or phone number.');
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) throw new FormError('Please choose a valid event date.');
+    const parsedEventDate = dateOnlyToUtc(eventDate);
+    if (!parsedEventDate) throw new FormError('Please choose a valid event date.');
+    const firstAvailableEventDate = minimumEventDate();
+    if (parsedEventDate < firstAvailableEventDate) {
+      throw new FormError(`Please choose an event date at least 4 days away (${formatDateOnly(firstAvailableEventDate)} or later).`);
+    }
     if (flavorPath !== 'custom' && flavorPath !== 'surprise') throw new FormError('Please choose a flavor path.');
     if (fillingPath !== 'custom' && fillingPath !== 'surprise') throw new FormError('Please choose a filling path.');
     if (flavorPath === 'custom' && !customFlavorRequest) throw new FormError('Please describe your flavor request.');

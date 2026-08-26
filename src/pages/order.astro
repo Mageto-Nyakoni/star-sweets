@@ -69,7 +69,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
             <p class="step-label">1</p>
             <div>
               <h2 id="contact-heading">Contact and date</h2>
-              <p>Name, event date, and one way to reach you are required.</p>
+              <p>Name, an event date at least 4 days away, and one way to reach you are required.</p>
             </div>
           </div>
 
@@ -81,6 +81,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
             <label>
               <span>Event date</span>
               <input type="date" name="eventDate" required />
+              <small class="field-note" data-min-event-date-note></small>
             </label>
             <label>
               <span>Email</span>
@@ -389,6 +390,8 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       const fileInput = document.getElementById('reference-images');
       const fileList = document.getElementById('file-list');
       const dataElement = document.getElementById('cake-order-data');
+      const eventDateInput = form.elements.eventDate;
+      const eventDateNote = form.querySelector('[data-min-event-date-note]');
       const orderData = JSON.parse(dataElement.textContent || '{}');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -399,6 +402,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       const maxFileSize = 2 * 1024 * 1024;
       const maxTotalFileSize = 4 * 1024 * 1024;
       const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      const minEventLeadDays = 4;
 
       function checked(name) {
         return form.querySelector(`[name="${name}"]:checked`);
@@ -414,6 +418,59 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
 
       function labelOf(input) {
         return input?.dataset.label || '';
+      }
+
+      function formatDateOnly(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatDisplayDate(date) {
+        return new Intl.DateTimeFormat('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        }).format(date);
+      }
+
+      function startOfToday() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return today;
+      }
+
+      function minimumEventDate() {
+        const date = startOfToday();
+        date.setDate(date.getDate() + minEventLeadDays);
+        return date;
+      }
+
+      function dateValueToLocalDate(value) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        if (!match) return null;
+
+        const year = Number(match[1]);
+        const monthIndex = Number(match[2]) - 1;
+        const day = Number(match[3]);
+        const date = new Date(year, monthIndex, day);
+
+        if (
+          date.getFullYear() !== year
+          || date.getMonth() !== monthIndex
+          || date.getDate() !== day
+        ) {
+          return null;
+        }
+
+        return date;
+      }
+
+      function syncMinimumEventDate() {
+        const minDate = minimumEventDate();
+        eventDateInput.min = formatDateOnly(minDate);
+        eventDateNote.textContent = `Earliest available event date: ${formatDisplayDate(minDate)}.`;
       }
 
       function setFlavorPath() {
@@ -533,6 +590,15 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
 
         if (!name) errors.push('Name is required.');
         if (!eventDate) errors.push('Event date is required.');
+        if (eventDate) {
+          const parsedEventDate = dateValueToLocalDate(eventDate);
+          const minDate = minimumEventDate();
+          if (!parsedEventDate) {
+            errors.push('Choose a valid event date.');
+          } else if (parsedEventDate < minDate) {
+            errors.push(`Choose an event date at least 4 days away (${formatDisplayDate(minDate)} or later).`);
+          }
+        }
         if (!email && !phone) errors.push('Please enter an email or phone number.');
         if (!flavorPath) errors.push('Choose a flavor path.');
         if (flavorPath === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
@@ -571,6 +637,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (form.elements.website.value) return;
+        syncMinimumEventDate();
         const errors = validateForm();
         message.classList.toggle('error', errors.length > 0);
         if (errors.length) {
@@ -614,6 +681,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         }
       });
 
+      syncMinimumEventDate();
       setFlavorPath();
       setFillingPath();
       updateEstimate();
