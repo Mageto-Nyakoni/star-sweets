@@ -53,7 +53,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       <a class="order-intro-link" href="#cake-builder">Start order</a>
     </section>
 
-    <form id="cake-builder" class="order-builder" novalidate>
+    <form id="cake-builder" class="order-builder" enctype="multipart/form-data" novalidate>
       <input
         class="order-honeypot"
         type="text"
@@ -320,7 +320,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
               accept="image/png,image/jpeg,image/webp"
               multiple
             />
-            <small>PNG, JPG, or WebP. Up to 5 images, 5 MB each.</small>
+            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total.</small>
           </label>
           <ul id="file-list" class="file-list" aria-live="polite"></ul>
 
@@ -350,8 +350,8 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
 
           <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
 
-          <button class="submit-button" type="submit">
-            Review cake request
+          <button class="submit-button" type="submit" data-submit-button>
+            Send cake request
           </button>
         </div>
 
@@ -396,7 +396,8 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         maximumFractionDigits: 0,
       });
       const maxFiles = 5;
-      const maxFileSize = 5 * 1024 * 1024;
+      const maxFileSize = 2 * 1024 * 1024;
+      const maxTotalFileSize = 4 * 1024 * 1024;
       const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
       function checked(name) {
@@ -504,8 +505,13 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
             return `${file.name} is not a PNG, JPG, or WebP image.`;
           }
           if (file.size > maxFileSize) {
-            return `${file.name} is larger than 5 MB.`;
+            return `${file.name} is larger than 2 MB.`;
           }
+        }
+
+        const totalFileSize = files.reduce((total, file) => total + file.size, 0);
+        if (totalFileSize > maxTotalFileSize) {
+          return 'Reference images must be 4 MB or smaller in total.';
         }
 
         files.forEach((file) => {
@@ -562,14 +568,50 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         message.textContent = '';
       });
 
-      form.addEventListener('submit', (event) => {
+      form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (form.elements.website.value) return;
         const errors = validateForm();
         message.classList.toggle('error', errors.length > 0);
-        message.textContent = errors.length
-          ? errors.join(' ')
-          : 'This request is ready for review. After you approve the form, I will connect this button to Sanity and email notifications.';
+        if (errors.length) {
+          message.textContent = errors.join(' ');
+          return;
+        }
+
+        const submitButton = form.querySelector('[data-submit-button]');
+        const originalLabel = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending request...';
+        message.classList.remove('error');
+        message.textContent = 'Saving your cake request...';
+
+        try {
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { Accept: 'application/json' },
+          });
+          const result = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(result.error || 'Unable to send your request. Please try again.');
+          }
+
+          message.textContent = result.message || 'Your cake request is in. I will be in touch soon.';
+          form.reset();
+          fileList.replaceChildren();
+          setFlavorPath();
+          setFillingPath();
+          updateEstimate();
+        } catch (error) {
+          message.classList.add('error');
+          message.textContent = error instanceof Error
+            ? error.message
+            : 'Unable to send your request. Please try again.';
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = originalLabel;
+        }
       });
 
       setFlavorPath();

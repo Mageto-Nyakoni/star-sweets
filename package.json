@@ -9,7 +9,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "studio:dev": "sanity dev",
+    "studio:dev": "CHOKIDAR_USEPOLLING=true sanity dev",
     "studio:deploy": "sanity deploy",
     "sanity:import:seed": "sanity dataset import sanity.seed.ndjson production --replace"
   },
@@ -20,6 +20,7 @@
     "astro": "^5.18.2",
     "daisyui": "^4.12.23",
     "sanity": "^6.10.1",
+    "styled-components": "^6.5.3",
     "tailwindcss": "^3.4.17"
   }
 }

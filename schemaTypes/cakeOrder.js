@@ -134,6 +134,28 @@ export const cakeOrder = defineType({
       initialValue: () => new Date().toISOString(),
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: 'notificationStatus',
+      title: 'Notification Status',
+      type: 'string',
+      readOnly: true,
+      initialValue: 'pending',
+      options: {
+        list: [
+          { title: 'Pending', value: 'pending' },
+          { title: 'Sent', value: 'sent' },
+          { title: 'Failed', value: 'failed' },
+        ],
+      },
+    }),
+    defineField({
+      name: 'notificationError',
+      title: 'Notification Error',
+      type: 'text',
+      readOnly: true,
+      rows: 3,
+      hidden: ({ document }) => !document?.notificationError,
+    }),
   ],
   preview: {
     select: {

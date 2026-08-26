@@ -527,6 +527,11 @@ textarea:focus {
   cursor: pointer;
 }
 
+.submit-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .order-honeypot {
   position: absolute;
   left: -100vw;

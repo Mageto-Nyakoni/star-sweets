@@ -2,6 +2,7 @@
 .claude/
 .env
 .astro/
+.sanity/
 dist/
 node_modules/
 tmp/
