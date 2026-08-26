@@ -11,8 +11,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_EVENT_LEAD_DAYS = 4;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const PRODUCTION_ORDER_ORIGINS = new Set([
-  'https://star-sweets.co',
-  'https://www.star-sweets.co',
+  'https://starsweets.co',
+  'https://www.starsweets.co',
 ]);
 
 type MenuOption = {
