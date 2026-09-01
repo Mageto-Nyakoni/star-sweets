@@ -68,6 +68,10 @@ function asReference(id: string) {
   return { _type: 'reference', _ref: id };
 }
 
+function sanityArrayKey() {
+  return crypto.randomUUID().replaceAll('-', '');
+}
+
 function dollars(amount = 0) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -366,7 +370,7 @@ export const POST: APIRoute = async ({ request }) => {
         filename: file.name,
         contentType: file.type,
       });
-      return { _type: 'image', asset: asReference(asset._id) };
+      return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
     }));
 
     const order = await client.create({
@@ -378,7 +382,10 @@ export const POST: APIRoute = async ({ request }) => {
       cakeSize: asReference(selections.size._id),
       tierOption: selections.tier ? asReference(selections.tier._id) : undefined,
       cakeFrosting: selections.frosting ? asReference(selections.frosting._id) : undefined,
-      addOns: selections.addOns.map((addOn) => asReference(addOn._id)),
+      addOns: selections.addOns.map((addOn) => ({
+        _key: sanityArrayKey(),
+        ...asReference(addOn._id),
+      })),
       inspirationSelections: selections.inspiration.map((item) => asReference(item._id)),
       customFlavorRequest: flavorPath === 'custom' ? customFlavorRequest : undefined,
       letBakerChooseFlavor: flavorPath === 'surprise',
