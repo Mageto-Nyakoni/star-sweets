@@ -7,6 +7,7 @@ export const prerender = false;
 const MAX_IMAGES = 5;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_INSPIRATION_SELECTIONS = 3;
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_EVENT_LEAD_DAYS = 4;
@@ -326,6 +327,9 @@ export const POST: APIRoute = async ({ request }) => {
     const inspirationIds = uniqueValues(formData, 'inspirationSelections');
 
     if (!customerName || !eventDate || !sizeId) throw new FormError('Please complete your name, event date, and cake size.');
+    if (inspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
+      throw new FormError(`Please choose no more than ${MAX_INSPIRATION_SELECTIONS} inspiration cakes.`);
+    }
     if (!email && !phone) throw new FormError('Please provide an email address or phone number.');
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
     const parsedEventDate = dateOnlyToUtc(eventDate);

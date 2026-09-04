@@ -32,6 +32,13 @@ const priceLabel = (amount = 0, base = false) => {
 
 const firstSizeId = orderOptions.sizes?.[0]?._id;
 const customizationPrice = 10;
+const galleryItems = Array.isArray(orderOptions.gallery) ? orderOptions.gallery : [];
+const galleryTags = Array.from(new Set(
+  galleryItems
+    .flatMap((item) => Array.isArray(item.tags) ? item.tags : [])
+    .map((tag) => String(tag).trim())
+    .filter(Boolean)
+)).sort((a, b) => a.localeCompare(b));
 ---
 
 <Layout
@@ -245,31 +252,164 @@ const customizationPrice = 10;
 
           <fieldset>
             <legend>Past cake gallery</legend>
-            <div class="gallery-grid">
-              {orderOptions.gallery.map((item, index) => (
-                <label class="gallery-choice">
+            <div class="inspiration-picker" data-inspiration-picker>
+              {galleryTags.length > 0 && (
+                <div class="inspiration-filters" role="group" aria-label="Filter past cakes">
+                  <button type="button" class="is-active" data-inspiration-filter="" aria-pressed="true">All</button>
+                  {galleryTags.map((tag) => (
+                    <button type="button" data-inspiration-filter={tag} aria-pressed="false">{tag}</button>
+                  ))}
+                </div>
+              )}
+
+              <div class="inspiration-carousel" data-inspiration-carousel aria-label="Past cake inspiration">
+                <div class="inspiration-track">
+                  {galleryItems.map((item, index) => (
+                    <article
+                      class="inspiration-item"
+                      data-inspiration-item
+                      data-inspiration-id={item._id}
+                      data-inspiration-tags={JSON.stringify(Array.isArray(item.tags) ? item.tags : [])}
+                    >
                   <input
+                    id={`inspiration-${index}`}
+                    class="inspiration-checkbox"
                     type="checkbox"
                     name="inspirationSelections"
                     value={item._id}
                     data-label={item.caption}
+                    tabindex="-1"
+                    aria-hidden="true"
                   />
+                      <button
+                        type="button"
+                        class="gallery-choice"
+                        data-inspiration-open
+                        aria-haspopup="dialog"
+                        aria-controls={`inspiration-dialog-${index}`}
+                        aria-label={`View details for ${item.caption}`}
+                      >
+                        <span class="inspiration-selected-badge" data-inspiration-selected-badge hidden>
+                          Selected
+                        </span>
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.caption} loading="lazy" />
+                        ) : (
+                          <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+                        )}
+                        <span class="gallery-choice-copy">
+                          <strong>{item.caption}</strong>
+                          {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
+                          <span class="gallery-view-details">View details <span aria-hidden="true">&rarr;</span></span>
+                        </span>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              {galleryItems.length > 1 && (
+                <div class="inspiration-carousel-controls" aria-label="Past cake gallery controls">
+                  <button type="button" data-inspiration-previous aria-label="Show previous cakes">
+                    <span aria-hidden="true">&larr;</span>
+                  </button>
+                  <button type="button" data-inspiration-next aria-label="Show more cakes">
+                    <span aria-hidden="true">&rarr;</span>
+                  </button>
+                </div>
+              )}
+
+              <p class="inspiration-picker-status" data-inspiration-status aria-live="polite">
+                Choose up to 3 cakes. Open any cake to see its details.
+              </p>
+
+              <div class="inspiration-selected-tray" data-inspiration-selected-tray hidden>
+                <div class="inspiration-selected-heading">
+                  <strong>Your inspiration</strong>
+                  <span><span data-inspiration-count>0</span> of 3 selected</span>
+                </div>
+                <div class="inspiration-selected-list">
+                  {galleryItems.map((item, index) => (
+                    <article data-inspiration-selected-entry={item._id} hidden>
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt="" loading="lazy" />
+                      ) : (
+                        <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+                      )}
+                      <span>{item.caption}</span>
+                      <button
+                        type="button"
+                        data-inspiration-remove={item._id}
+                        aria-label={`Remove ${item.caption} from your inspiration`}
+                      >
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          {galleryItems.map((item, index) => (
+            <dialog
+              id={`inspiration-dialog-${index}`}
+              class="inspiration-dialog"
+              aria-labelledby={`inspiration-dialog-title-${index}`}
+            >
+              <div class="inspiration-dialog-card">
+                <button
+                  type="button"
+                  class="inspiration-dialog-close"
+                  data-inspiration-dialog-close
+                  aria-label="Close cake details"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+
+                <div class="inspiration-dialog-media">
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.caption} loading="lazy" />
                   ) : (
                     <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
                   )}
-                  <span>
-                    <strong>{item.caption}</strong>
-                    {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+                </div>
+
+                <div class="inspiration-dialog-copy">
+                  <p class="inspiration-dialog-eyebrow">Past cake</p>
+                  <h3 id={`inspiration-dialog-title-${index}`}>{item.caption}</h3>
+                  {Array.isArray(item.tags) && item.tags.length > 0 && (
+                    <p class="inspiration-dialog-tags">{item.tags.join(' / ')}</p>
+                  )}
+                  <div class="inspiration-dialog-section">
+                    <h4>Cake details</h4>
+                    <p>{item.cakeDetails || 'More cake details coming soon.'}</p>
+                  </div>
+                  <div class="inspiration-dialog-section">
+                    <h4>Add-ons</h4>
+                    {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
+                      <ul>{item.addOns.map((addOn) => <li>{addOn}</li>)}</ul>
+                    ) : (
+                      <p>No add-ons listed for this cake.</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    class="inspiration-use-button"
+                    data-use-inspiration={item._id}
+                  >
+                    Use as inspiration
+                  </button>
+                  <p class="inspiration-dialog-limit" data-inspiration-dialog-limit hidden>
+                    You already have 3 cakes selected. Remove one from “Your inspiration” to choose this cake.
+                  </p>
+                </div>
+              </div>
+            </dialog>
+          ))}
 
           <label class="upload-drop">
-            <span>Reference photos</span>
+            <span>Upload your own inspiration</span>
             <input
               id="reference-images"
               type="file"
@@ -353,12 +493,21 @@ const customizationPrice = 10;
       const sizeRestrictionNotice = form.querySelector('[data-size-restriction-notice]');
       const customizationSection = form.querySelector('[data-customization-section]');
       const inspirationSection = form.querySelector('[data-inspiration-section]');
+      const inspirationCarousel = form.querySelector('[data-inspiration-carousel]');
+      const inspirationTrack = form.querySelector('.inspiration-track');
+      const inspirationItems = Array.from(form.querySelectorAll('[data-inspiration-item]'));
+      const inspirationInputs = Array.from(form.querySelectorAll('[name="inspirationSelections"]'));
+      const inspirationFilters = Array.from(form.querySelectorAll('[data-inspiration-filter]'));
+      const inspirationStatus = form.querySelector('[data-inspiration-status]');
+      const inspirationTray = form.querySelector('[data-inspiration-selected-tray]');
+      const inspirationCount = form.querySelector('[data-inspiration-count]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         maximumFractionDigits: 0,
       });
       const minEventLeadDays = 4;
+      const maxInspirationSelections = 3;
       const maxFiles = 5;
       const maxFileSize = 2 * 1024 * 1024;
       const maxTotalFileSize = 4 * 1024 * 1024;
@@ -478,11 +627,94 @@ const customizationPrice = 10;
 
         if (restricted) {
           fileList.replaceChildren();
+          syncInspirationPicker();
           return;
         }
 
         if (!checked('cakeFlavor')) form.querySelector('[name="cakeFlavor"]').checked = true;
         setCustomizationDetails();
+        syncInspirationPicker();
+      }
+
+      function inspirationInputFor(id) {
+        return inspirationInputs.find((input) => input.value === id);
+      }
+
+      function syncInspirationPicker(statusMessage = '') {
+        const selectedInputs = checkedAll('inspirationSelections');
+        const selectedIds = new Set(selectedInputs.map((input) => input.value));
+
+        inspirationItems.forEach((item) => {
+          const isSelected = selectedIds.has(item.dataset.inspirationId);
+          item.classList.toggle('is-selected', isSelected);
+          const badge = item.querySelector('[data-inspiration-selected-badge]');
+          const trigger = item.querySelector('[data-inspiration-open]');
+          const input = inspirationInputFor(item.dataset.inspirationId);
+          if (badge) badge.hidden = !isSelected;
+          if (trigger && input) {
+            trigger.setAttribute(
+              'aria-label',
+              `View details for ${input.dataset.label}${isSelected ? ', selected as inspiration' : ''}`
+            );
+          }
+        });
+
+        form.querySelectorAll('[data-inspiration-selected-entry]').forEach((entry) => {
+          entry.hidden = !selectedIds.has(entry.dataset.inspirationSelectedEntry);
+        });
+
+        form.querySelectorAll('[data-use-inspiration]').forEach((button) => {
+          const isSelected = selectedIds.has(button.dataset.useInspiration);
+          const selectionLimitReached = selectedInputs.length >= maxInspirationSelections && !isSelected;
+          const limitMessage = button.closest('dialog')?.querySelector('[data-inspiration-dialog-limit]');
+          button.textContent = isSelected
+            ? 'Remove from inspiration'
+            : selectionLimitReached
+              ? '3 cakes selected'
+              : 'Use as inspiration';
+          button.classList.toggle('is-selected', isSelected);
+          button.disabled = selectionLimitReached;
+          if (limitMessage) limitMessage.hidden = !selectionLimitReached;
+        });
+
+        if (inspirationTray) inspirationTray.hidden = selectedInputs.length === 0;
+        if (inspirationCount) inspirationCount.textContent = String(selectedInputs.length);
+        if (inspirationStatus) {
+          inspirationStatus.textContent = statusMessage
+            || (selectedInputs.length
+              ? `${selectedInputs.length} of ${maxInspirationSelections} cakes selected.`
+              : `Choose up to ${maxInspirationSelections} cakes. Open any cake to see its details.`);
+          inspirationStatus.classList.toggle('is-limit', Boolean(statusMessage));
+        }
+      }
+
+      function toggleInspiration(id, dialog) {
+        const input = inspirationInputFor(id);
+        if (!(input instanceof HTMLInputElement) || input.disabled) return;
+
+        if (!input.checked && checkedAll('inspirationSelections').length >= maxInspirationSelections) {
+          syncInspirationPicker(`You can choose up to ${maxInspirationSelections} inspiration cakes.`);
+          return;
+        }
+
+        input.checked = !input.checked;
+        syncInspirationPicker();
+        updateEstimate();
+        if (dialog instanceof HTMLDialogElement) dialog.close();
+      }
+
+      function scrollInspirationGallery(direction) {
+        if (!(inspirationCarousel instanceof HTMLElement)) return;
+        const firstVisibleItem = inspirationItems.find((item) => !item.hidden);
+        if (!(firstVisibleItem instanceof HTMLElement)) return;
+
+        const gap = inspirationTrack instanceof HTMLElement
+          ? Number.parseFloat(window.getComputedStyle(inspirationTrack).columnGap) || 0
+          : 0;
+        inspirationCarousel.scrollBy({
+          left: direction * (firstVisibleItem.getBoundingClientRect().width + gap),
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        });
       }
 
       function addSummaryLine(label, value, amount, amountLabel = '') {
@@ -594,9 +826,84 @@ const customizationPrice = 10;
 
           const fileError = validateFiles();
           if (fileError) errors.push(fileError);
+          if (checkedAll('inspirationSelections').length > maxInspirationSelections) {
+            errors.push(`Choose no more than ${maxInspirationSelections} inspiration cakes.`);
+          }
         }
         return errors;
       }
+
+      inspirationFilters.forEach((button) => {
+        button.addEventListener('click', () => {
+          const selectedTag = button.dataset.inspirationFilter || '';
+
+          inspirationFilters.forEach((filterButton) => {
+            const isActive = filterButton === button;
+            filterButton.classList.toggle('is-active', isActive);
+            filterButton.setAttribute('aria-pressed', String(isActive));
+          });
+
+          inspirationItems.forEach((item) => {
+            let tags = [];
+            try {
+              tags = JSON.parse(item.dataset.inspirationTags || '[]');
+            } catch {
+              tags = [];
+            }
+            item.hidden = Boolean(selectedTag) && !tags.includes(selectedTag);
+          });
+
+          inspirationCarousel?.scrollTo({ left: 0, behavior: 'auto' });
+        });
+      });
+
+      form.querySelector('[data-inspiration-previous]')?.addEventListener('click', () => {
+        scrollInspirationGallery(-1);
+      });
+
+      form.querySelector('[data-inspiration-next]')?.addEventListener('click', () => {
+        scrollInspirationGallery(1);
+      });
+
+      form.querySelectorAll('[data-inspiration-open]').forEach((trigger) => {
+        const dialogId = trigger.getAttribute('aria-controls');
+        const dialog = dialogId ? document.getElementById(dialogId) : null;
+        if (!(dialog instanceof HTMLDialogElement)) return;
+
+        trigger.addEventListener('click', () => {
+          dialog.showModal();
+          document.body.classList.add('inspiration-dialog-open');
+        });
+
+        dialog.querySelector('[data-inspiration-dialog-close]')?.addEventListener('click', () => {
+          dialog.close();
+        });
+
+        dialog.addEventListener('click', (event) => {
+          if (event.target === dialog) dialog.close();
+        });
+
+        dialog.addEventListener('close', () => {
+          document.body.classList.remove('inspiration-dialog-open');
+          trigger.focus();
+        });
+      });
+
+      form.querySelectorAll('[data-use-inspiration]').forEach((button) => {
+        button.addEventListener('click', () => {
+          toggleInspiration(button.dataset.useInspiration, button.closest('dialog'));
+        });
+      });
+
+      form.querySelectorAll('[data-inspiration-remove]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const input = inspirationInputFor(button.dataset.inspirationRemove);
+          if (!(input instanceof HTMLInputElement)) return;
+          input.checked = false;
+          syncInspirationPicker();
+          updateEstimate();
+        });
+      });
 
       form.addEventListener('change', (event) => {
         if (event.target.name === 'cakeSize') {

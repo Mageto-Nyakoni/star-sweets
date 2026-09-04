@@ -28,20 +28,21 @@ if (isSanityConfigured()) {
 
 const featuredImage = galleryItems.find((item) => item.imageUrl)?.imageUrl;
 const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` : undefined;
+const visibleGalleryItems = galleryItems;
 ---
 
 <Layout
   title="Star Sweets - Custom Cakes and Baked Goods"
   description="Star Sweets creates custom celebration cakes and baked goods made for your moment."
 >
-  <Navbar />
+  <Navbar homepage />
 
   <main class="home-page">
     <section class:list={['home-hero', { 'has-image': featuredImage }]} style={heroStyle} aria-labelledby="home-title">
       <div class="home-hero-inner">
         <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" />
         <p class="home-eyebrow">Based in Boston, MA</p>
-        <h1 id="home-title">Star Sweets</h1>
+        <h1 id="home-title" class="visually-hidden">Star Sweets</h1>
         <p class="home-hero-copy placement-copy">
           [Add a short introduction to Star Sweets and the kinds of orders you offer.]
         </p>
@@ -61,23 +62,112 @@ const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` :
         <p class="placement-copy">[Add a short sentence introducing your previous work.]</p>
       </div>
 
-      <div class="work-grid">
-        {galleryItems.slice(0, 6).map((item, index) => (
-          <article class:list={['work-item', `work-item-${(index % 3) + 1}`]}>
-            {item.imageUrl ? (
-              <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} />
-            ) : (
-              <div class="work-placeholder" aria-hidden="true">
-                <img src="/StarSweets-logo-trimmed.png" alt="" />
-              </div>
-            )}
-            <div class="work-caption">
-              <h3>{item.caption}</h3>
-              {Array.isArray(item.tags) && item.tags.length > 0 && <p>{item.tags.join(' / ')}</p>}
-            </div>
-          </article>
-        ))}
+      <div class="work-carousel-shell">
+        <div
+          class="work-carousel"
+          data-work-carousel
+          role="region"
+          aria-label="Previous orders carousel"
+          aria-roledescription="carousel"
+        >
+          <div class="work-track">
+            {visibleGalleryItems.map((item, index) => (
+              <article class:list={['work-item', `work-item-${(index % 3) + 1}`]}>
+                <button
+                  type="button"
+                  class="work-item-button"
+                  data-work-modal-trigger
+                  aria-haspopup="dialog"
+                  aria-controls={`work-dialog-${index}`}
+                  aria-label={`View details for ${item.caption}`}
+                >
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} />
+                  ) : (
+                    <div class="work-placeholder" aria-hidden="true">
+                      <img src="/StarSweets-logo-trimmed.png" alt="" />
+                    </div>
+                  )}
+                  <div class="work-caption">
+                    <h3>{item.caption}</h3>
+                    {Array.isArray(item.tags) && item.tags.length > 0 && <p>{item.tags.join(' / ')}</p>}
+                    <span class="work-details-link">View details <span aria-hidden="true">&rarr;</span></span>
+                  </div>
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        {visibleGalleryItems.length > 1 && (
+          <div class="work-carousel-controls" aria-label="Carousel controls">
+            <button type="button" data-carousel-previous aria-label="Show previous order">
+              <span aria-hidden="true">&larr;</span>
+            </button>
+            <button
+              type="button"
+              class="work-carousel-toggle"
+              data-carousel-toggle
+              aria-label="Pause auto-scroll"
+              aria-pressed="false"
+              title="Pause auto-scroll"
+            >
+              <span data-carousel-toggle-icon aria-hidden="true">&#10074;&#10074;</span>
+            </button>
+            <button type="button" data-carousel-next aria-label="Show next order">
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {visibleGalleryItems.map((item, index) => (
+        <dialog
+          id={`work-dialog-${index}`}
+          class="work-dialog"
+          aria-labelledby={`work-dialog-title-${index}`}
+        >
+          <div class="work-dialog-card">
+            <button type="button" class="work-dialog-close" data-work-modal-close aria-label="Close cake details">
+              <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="work-dialog-media">
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.caption} loading="lazy" />
+              ) : (
+                <div class="work-dialog-placeholder" aria-hidden="true">
+                  <img src="/StarSweets-logo-trimmed.png" alt="" />
+                </div>
+              )}
+            </div>
+
+            <div class="work-dialog-copy">
+              <p class="home-eyebrow">Previous order</p>
+              <h2 id={`work-dialog-title-${index}`}>{item.caption}</h2>
+              {Array.isArray(item.tags) && item.tags.length > 0 && (
+                <p class="work-dialog-tags">{item.tags.join(' / ')}</p>
+              )}
+
+              <section class="work-dialog-section" aria-labelledby={`work-dialog-details-${index}`}>
+                <h3 id={`work-dialog-details-${index}`}>Cake details</h3>
+                <p>{item.cakeDetails || 'More cake details coming soon.'}</p>
+              </section>
+
+              <section class="work-dialog-section" aria-labelledby={`work-dialog-addons-${index}`}>
+                <h3 id={`work-dialog-addons-${index}`}>Add-ons</h3>
+                {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
+                  <ul>
+                    {item.addOns.map((addOn) => <li>{addOn}</li>)}
+                  </ul>
+                ) : (
+                  <p>No add-ons listed for this order.</p>
+                )}
+              </section>
+            </div>
+          </div>
+        </dialog>
+      ))}
     </section>
 
     <section class="home-order-band" aria-labelledby="order-cta-title">
@@ -113,4 +203,266 @@ const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` :
   </main>
 
   <SiteFooter />
+
+  <script>
+    const galleryCarousel = document.querySelector('[data-work-carousel]');
+
+    if (galleryCarousel instanceof HTMLElement) {
+      const carouselTrack = galleryCarousel.querySelector('.work-track');
+      const previousButton = document.querySelector('[data-carousel-previous]');
+      const nextButton = document.querySelector('[data-carousel-next]');
+      const toggleButton = document.querySelector('[data-carousel-toggle]');
+      const toggleIcon = document.querySelector('[data-carousel-toggle-icon]');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const desktopCarousel = window.matchMedia('(min-width: 901px)');
+      let autoScrollTimer;
+      let scrollSettleTimer;
+      let transitionTimer;
+      let userPaused = false;
+      let isTransitioning = false;
+
+      if (carouselTrack instanceof HTMLElement) {
+        const originalSlides = Array.from(carouselTrack.querySelectorAll('.work-item'))
+          .filter((slide) => slide instanceof HTMLElement);
+        const originalCount = originalSlides.length;
+        const cloneCount = Math.min(2, originalCount);
+
+        if (originalCount > 1) {
+          const leadingClones = document.createDocumentFragment();
+          const trailingClones = document.createDocumentFragment();
+
+          originalSlides.slice(-cloneCount).forEach((slide) => {
+            const clone = slide.cloneNode(true);
+            if (clone instanceof HTMLElement) {
+              clone.dataset.carouselClone = 'true';
+              leadingClones.append(clone);
+            }
+          });
+
+          originalSlides.slice(0, cloneCount).forEach((slide) => {
+            const clone = slide.cloneNode(true);
+            if (clone instanceof HTMLElement) {
+              clone.dataset.carouselClone = 'true';
+              trailingClones.append(clone);
+            }
+          });
+
+          carouselTrack.prepend(leadingClones);
+          carouselTrack.append(trailingClones);
+        }
+
+        const slides = Array.from(carouselTrack.querySelectorAll('.work-item'))
+          .filter((slide) => slide instanceof HTMLElement);
+        let currentIndex = cloneCount;
+
+        const updateSlideStates = () => {
+          const focusRadius = desktopCarousel.matches ? 1 : 0;
+
+          slides.forEach((slide, index) => {
+            const isActive = index === currentIndex;
+            const isNeighbor = Math.abs(index - currentIndex) === 1;
+            const isFocused = Math.abs(index - currentIndex) <= focusRadius;
+            const slideButton = slide.querySelector('.work-item-button');
+
+            slide.classList.toggle('is-active', isActive);
+            slide.classList.toggle('is-neighbor', isNeighbor);
+            slide.classList.toggle('is-focused', isFocused);
+            slide.setAttribute('aria-hidden', String(!isFocused));
+
+            if (slideButton instanceof HTMLButtonElement) {
+              slideButton.tabIndex = isFocused ? 0 : -1;
+            }
+          });
+        };
+
+        const centerCurrentSlide = (behavior = 'smooth') => {
+          const currentSlide = slides[currentIndex];
+          if (!(currentSlide instanceof HTMLElement)) return;
+
+          const slideBounds = currentSlide.getBoundingClientRect();
+          const carouselBounds = galleryCarousel.getBoundingClientRect();
+          const centeredLeft = galleryCarousel.scrollLeft
+            + slideBounds.left
+            + slideBounds.width / 2
+            - carouselBounds.left
+            - carouselBounds.width / 2;
+          galleryCarousel.scrollTo({ left: centeredLeft, behavior });
+        };
+
+        const normalizeInfinitePosition = () => {
+          if (originalCount < 2) return;
+
+          if (currentIndex < cloneCount) {
+            currentIndex += originalCount;
+          } else if (currentIndex >= cloneCount + originalCount) {
+            currentIndex -= originalCount;
+          } else {
+            return;
+          }
+
+          updateSlideStates();
+          centerCurrentSlide('auto');
+        };
+
+        const moveCarousel = (direction) => {
+          if (isTransitioning || slides.length < 2) return;
+
+          currentIndex = Math.max(0, Math.min(slides.length - 1, currentIndex + direction));
+          updateSlideStates();
+          centerCurrentSlide(reducedMotion.matches ? 'auto' : 'smooth');
+          isTransitioning = true;
+
+          if (transitionTimer) window.clearTimeout(transitionTimer);
+          transitionTimer = window.setTimeout(() => {
+            normalizeInfinitePosition();
+            isTransitioning = false;
+          }, reducedMotion.matches ? 0 : 600);
+        };
+
+        const stopAutoScroll = () => {
+          if (autoScrollTimer) window.clearInterval(autoScrollTimer);
+          autoScrollTimer = undefined;
+        };
+
+        const startAutoScroll = () => {
+          stopAutoScroll();
+          if (userPaused || reducedMotion.matches || originalCount < 2 || document.hidden) return;
+          autoScrollTimer = window.setInterval(() => moveCarousel(1), 4000);
+        };
+
+        const updateToggleButton = () => {
+          if (!(toggleButton instanceof HTMLButtonElement)) return;
+
+          if (reducedMotion.matches) {
+            toggleButton.setAttribute('aria-label', 'Auto-scroll disabled by reduced motion setting');
+            toggleButton.setAttribute('title', 'Auto-scroll disabled');
+            toggleButton.setAttribute('aria-pressed', 'true');
+            toggleButton.disabled = true;
+            if (toggleIcon instanceof HTMLElement) toggleIcon.textContent = '\u25b6';
+            return;
+          }
+
+          const actionLabel = userPaused ? 'Resume auto-scroll' : 'Pause auto-scroll';
+          toggleButton.disabled = false;
+          toggleButton.setAttribute('aria-label', actionLabel);
+          toggleButton.setAttribute('title', actionLabel);
+          toggleButton.setAttribute('aria-pressed', String(userPaused));
+          if (toggleIcon instanceof HTMLElement) toggleIcon.textContent = userPaused ? '\u25b6' : '\u275a\u275a';
+        };
+
+        slides.forEach((slide, index) => {
+          const slideButton = slide.querySelector('.work-item-button');
+          slideButton?.addEventListener('click', (event) => {
+            if (slide.classList.contains('is-focused')) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (isTransitioning) return;
+            currentIndex = index;
+            updateSlideStates();
+            centerCurrentSlide(reducedMotion.matches ? 'auto' : 'smooth');
+            isTransitioning = true;
+            transitionTimer = window.setTimeout(() => {
+              normalizeInfinitePosition();
+              isTransitioning = false;
+            }, reducedMotion.matches ? 0 : 600);
+            startAutoScroll();
+          });
+        });
+
+        previousButton?.addEventListener('click', () => {
+          moveCarousel(-1);
+          startAutoScroll();
+        });
+
+        nextButton?.addEventListener('click', () => {
+          moveCarousel(1);
+          startAutoScroll();
+        });
+
+        toggleButton?.addEventListener('click', () => {
+          userPaused = !userPaused;
+          updateToggleButton();
+          startAutoScroll();
+        });
+
+        galleryCarousel.addEventListener('mouseenter', stopAutoScroll);
+        galleryCarousel.addEventListener('mouseleave', startAutoScroll);
+        galleryCarousel.addEventListener('focusin', stopAutoScroll);
+        galleryCarousel.addEventListener('focusout', (event) => {
+          if (!(event.relatedTarget instanceof Node) || !galleryCarousel.contains(event.relatedTarget)) {
+            startAutoScroll();
+          }
+        });
+
+        galleryCarousel.addEventListener('scroll', () => {
+          if (scrollSettleTimer) window.clearTimeout(scrollSettleTimer);
+          scrollSettleTimer = window.setTimeout(() => {
+            const carouselCenter = galleryCarousel.scrollLeft + galleryCarousel.clientWidth / 2;
+            let closestIndex = currentIndex;
+            let closestDistance = Number.POSITIVE_INFINITY;
+
+            slides.forEach((slide, index) => {
+              const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+              const distance = Math.abs(slideCenter - carouselCenter);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = index;
+              }
+            });
+
+            currentIndex = closestIndex;
+            updateSlideStates();
+            normalizeInfinitePosition();
+          }, 120);
+        });
+
+        reducedMotion.addEventListener('change', () => {
+          updateToggleButton();
+          centerCurrentSlide('auto');
+          startAutoScroll();
+        });
+
+        desktopCarousel.addEventListener('change', () => {
+          updateSlideStates();
+          centerCurrentSlide('auto');
+        });
+
+        window.addEventListener('resize', () => centerCurrentSlide('auto'));
+        document.addEventListener('visibilitychange', startAutoScroll);
+
+        updateToggleButton();
+        updateSlideStates();
+        window.requestAnimationFrame(() => centerCurrentSlide('auto'));
+        startAutoScroll();
+      }
+    }
+
+    const modalTriggers = document.querySelectorAll('[data-work-modal-trigger]');
+
+    modalTriggers.forEach((trigger) => {
+      const dialogId = trigger.getAttribute('aria-controls');
+      const dialog = dialogId ? document.getElementById(dialogId) : null;
+
+      if (!(dialog instanceof HTMLDialogElement)) return;
+
+      const closeButton = dialog.querySelector('[data-work-modal-close]');
+
+      trigger.addEventListener('click', () => {
+        dialog.showModal();
+        document.body.classList.add('work-dialog-open');
+      });
+
+      closeButton?.addEventListener('click', () => dialog.close());
+
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+
+      dialog.addEventListener('close', () => {
+        document.body.classList.remove('work-dialog-open');
+        if (trigger instanceof HTMLElement) trigger.focus();
+      });
+    });
+  </script>
 </Layout>

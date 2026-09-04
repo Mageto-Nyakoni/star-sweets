@@ -112,6 +112,8 @@ export async function fetchCakeOrderOptions() {
         _id,
         caption,
         tags,
+        cakeDetails,
+        addOns,
         "imageUrl": image.asset->url
       }
     }`

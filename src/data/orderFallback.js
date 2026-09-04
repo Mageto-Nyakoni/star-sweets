@@ -74,16 +74,22 @@ export const cakeOrderOptions = {
       _id: 'gallery-vintage-pink',
       caption: '[Add past order photo and caption #1]',
       tags: [],
+      cakeDetails: '[Add the cake flavor, filling, finish, and design details in Sanity.]',
+      addOns: [],
     },
     {
       _id: 'gallery-floral-white',
       caption: '[Add past order photo and caption #2]',
       tags: [],
+      cakeDetails: '[Add the cake flavor, filling, finish, and design details in Sanity.]',
+      addOns: [],
     },
     {
       _id: 'gallery-chocolate-drip',
       caption: '[Add past order photo and caption #3]',
       tags: [],
+      cakeDetails: '[Add the cake flavor, filling, finish, and design details in Sanity.]',
+      addOns: [],
     },
   ],
 };

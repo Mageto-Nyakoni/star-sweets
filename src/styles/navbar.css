@@ -6,6 +6,33 @@
   border-bottom: 1px solid var(--ss-blush);
 }
 
+.navbar-home {
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.navbar-home .home-nav-icon {
+  color: #fff;
+  filter: drop-shadow(0 1px 4px rgba(58, 21, 32, 0.5));
+}
+
+.navbar-home .home-nav-icon:hover,
+.navbar-home .home-nav-icon:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.home-mobile-menu {
+  right: 1rem;
+  width: min(16rem, calc(100% - 2rem));
+  border: 1px solid var(--ss-blush);
+  border-radius: 8px;
+  box-shadow: 0 1rem 2.5rem rgba(58, 21, 32, 0.18);
+}
+
 .nav-logo {
   width: 86px;
   height: 52px;
