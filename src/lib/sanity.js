@@ -51,6 +51,36 @@ export async function fetchMukbangs() {
   );
 }
 
+export async function fetchAboutPage() {
+  return getClient().fetch(
+    `*[_type == "aboutPage" && _id == "aboutPage"][0] {
+      homeEyebrow,
+      homeHeading,
+      homeIntroduction,
+      "portraitUrl": portrait.asset->url,
+      "portraitAlt": portrait.alt,
+      heroEyebrow,
+      heroTitle,
+      heroIntroduction,
+      storyEyebrow,
+      storyHeading,
+      biography,
+      valuesEyebrow,
+      valuesHeading,
+      values[] {
+        _key,
+        title,
+        description
+      },
+      ctaEyebrow,
+      ctaHeading,
+      ctaLabel,
+      seoTitle,
+      seoDescription
+    }`
+  );
+}
+
 export async function fetchCakeOrderOptions() {
   return getClient().fetch(
     `{

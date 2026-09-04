@@ -289,6 +289,13 @@
   object-fit: contain;
 }
 
+.home-about-mark .about-portrait,
+.about-brand-mark .about-portrait {
+  width: 100%;
+  height: clamp(16rem, 50vw, 22rem);
+  object-fit: cover;
+}
+
 .home-about-copy > p {
   max-width: 38rem;
   margin-top: 1rem;

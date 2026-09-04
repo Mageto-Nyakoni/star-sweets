@@ -2,71 +2,77 @@
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
+
+let aboutPage = aboutPageFallback;
+
+const { isSanityConfigured, fetchAboutPage } = await import('../lib/sanity.js');
+
+if (isSanityConfigured()) {
+  try {
+    aboutPage = withAboutPageFallback(await fetchAboutPage());
+  } catch {
+    aboutPage = aboutPageFallback;
+  }
+}
 ---
 
 <Layout
-  title="About - Star Sweets"
-  description="Meet the baker and owner behind the Star Sweets microbakery."
+  title={aboutPage.seoTitle}
+  description={aboutPage.seoDescription}
 >
   <Navbar />
 
   <main class="about-page">
     <header class="about-hero">
-      <p class="home-eyebrow">The story behind the sweets</p>
-      <h1>About Star Sweets</h1>
-      <p class="placement-copy">
-        [Add a short introduction to your story and what Star Sweets means to you.]
-      </p>
+      <p class="home-eyebrow">{aboutPage.heroEyebrow}</p>
+      <h1>{aboutPage.heroTitle}</h1>
+      <p class="placement-copy">{aboutPage.heroIntroduction}</p>
     </header>
 
     <section class="about-story" aria-labelledby="meet-baker">
       <div class="about-brand-mark">
-        <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
+        {aboutPage.portraitUrl ? (
+          <img
+            class="about-portrait"
+            src={aboutPage.portraitUrl}
+            alt={aboutPage.portraitAlt || 'Star Sweets baker'}
+          />
+        ) : (
+          <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
+        )}
       </div>
       <div>
-        <p class="home-eyebrow">Your introduction</p>
-        <h2 id="meet-baker" class="placement-heading">[Add your name or introduction heading]</h2>
-        <p class="placement-copy">
-          [Add your main biography here. You could include how you started baking,
-          your professional background, and why you created Star Sweets.]
-        </p>
-        <p class="placement-copy">
-          [Add a second paragraph about your baking style, process, or what customers
-          can expect when they order from you.]
-        </p>
+        <p class="home-eyebrow">{aboutPage.storyEyebrow}</p>
+        <h2 id="meet-baker" class="placement-heading">{aboutPage.storyHeading}</h2>
+        {aboutPage.biography.map((paragraph) => (
+          <p class="placement-copy">{paragraph}</p>
+        ))}
       </div>
     </section>
 
     <section class="about-values" aria-labelledby="values-title">
       <div class="about-values-heading">
-        <p class="home-eyebrow">Your values</p>
-        <h2 id="values-title" class="placement-heading">[Add a heading for what matters to you]</h2>
+        <p class="home-eyebrow">{aboutPage.valuesEyebrow}</p>
+        <h2 id="values-title" class="placement-heading">{aboutPage.valuesHeading}</h2>
       </div>
       <div class="about-values-grid">
-        <article>
-          <span>01</span>
-          <h3 class="placement-heading">[First value]</h3>
-          <p class="placement-copy">[Explain one principle that guides your work.]</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h3 class="placement-heading">[Second value]</h3>
-          <p class="placement-copy">[Explain another part of your approach or service.]</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h3 class="placement-heading">[Third value]</h3>
-          <p class="placement-copy">[Explain what customers can expect from you.]</p>
-        </article>
+        {aboutPage.values.map((value, index) => (
+          <article>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <h3 class="placement-heading">{value.title}</h3>
+            <p class="placement-copy">{value.description}</p>
+          </article>
+        ))}
       </div>
     </section>
 
     <section class="about-order-band">
       <div>
-        <p class="home-eyebrow">Let’s make something memorable</p>
-        <h2>Ready to plan your cake?</h2>
+        <p class="home-eyebrow">{aboutPage.ctaEyebrow}</p>
+        <h2>{aboutPage.ctaHeading}</h2>
       </div>
-      <a href="/order" class="home-button home-button-primary">Start your order</a>
+      <a href="/order" class="home-button home-button-primary">{aboutPage.ctaLabel}</a>
     </section>
   </main>
 

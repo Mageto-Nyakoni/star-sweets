@@ -53,7 +53,7 @@ const customizationPrice = 10;
       <a class="order-intro-link" href="#cake-builder">Start order</a>
     </section>
 
-    <form id="cake-builder" class="order-builder" novalidate>
+    <form id="cake-builder" class="order-builder" enctype="multipart/form-data" novalidate>
       <input
         class="order-honeypot"
         type="text"
@@ -233,6 +233,54 @@ const customizationPrice = 10;
             </div>
           ))}
         </section>
+
+        <section class="order-section" aria-labelledby="inspiration-heading" data-inspiration-section>
+          <div class="section-copy">
+            <p class="step-label">4</p>
+            <div>
+              <h2 id="inspiration-heading">Cake inspiration</h2>
+              <p>Choose past cake styles you like or upload your own reference photos.</p>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Past cake gallery</legend>
+            <div class="gallery-grid">
+              {orderOptions.gallery.map((item, index) => (
+                <label class="gallery-choice">
+                  <input
+                    type="checkbox"
+                    name="inspirationSelections"
+                    value={item._id}
+                    data-label={item.caption}
+                  />
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.caption} loading="lazy" />
+                  ) : (
+                    <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+                  )}
+                  <span>
+                    <strong>{item.caption}</strong>
+                    {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <label class="upload-drop">
+            <span>Reference photos</span>
+            <input
+              id="reference-images"
+              type="file"
+              name="referenceImages"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+            />
+            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total.</small>
+          </label>
+          <ul id="file-list" class="file-list" aria-live="polite"></ul>
+        </section>
       </div>
 
       <aside class="order-summary" aria-labelledby="summary-heading">
@@ -259,21 +307,34 @@ const customizationPrice = 10;
           <p class="pricing-explainer-kicker">Behind the price</p>
           <h2 id="pricing-explainer-heading">Wondering what goes into the price?</h2>
           <p class="pricing-explainer-placeholder">
-            [Add a short introduction explaining what customers are paying for when they
-            order a custom cake from you.]
+            I started making these cakes for fun, and I still do it because I love it.
+            But I can't keep making them unless each order covers what it actually costs.
+            I'm also a full-time dental student, so the time I put into each cake matters.
           </p>
           <div class="pricing-explainer-points">
             <p>
-              <strong>[Ingredients]</strong>
-              <span>[Explain the ingredients or special sourcing you use.]</span>
+              <strong>Ingredients</strong>
+              <span>
+                Ingredients for one cake cost me at least $30 before I start baking.
+                Unique flavors and specialty ingredients can push that number higher.
+              </span>
             </p>
             <p>
-              <strong>[Time and craft]</strong>
-              <span>[Explain the preparation, baking, decorating, and finishing time.]</span>
+              <strong>Time and craft</strong>
+              <span>
+                Every cake takes at least six hours, and plenty take longer. I use that
+                time to bake, build, decorate, and work on every component until the cake
+                tastes as good as it looks.
+              </span>
             </p>
             <p>
-              <strong>[Custom design]</strong>
-              <span>[Explain how personalization and design complexity affect the price.]</span>
+              <strong>Custom design</strong>
+              <span>
+                Custom designs need a plan before I ever touch the cake. Getting that plan
+                onto a real cake, with all the details right, takes time and patience. I
+                love putting the whole vision together and making something that knocks
+                y'all off your feet.
+              </span>
             </p>
           </div>
         </section>
@@ -285,16 +346,23 @@ const customizationPrice = 10;
       const totalOutput = document.getElementById('order-total');
       const summaryLines = document.getElementById('summary-lines');
       const message = document.getElementById('form-message');
+      const fileInput = document.getElementById('reference-images');
+      const fileList = document.getElementById('file-list');
       const eventDateInput = form.elements.eventDate;
       const eventDateNote = form.querySelector('[data-min-event-date-note]');
       const sizeRestrictionNotice = form.querySelector('[data-size-restriction-notice]');
       const customizationSection = form.querySelector('[data-customization-section]');
+      const inspirationSection = form.querySelector('[data-inspiration-section]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         maximumFractionDigits: 0,
       });
       const minEventLeadDays = 4;
+      const maxFiles = 5;
+      const maxFileSize = 2 * 1024 * 1024;
+      const maxTotalFileSize = 4 * 1024 * 1024;
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
       const paidCustomizationNames = [
         'flowers',
         'specializedDesign',
@@ -304,6 +372,10 @@ const customizationPrice = 10;
 
       function checked(name) {
         return form.querySelector(`[name="${name}"]:checked`);
+      }
+
+      function checkedAll(name) {
+        return Array.from(form.querySelectorAll(`[name="${name}"]:checked`));
       }
 
       function priceOf(input) {
@@ -390,19 +462,24 @@ const customizationPrice = 10;
       function setCustomizationAvailability() {
         const restricted = customizationsAreRestricted();
         sizeRestrictionNotice.hidden = !restricted;
-        customizationSection.classList.toggle('hidden', restricted);
-        customizationSection.querySelectorAll('input, textarea').forEach((control) => {
-          control.disabled = restricted;
-          if (!restricted) return;
+        [customizationSection, inspirationSection].forEach((section) => {
+          section.classList.toggle('hidden', restricted);
+          section.querySelectorAll('input, textarea').forEach((control) => {
+            control.disabled = restricted;
+            if (!restricted) return;
 
-          if (control instanceof HTMLInputElement && ['radio', 'checkbox'].includes(control.type)) {
-            control.checked = false;
-          } else {
-            control.value = '';
-          }
+            if (control instanceof HTMLInputElement && ['radio', 'checkbox'].includes(control.type)) {
+              control.checked = false;
+            } else {
+              control.value = '';
+            }
+          });
         });
 
-        if (restricted) return;
+        if (restricted) {
+          fileList.replaceChildren();
+          return;
+        }
 
         if (!checked('cakeFlavor')) form.querySelector('[name="cakeFlavor"]').checked = true;
         setCustomizationDetails();
@@ -420,6 +497,8 @@ const customizationPrice = 10;
         const size = checked('cakeSize');
         const flavor = checked('cakeFlavor');
         const paidCustomizations = paidCustomizationNames.map(checked).filter(Boolean);
+        const gallery = checkedAll('inspirationSelections');
+        const files = Array.from(fileInput.files || []);
         const restricted = customizationsAreRestricted();
 
         const total = restricted
@@ -441,6 +520,45 @@ const customizationPrice = 10;
         paidCustomizations.forEach((input) => {
           addSummaryLine(labelOf(input), 'Selected', priceOf(input));
         });
+        addSummaryLine(
+          'Inspiration',
+          gallery.length ? gallery.map(labelOf).join(', ') : 'None selected',
+          0
+        );
+        addSummaryLine(
+          'Reference photos',
+          files.length ? `${files.length} selected` : 'None selected',
+          0
+        );
+      }
+
+      function validateFiles() {
+        const files = Array.from(fileInput.files || []);
+        fileList.replaceChildren();
+        if (files.length > maxFiles) {
+          return `Please attach no more than ${maxFiles} images.`;
+        }
+
+        for (const file of files) {
+          if (!allowedTypes.includes(file.type)) {
+            return `${file.name} is not a PNG, JPG, or WebP image.`;
+          }
+          if (file.size > maxFileSize) {
+            return `${file.name} is larger than 2 MB.`;
+          }
+        }
+
+        const totalFileSize = files.reduce((total, file) => total + file.size, 0);
+        if (totalFileSize > maxTotalFileSize) {
+          return 'Reference images must be 4 MB or smaller in total.';
+        }
+
+        files.forEach((file) => {
+          const item = document.createElement('li');
+          item.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
+          fileList.append(item);
+        });
+        return '';
       }
 
       function validateForm() {
@@ -473,6 +591,9 @@ const customizationPrice = 10;
               errors.push(`Add details for ${labelOf(checked(name)).toLowerCase()}.`);
             }
           });
+
+          const fileError = validateFiles();
+          if (fileError) errors.push(fileError);
         }
         return errors;
       }
@@ -483,6 +604,11 @@ const customizationPrice = 10;
         }
         if (event.target.name === 'cakeFlavor' || paidCustomizationNames.includes(event.target.name)) {
           setCustomizationDetails();
+        }
+        if (event.target === fileInput) {
+          const fileError = validateFiles();
+          message.textContent = fileError;
+          message.classList.toggle('error', Boolean(fileError));
         }
         updateEstimate();
       });
@@ -524,6 +650,7 @@ const customizationPrice = 10;
 
           message.textContent = result.message || 'Your cake request is in. I will be in touch soon.';
           form.reset();
+          fileList.replaceChildren();
           setCustomizationAvailability();
           updateEstimate();
         } catch (error) {

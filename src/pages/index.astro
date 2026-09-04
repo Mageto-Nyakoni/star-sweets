@@ -3,17 +3,26 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
+import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
 
 let galleryItems = fallbackOrderOptions.gallery;
+let aboutPage = aboutPageFallback;
 
-const { isSanityConfigured, fetchCakeOrderOptions } = await import('../lib/sanity.js');
+const { isSanityConfigured, fetchAboutPage, fetchCakeOrderOptions } = await import('../lib/sanity.js');
 
 if (isSanityConfigured()) {
-  try {
-    const orderOptions = await fetchCakeOrderOptions();
+  const [orderResult, aboutResult] = await Promise.allSettled([
+    fetchCakeOrderOptions(),
+    fetchAboutPage(),
+  ]);
+
+  if (orderResult.status === 'fulfilled') {
+    const orderOptions = orderResult.value;
     galleryItems = orderOptions.gallery?.length ? orderOptions.gallery : fallbackOrderOptions.gallery;
-  } catch {
-    galleryItems = fallbackOrderOptions.gallery;
+  }
+
+  if (aboutResult.status === 'fulfilled') {
+    aboutPage = withAboutPageFallback(aboutResult.value);
   }
 }
 
@@ -82,15 +91,21 @@ const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` :
 
     <section class="home-about" aria-labelledby="about-preview-title">
       <div class="home-about-mark">
-        <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
+        {aboutPage.portraitUrl ? (
+          <img
+            class="about-portrait"
+            src={aboutPage.portraitUrl}
+            alt={aboutPage.portraitAlt || 'Star Sweets baker'}
+            loading="lazy"
+          />
+        ) : (
+          <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
+        )}
       </div>
       <div class="home-about-copy">
-        <p class="home-eyebrow">Meet the baker</p>
-        <h2 id="about-preview-title" class="placement-heading">[Add a short heading about yourself]</h2>
-        <p class="placement-copy">
-          [Add a two or three sentence introduction about who you are, your background,
-          and what you want customers to know about you.]
-        </p>
+        <p class="home-eyebrow">{aboutPage.homeEyebrow}</p>
+        <h2 id="about-preview-title" class="placement-heading">{aboutPage.homeHeading}</h2>
+        <p class="placement-copy">{aboutPage.homeIntroduction}</p>
         <a href="/about" class="home-text-link">More about me <span aria-hidden="true">&rarr;</span></a>
       </div>
     </section>
