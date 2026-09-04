@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
+import { cakeSizeHasNoCustomizations } from '../lib/orderRules';
 
 let orderOptions = fallbackOrderOptions;
 let orderSource = 'sample';
@@ -30,13 +31,12 @@ const priceLabel = (amount = 0, base = false) => {
 };
 
 const firstSizeId = orderOptions.sizes?.[0]?._id;
-const firstFrostingId = orderOptions.frostings?.[0]?._id;
-const firstTierId = orderOptions.tiers?.[0]?._id;
+const customizationPrice = 10;
 ---
 
 <Layout
   title="Custom Cake Orders - Star Sweets"
-  description="Build a custom Star Sweets cake request with live pricing and inspiration options."
+  description="Build a Star Sweets cake request with live pricing and streamlined customization options."
 >
   <Navbar />
 
@@ -46,14 +46,14 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         <p class="order-kicker">Custom cake request</p>
         <h1 id="order-title">Build your celebration cake</h1>
         <p>
-          Choose a size, flavor direction, filling, frosting, tiers, and finishing touches.
+          Choose a size, cake flavor, and any finishing touches.
           Your running estimate updates as you build.
         </p>
       </div>
       <a class="order-intro-link" href="#cake-builder">Start order</a>
     </section>
 
-    <form id="cake-builder" class="order-builder" enctype="multipart/form-data" novalidate>
+    <form id="cake-builder" class="order-builder" novalidate>
       <input
         class="order-honeypot"
         type="text"
@@ -114,6 +114,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
                     value={size._id}
                     data-label={size.name}
                     data-price={size.basePrice}
+                    data-customizations={cakeSizeHasNoCustomizations(size.name) ? 'none' : 'allowed'}
                     checked={size._id === firstSizeId}
                     required
                   />
@@ -127,212 +128,110 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
             </div>
           </fieldset>
 
-          <fieldset>
-            <legend>Tiers</legend>
-            <div class="option-grid compact">
-              {orderOptions.tiers.map((tier) => (
-                <label class="choice-card">
-                  <input
-                    type="radio"
-                    name="tierOption"
-                    value={tier._id}
-                    data-label={tier.label}
-                    data-price={tier.priceModifier}
-                    checked={tier._id === firstTierId}
-                  />
-                  <span>
-                    <strong>{tier.label}</strong>
-                    <small>{tier.tiers} tier{tier.tiers === 1 ? '' : 's'}</small>
-                  </span>
-                  <em>{priceLabel(tier.priceModifier)}</em>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <div
+            class="notice-box size-restriction-notice"
+            data-size-restriction-notice
+            role="status"
+            hidden
+          >
+            <strong>This cake is offered as-is.</strong>
+            <p>The 4 inch, 2 layer cake does not support additional customizations.</p>
+          </div>
         </section>
 
-        <section class="order-section" aria-labelledby="flavor-heading">
+        <section class="order-section" aria-labelledby="customization-heading" data-customization-section>
           <div class="section-copy">
             <p class="step-label">3</p>
             <div>
-              <h2 id="flavor-heading">Flavor direction</h2>
-              <p>Describe what you have in mind or let the baker choose for you.</p>
+              <h2 id="customization-heading">Customize your cake</h2>
+              <p>Basic flavors are included. Each additional customization is $10.</p>
             </div>
           </div>
 
-          <fieldset class="flavor-tabs">
-            <legend>Choose one flavor path</legend>
-            <label>
-              <input type="radio" name="flavorPath" value="custom" checked />
-              <span>Custom request</span>
-            </label>
-            <label>
-              <input type="radio" name="flavorPath" value="surprise" />
-              <span>Surprise me</span>
-            </label>
+          <fieldset>
+            <legend>Cake flavor</legend>
+            <div class="option-grid compact">
+              <label class="choice-card">
+                <input type="radio" name="cakeFlavor" value="vanilla" data-label="Vanilla" data-price="0" checked />
+                <span><strong>Vanilla</strong><small>Classic vanilla cake.</small></span>
+                <em>Included</em>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="cakeFlavor" value="chocolate" data-label="Chocolate" data-price="0" />
+                <span><strong>Chocolate</strong><small>Classic chocolate cake.</small></span>
+                <em>Included</em>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="cakeFlavor" value="red-velvet" data-label="Red Velvet" data-price="0" />
+                <span><strong>Red Velvet</strong><small>Classic red velvet cake.</small></span>
+                <em>Included</em>
+              </label>
+              <label class="choice-card">
+                <input
+                  type="radio"
+                  name="cakeFlavor"
+                  value="custom"
+                  data-label="Custom Cake Flavor"
+                  data-price={customizationPrice}
+                />
+                <span><strong>Custom Cake Flavor</strong><small>Request a flavor outside the three basics.</small></span>
+                <em>{priceLabel(customizationPrice)}</em>
+              </label>
+            </div>
           </fieldset>
 
-          <div class="flavor-panel" data-flavor-panel="custom">
+          <div class="customization-detail hidden" data-customization-detail="cakeFlavor">
             <label>
-              <span>Custom flavor request</span>
+              <span>Custom cake flavor</span>
               <textarea
                 name="customFlavorRequest"
                 rows="4"
-                placeholder="Tell me the flavor, inspiration, or dietary detail you have in mind."
+                placeholder="Describe the cake flavor you would like."
+                disabled
               ></textarea>
             </label>
-            <p class="field-note">Custom flavors are subject to baker approval and may affect the final price.</p>
-          </div>
-
-          <div class="flavor-panel hidden" data-flavor-panel="surprise">
-            <div class="notice-box">
-              <strong>Baker's choice selected.</strong>
-              <p>I will choose a flavor direction that fits your event notes and may email you before confirming.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="order-section" aria-labelledby="finish-heading">
-          <div class="section-copy">
-            <p class="step-label">4</p>
-            <div>
-              <h2 id="finish-heading">Filling, frosting, and add-ons</h2>
-              <p>Describe your filling or let the baker choose, then select frosting and extras.</p>
-            </div>
-          </div>
-
-          <fieldset class="flavor-tabs">
-            <legend>Choose one filling path</legend>
-            <label>
-              <input type="radio" name="fillingPath" value="custom" checked />
-              <span>Custom request</span>
-            </label>
-            <label>
-              <input type="radio" name="fillingPath" value="surprise" />
-              <span>Surprise me</span>
-            </label>
-          </fieldset>
-
-          <div class="flavor-panel" data-filling-panel="custom">
-            <label>
-              <span>Custom filling request</span>
-              <textarea
-                name="customFillingRequest"
-                rows="4"
-                placeholder="Tell me what filling you would like between the cake layers."
-              ></textarea>
-            </label>
-            <p class="field-note">Custom fillings are subject to baker approval and may affect the final price.</p>
-          </div>
-
-          <div class="flavor-panel hidden" data-filling-panel="surprise">
-            <div class="notice-box">
-              <strong>Baker's choice selected.</strong>
-              <p>I will choose a filling that works with your flavor direction and may email you before confirming.</p>
-            </div>
+            <p class="field-note">Custom flavor requests add $10 and are subject to baker approval.</p>
           </div>
 
           <fieldset>
-            <legend>Frosting</legend>
+            <legend>Additional customizations</legend>
             <div class="option-grid compact">
-              {orderOptions.frostings.map((frosting) => (
-                <label class="choice-card">
-                  <input
-                    type="radio"
-                    name="cakeFrosting"
-                    value={frosting._id}
-                    data-label={frosting.name}
-                    data-price={frosting.priceModifier}
-                    checked={frosting._id === firstFrostingId}
-                  />
-                  <span>
-                    <strong>{frosting.name}</strong>
-                    {frosting.description && <small>{frosting.description}</small>}
-                  </span>
-                  <em>{priceLabel(frosting.priceModifier)}</em>
-                </label>
-              ))}
+              <label class="choice-card">
+                <input type="checkbox" name="flowers" value="yes" data-label="Flowers" data-price={customizationPrice} />
+                <span><strong>Flowers</strong><small>Add floral decorations to the cake.</small></span>
+                <em>{priceLabel(customizationPrice)}</em>
+              </label>
+              <label class="choice-card">
+                <input type="checkbox" name="specializedDesign" value="yes" data-label="Specialized Designs" data-price={customizationPrice} />
+                <span><strong>Specialized Designs</strong><small>Request a specific theme or decorative treatment.</small></span>
+                <em>{priceLabel(customizationPrice)}</em>
+              </label>
+              <label class="choice-card">
+                <input type="checkbox" name="customFilling" value="yes" data-label="Custom Filling" data-price={customizationPrice} />
+                <span><strong>Custom Filling</strong><small>Choose a filling between the cake layers.</small></span>
+                <em>{priceLabel(customizationPrice)}</em>
+              </label>
+              <label class="choice-card">
+                <input type="checkbox" name="customButtercream" value="yes" data-label="Custom Buttercream" data-price={customizationPrice} />
+                <span><strong>Custom Buttercream</strong><small>Request a custom buttercream.</small></span>
+                <em>{priceLabel(customizationPrice)}</em>
+              </label>
             </div>
           </fieldset>
 
-          <fieldset>
-            <legend>Add-ons</legend>
-            <div class="option-grid compact">
-              {orderOptions.addOns.map((addOn) => (
-                <label class="choice-card">
-                  <input
-                    type="checkbox"
-                    name="addOns"
-                    value={addOn._id}
-                    data-label={addOn.name}
-                    data-price={addOn.priceModifier}
-                  />
-                  <span>
-                    <strong>{addOn.name}</strong>
-                    {addOn.description && <small>{addOn.description}</small>}
-                  </span>
-                  <em>{priceLabel(addOn.priceModifier)}</em>
-                </label>
-              ))}
+          {[
+            ['flowers', 'Flower details', 'Describe the flowers, colors, or placement you would like.'],
+            ['specializedDesign', 'Specialized design details', 'Describe the theme or design you would like.'],
+            ['customFilling', 'Custom filling', 'Describe the filling you would like between the cake layers.'],
+            ['customButtercream', 'Custom buttercream', 'Describe the custom buttercream you would like.'],
+          ].map(([name, label, placeholder]) => (
+            <div class="customization-detail hidden" data-customization-detail={name}>
+              <label>
+                <span>{label}</span>
+                <textarea name={`${name}Request`} rows="3" placeholder={placeholder} disabled></textarea>
+              </label>
             </div>
-          </fieldset>
-        </section>
-
-        <section class="order-section" aria-labelledby="inspo-heading">
-          <div class="section-copy">
-            <p class="step-label">5</p>
-            <div>
-              <h2 id="inspo-heading">Inspiration</h2>
-              <p>Mark past styles you like or attach your own reference photos.</p>
-            </div>
-          </div>
-
-          <fieldset>
-            <legend>Past cake gallery</legend>
-            <div class="gallery-grid">
-              {orderOptions.gallery.map((item, index) => (
-                <label class="gallery-choice">
-                  <input
-                    type="checkbox"
-                    name="inspirationSelections"
-                    value={item._id}
-                    data-label={item.caption}
-                  />
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.caption} loading="lazy" />
-                  ) : (
-                    <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
-                  )}
-                  <span>
-                    <strong>{item.caption}</strong>
-                    {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label class="upload-drop">
-            <span>Reference photos</span>
-            <input
-              id="reference-images"
-              type="file"
-              name="referenceImages"
-              accept="image/png,image/jpeg,image/webp"
-              multiple
-            />
-            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total.</small>
-          </label>
-          <ul id="file-list" class="file-list" aria-live="polite"></ul>
-
-          <label>
-            <span>Notes</span>
-            <textarea
-              name="notes"
-              rows="4"
-              placeholder="Colors, theme, allergies, pickup timing, or anything I should know."
-            ></textarea>
-          </label>
+          ))}
         </section>
       </div>
 
@@ -344,7 +243,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
           <h2 id="summary-heading">Estimate</h2>
           <output id="order-total" for="cake-builder">$0</output>
           <p class="summary-note">
-            Custom flavors, fillings, special sourcing, and complex design details may need a follow-up quote.
+            Each selected customization adds $10. Requests are confirmed after baker review.
           </p>
 
           <dl id="summary-lines" class="summary-lines"></dl>
@@ -381,35 +280,30 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       </aside>
     </form>
 
-    <script type="application/json" id="cake-order-data" set:html={JSON.stringify(orderOptions)} />
     <script is:inline>
       const form = document.getElementById('cake-builder');
       const totalOutput = document.getElementById('order-total');
       const summaryLines = document.getElementById('summary-lines');
       const message = document.getElementById('form-message');
-      const fileInput = document.getElementById('reference-images');
-      const fileList = document.getElementById('file-list');
-      const dataElement = document.getElementById('cake-order-data');
       const eventDateInput = form.elements.eventDate;
       const eventDateNote = form.querySelector('[data-min-event-date-note]');
-      const orderData = JSON.parse(dataElement.textContent || '{}');
+      const sizeRestrictionNotice = form.querySelector('[data-size-restriction-notice]');
+      const customizationSection = form.querySelector('[data-customization-section]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         maximumFractionDigits: 0,
       });
-      const maxFiles = 5;
-      const maxFileSize = 2 * 1024 * 1024;
-      const maxTotalFileSize = 4 * 1024 * 1024;
-      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
       const minEventLeadDays = 4;
+      const paidCustomizationNames = [
+        'flowers',
+        'specializedDesign',
+        'customFilling',
+        'customButtercream',
+      ];
 
       function checked(name) {
         return form.querySelector(`[name="${name}"]:checked`);
-      }
-
-      function checkedAll(name) {
-        return Array.from(form.querySelectorAll(`[name="${name}"]:checked`));
       }
 
       function priceOf(input) {
@@ -473,110 +367,80 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         eventDateNote.textContent = `Earliest available event date: ${formatDisplayDate(minDate)}.`;
       }
 
-      function setFlavorPath() {
-        const path = checked('flavorPath')?.value || 'custom';
-        form.querySelectorAll('[data-flavor-panel]').forEach((panel) => {
-          panel.classList.toggle('hidden', panel.dataset.flavorPanel !== path);
-        });
-
-        const customInput = form.elements.customFlavorRequest;
-        customInput.disabled = path !== 'custom';
-        if (path !== 'custom') {
-          customInput.value = '';
-        }
+      function customizationsAreRestricted() {
+        return checked('cakeSize')?.dataset.customizations === 'none';
       }
 
-      function setFillingPath() {
-        const path = checked('fillingPath')?.value || 'custom';
-        form.querySelectorAll('[data-filling-panel]').forEach((panel) => {
-          panel.classList.toggle('hidden', panel.dataset.fillingPanel !== path);
-        });
+      function setCustomizationDetails() {
+        const selectedFlavor = checked('cakeFlavor')?.value;
+        const selections = {
+          cakeFlavor: selectedFlavor === 'custom',
+          ...Object.fromEntries(paidCustomizationNames.map((name) => [name, Boolean(checked(name))])),
+        };
 
-        const customInput = form.elements.customFillingRequest;
-        customInput.disabled = path !== 'custom';
-        if (path !== 'custom') {
-          customInput.value = '';
-        }
+        form.querySelectorAll('[data-customization-detail]').forEach((panel) => {
+          const selected = Boolean(selections[panel.dataset.customizationDetail]);
+          panel.classList.toggle('hidden', !selected);
+          const input = panel.querySelector('textarea');
+          input.disabled = !selected;
+          if (!selected) input.value = '';
+        });
       }
 
-      function addSummaryLine(label, value, amount) {
+      function setCustomizationAvailability() {
+        const restricted = customizationsAreRestricted();
+        sizeRestrictionNotice.hidden = !restricted;
+        customizationSection.classList.toggle('hidden', restricted);
+        customizationSection.querySelectorAll('input, textarea').forEach((control) => {
+          control.disabled = restricted;
+          if (!restricted) return;
+
+          if (control instanceof HTMLInputElement && ['radio', 'checkbox'].includes(control.type)) {
+            control.checked = false;
+          } else {
+            control.value = '';
+          }
+        });
+
+        if (restricted) return;
+
+        if (!checked('cakeFlavor')) form.querySelector('[name="cakeFlavor"]').checked = true;
+        setCustomizationDetails();
+      }
+
+      function addSummaryLine(label, value, amount, amountLabel = '') {
         const dt = document.createElement('dt');
         const dd = document.createElement('dd');
         dt.textContent = label;
-        dd.innerHTML = `<span>${value || 'Not selected'}</span><strong>${amount ? formatter.format(amount) : 'Included'}</strong>`;
+        dd.innerHTML = `<span>${value || 'Not selected'}</span><strong>${amountLabel || (amount ? formatter.format(amount) : 'Included')}</strong>`;
         summaryLines.append(dt, dd);
       }
 
       function updateEstimate() {
         const size = checked('cakeSize');
-        const tier = checked('tierOption');
-        const frosting = checked('cakeFrosting');
-        const flavorPath = checked('flavorPath')?.value || 'custom';
-        const fillingPath = checked('fillingPath')?.value || 'custom';
-        const addOns = checkedAll('addOns');
-        const gallery = checkedAll('inspirationSelections');
+        const flavor = checked('cakeFlavor');
+        const paidCustomizations = paidCustomizationNames.map(checked).filter(Boolean);
+        const restricted = customizationsAreRestricted();
 
-        const total = [
-          priceOf(size),
-          priceOf(tier),
-          priceOf(frosting),
-          ...addOns.map(priceOf),
-        ].reduce((sum, value) => sum + value, 0);
+        const total = restricted
+          ? priceOf(size)
+          : [
+            priceOf(size),
+            priceOf(flavor),
+            ...paidCustomizations.map(priceOf),
+          ].reduce((sum, value) => sum + value, 0);
 
         totalOutput.value = formatter.format(total);
         summaryLines.replaceChildren();
         addSummaryLine('Size', labelOf(size), priceOf(size));
-        addSummaryLine('Tiers', labelOf(tier), priceOf(tier));
-        addSummaryLine(
-          'Flavor',
-          flavorPath === 'surprise' ? "Baker's choice" : 'Custom request',
-          0
-        );
-        addSummaryLine(
-          'Filling',
-          fillingPath === 'surprise' ? "Baker's choice" : 'Custom request',
-          0
-        );
-        addSummaryLine('Frosting', labelOf(frosting), priceOf(frosting));
-        addSummaryLine(
-          'Add-ons',
-          addOns.length ? addOns.map(labelOf).join(', ') : 'None selected',
-          addOns.reduce((sum, input) => sum + priceOf(input), 0)
-        );
-        addSummaryLine(
-          'Inspiration',
-          gallery.length ? gallery.map(labelOf).join(', ') : 'None selected',
-          0
-        );
-      }
-
-      function validateFiles() {
-        const files = Array.from(fileInput.files || []);
-        fileList.replaceChildren();
-        if (files.length > maxFiles) {
-          return `Please attach no more than ${maxFiles} images.`;
+        if (restricted) {
+          addSummaryLine('Customizations', 'Not available for this size', 0, 'As-is');
+          return;
         }
-
-        for (const file of files) {
-          if (!allowedTypes.includes(file.type)) {
-            return `${file.name} is not a PNG, JPG, or WebP image.`;
-          }
-          if (file.size > maxFileSize) {
-            return `${file.name} is larger than 2 MB.`;
-          }
-        }
-
-        const totalFileSize = files.reduce((total, file) => total + file.size, 0);
-        if (totalFileSize > maxTotalFileSize) {
-          return 'Reference images must be 4 MB or smaller in total.';
-        }
-
-        files.forEach((file) => {
-          const item = document.createElement('li');
-          item.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
-          fileList.append(item);
+        addSummaryLine('Cake flavor', labelOf(flavor), priceOf(flavor));
+        paidCustomizations.forEach((input) => {
+          addSummaryLine(labelOf(input), 'Selected', priceOf(input));
         });
-        return '';
       }
 
       function validateForm() {
@@ -585,8 +449,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
         const eventDate = form.elements.eventDate.value;
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.trim();
-        const flavorPath = checked('flavorPath')?.value;
-        const fillingPath = checked('fillingPath')?.value;
+        const cakeFlavor = checked('cakeFlavor')?.value;
 
         if (!name) errors.push('Name is required.');
         if (!eventDate) errors.push('Event date is required.');
@@ -600,31 +463,26 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
           }
         }
         if (!email && !phone) errors.push('Please enter an email or phone number.');
-        if (!flavorPath) errors.push('Choose a flavor path.');
-        if (flavorPath === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
-          errors.push('Add a custom flavor request.');
+        if (!customizationsAreRestricted()) {
+          if (!cakeFlavor) errors.push('Choose a cake flavor.');
+          if (cakeFlavor === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
+            errors.push('Describe your custom cake flavor.');
+          }
+          paidCustomizationNames.forEach((name) => {
+            if (checked(name) && !form.elements[`${name}Request`].value.trim()) {
+              errors.push(`Add details for ${labelOf(checked(name)).toLowerCase()}.`);
+            }
+          });
         }
-        if (!fillingPath) errors.push('Choose a filling path.');
-        if (fillingPath === 'custom' && !form.elements.customFillingRequest.value.trim()) {
-          errors.push('Add a custom filling request.');
-        }
-
-        const fileError = validateFiles();
-        if (fileError) errors.push(fileError);
         return errors;
       }
 
       form.addEventListener('change', (event) => {
-        if (event.target.name === 'flavorPath') {
-          setFlavorPath();
+        if (event.target.name === 'cakeSize') {
+          setCustomizationAvailability();
         }
-        if (event.target.name === 'fillingPath') {
-          setFillingPath();
-        }
-        if (event.target === fileInput) {
-          const fileError = validateFiles();
-          message.textContent = fileError;
-          message.classList.toggle('error', Boolean(fileError));
+        if (event.target.name === 'cakeFlavor' || paidCustomizationNames.includes(event.target.name)) {
+          setCustomizationDetails();
         }
         updateEstimate();
       });
@@ -666,9 +524,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
 
           message.textContent = result.message || 'Your cake request is in. I will be in touch soon.';
           form.reset();
-          fileList.replaceChildren();
-          setFlavorPath();
-          setFillingPath();
+          setCustomizationAvailability();
           updateEstimate();
         } catch (error) {
           message.classList.add('error');
@@ -682,8 +538,7 @@ const firstTierId = orderOptions.tiers?.[0]?._id;
       });
 
       syncMinimumEventDate();
-      setFlavorPath();
-      setFillingPath();
+      setCustomizationAvailability();
       updateEstimate();
     </script>
   </main>

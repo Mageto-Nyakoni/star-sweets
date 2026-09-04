@@ -303,7 +303,8 @@ textarea:focus {
   color: var(--ss-maroon);
 }
 
-.flavor-panel {
+.flavor-panel,
+.customization-detail {
   margin-bottom: 1.25rem;
 }
 
@@ -327,6 +328,10 @@ textarea:focus {
 
 .notice-box p {
   line-height: 1.5;
+}
+
+.size-restriction-notice {
+  margin-bottom: 0;
 }
 
 .gallery-grid {

@@ -36,12 +36,28 @@ export const cakeOrder = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'cakeFlavor',
+      title: 'Cake Flavor',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Vanilla', value: 'vanilla' },
+          { title: 'Chocolate', value: 'chocolate' },
+          { title: 'Red Velvet', value: 'red-velvet' },
+          { title: 'Custom Cake Flavor (+$10)', value: 'custom' },
+        ],
+      },
+    }),
+    defineField({
       name: 'customFlavorRequest',
       title: 'Custom Flavor Request',
       type: 'text',
       rows: 3,
-      description: 'Custom flavors may need baker approval and a follow-up quote.',
-      hidden: ({ document }) => document?.letBakerChooseFlavor,
+      description: 'A custom cake flavor adds $10.',
+      hidden: ({ document }) => (
+        document?.letBakerChooseFlavor
+        || (Boolean(document?.cakeFlavor) && document?.cakeFlavor !== 'custom')
+      ),
     }),
     defineField({
       name: 'letBakerChooseFlavor',
@@ -51,12 +67,44 @@ export const cakeOrder = defineType({
       hidden: ({ document }) => Boolean(document?.customFlavorRequest),
     }),
     defineField({
+      name: 'flowers',
+      title: 'Flowers (+$10)',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'flowersRequest',
+      title: 'Flower Details',
+      type: 'text',
+      rows: 3,
+      hidden: ({ document }) => !document?.flowers,
+    }),
+    defineField({
+      name: 'specializedDesign',
+      title: 'Specialized Designs (+$10)',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'specializedDesignRequest',
+      title: 'Specialized Design Details',
+      type: 'text',
+      rows: 3,
+      hidden: ({ document }) => !document?.specializedDesign,
+    }),
+    defineField({
+      name: 'customFilling',
+      title: 'Custom Filling (+$10)',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'customFillingRequest',
       title: 'Custom Filling Request',
       type: 'text',
       rows: 3,
-      description: 'Custom fillings may need baker approval and a follow-up quote.',
-      hidden: ({ document }) => document?.letBakerChooseFilling,
+      description: 'A custom filling adds $10.',
+      hidden: ({ document }) => document?.letBakerChooseFilling || document?.customFilling === false,
     }),
     defineField({
       name: 'letBakerChooseFilling',
@@ -64,6 +112,19 @@ export const cakeOrder = defineType({
       type: 'boolean',
       initialValue: false,
       hidden: ({ document }) => Boolean(document?.customFillingRequest),
+    }),
+    defineField({
+      name: 'customButtercream',
+      title: 'Custom Buttercream (+$10)',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'customButtercreamRequest',
+      title: 'Custom Buttercream Details',
+      type: 'text',
+      rows: 3,
+      hidden: ({ document }) => !document?.customButtercream,
     }),
     defineField({
       name: 'cakeFrosting',

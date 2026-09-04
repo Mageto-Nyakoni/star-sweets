@@ -1,27 +1,28 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@sanity/client';
+import { cakeSizeHasNoCustomizations } from '../../lib/orderRules';
 
 export const prerender = false;
 
-const MAX_IMAGES = 5;
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_EVENT_LEAD_DAYS = 4;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const CUSTOMIZATION_PRICE = 10;
+const CAKE_FLAVOR_LABELS = {
+  vanilla: 'Vanilla',
+  chocolate: 'Chocolate',
+  'red-velvet': 'Red Velvet',
+  custom: 'Custom Cake Flavor',
+} as const;
 const PRODUCTION_ORDER_ORIGINS = new Set([
   'https://starsweets.co',
   'https://www.starsweets.co',
 ]);
 
-type MenuOption = {
+type CakeSizeOption = {
   _id: string;
   name?: string;
-  label?: string;
-  caption?: string;
   basePrice?: number;
-  priceModifier?: number;
 };
 
 type BrevoMessage = {
@@ -60,16 +61,15 @@ function textValue(formData: FormData, name: string, maxLength = 2000) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
 
-function uniqueValues(formData: FormData, name: string) {
-  return [...new Set(formData.getAll(name).filter((value): value is string => typeof value === 'string' && value))];
+function checkboxValue(formData: FormData, name: string) {
+  const value = formData.get(name);
+  if (value === null) return false;
+  if (value !== 'yes') throw new FormError('One or more customization selections are invalid.');
+  return true;
 }
 
 function asReference(id: string) {
   return { _type: 'reference', _ref: id };
-}
-
-function sanityArrayKey() {
-  return crypto.randomUUID().replaceAll('-', '');
 }
 
 function dollars(amount = 0) {
@@ -227,7 +227,7 @@ function customerEmailTemplate({
     eyebrow: 'Request received',
     title: 'Your cake request is in!',
     intro: `Thanks, ${customerName}. Your request has been received, and I will follow up soon to confirm the details and final price.`,
-    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Starting estimate</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">Custom flavors, fillings, sourcing, and design details may affect the final quote. Nothing is confirmed until we follow up with you.</div>`,
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Starting estimate</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">The estimate includes each selected $10 customization. Nothing is confirmed until we follow up with you.</div>`,
   });
 }
 
@@ -248,47 +248,13 @@ async function sendBrevoEmail(apiKey: string, message: BrevoMessage) {
   }
 }
 
-async function getMenuSelections(client: ReturnType<typeof createClient>, values: {
-  sizeId: string;
-  tierId: string;
-  frostingId: string;
-  addOnIds: string[];
-  inspirationIds: string[];
-}) {
-  const [size, tier, frosting, addOns, inspiration] = await Promise.all([
-    client.fetch<MenuOption | null>(
-      `*[_type == "cakeSize" && _id == $id && isActive != false][0]{_id, name, basePrice}`,
-      { id: values.sizeId }
-    ),
-    values.tierId
-      ? client.fetch<MenuOption | null>(
-        `*[_type == "tierOption" && _id == $id && isActive != false][0]{_id, label, priceModifier}`,
-        { id: values.tierId }
-      )
-      : Promise.resolve(null),
-    values.frostingId
-      ? client.fetch<MenuOption | null>(
-        `*[_type == "cakeFrosting" && _id == $id && isActive != false][0]{_id, name, priceModifier}`,
-        { id: values.frostingId }
-      )
-      : Promise.resolve(null),
-    client.fetch<MenuOption[]>(
-      `*[_type == "addOn" && _id in $ids && isActive != false]{_id, name, priceModifier}`,
-      { ids: values.addOnIds }
-    ),
-    client.fetch<MenuOption[]>(
-      `*[_type == "inspirationGallery" && _id in $ids]{_id, caption}`,
-      { ids: values.inspirationIds }
-    ),
-  ]);
-
+async function getCakeSize(client: ReturnType<typeof createClient>, sizeId: string) {
+  const size = await client.fetch<CakeSizeOption | null>(
+    `*[_type == "cakeSize" && _id == $id && isActive != false][0]{_id, name, basePrice}`,
+    { id: sizeId }
+  );
   if (!size) throw new FormError('Choose a currently available cake size.');
-  if (values.tierId && !tier) throw new FormError('Choose a currently available tier option.');
-  if (values.frostingId && !frosting) throw new FormError('Choose a currently available frosting.');
-  if (addOns.length !== values.addOnIds.length) throw new FormError('One or more selected add-ons are no longer available.');
-  if (inspiration.length !== values.inspirationIds.length) throw new FormError('One or more inspiration selections are no longer available.');
-
-  return { size, tier, frosting, addOns, inspiration };
+  return size;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -316,16 +282,17 @@ export const POST: APIRoute = async ({ request }) => {
     const eventDate = textValue(formData, 'eventDate', 10);
     const email = textValue(formData, 'email', 254).toLowerCase();
     const phone = textValue(formData, 'phone', 80);
-    const flavorPath = textValue(formData, 'flavorPath', 20);
-    const fillingPath = textValue(formData, 'fillingPath', 20);
+    const cakeFlavor = textValue(formData, 'cakeFlavor', 20);
     const customFlavorRequest = textValue(formData, 'customFlavorRequest');
+    const flowers = checkboxValue(formData, 'flowers');
+    const flowersRequest = textValue(formData, 'flowersRequest');
+    const specializedDesign = checkboxValue(formData, 'specializedDesign');
+    const specializedDesignRequest = textValue(formData, 'specializedDesignRequest');
+    const customFilling = checkboxValue(formData, 'customFilling');
     const customFillingRequest = textValue(formData, 'customFillingRequest');
-    const notes = textValue(formData, 'notes', 4000);
+    const customButtercream = checkboxValue(formData, 'customButtercream');
+    const customButtercreamRequest = textValue(formData, 'customButtercreamRequest');
     const sizeId = textValue(formData, 'cakeSize', 100);
-    const tierId = textValue(formData, 'tierOption', 100);
-    const frostingId = textValue(formData, 'cakeFrosting', 100);
-    const addOnIds = uniqueValues(formData, 'addOns');
-    const inspirationIds = uniqueValues(formData, 'inspirationSelections');
 
     if (!customerName || !eventDate || !sizeId) throw new FormError('Please complete your name, event date, and cake size.');
     if (!email && !phone) throw new FormError('Please provide an email address or phone number.');
@@ -336,20 +303,6 @@ export const POST: APIRoute = async ({ request }) => {
     if (parsedEventDate < firstAvailableEventDate) {
       throw new FormError(`Please choose an event date at least 4 days away (${formatDateOnly(firstAvailableEventDate)} or later).`);
     }
-    if (flavorPath !== 'custom' && flavorPath !== 'surprise') throw new FormError('Please choose a flavor path.');
-    if (fillingPath !== 'custom' && fillingPath !== 'surprise') throw new FormError('Please choose a filling path.');
-    if (flavorPath === 'custom' && !customFlavorRequest) throw new FormError('Please describe your flavor request.');
-    if (fillingPath === 'custom' && !customFillingRequest) throw new FormError('Please describe your filling request.');
-
-    const imageFiles = formData.getAll('referenceImages').filter((value): value is File => value instanceof File && value.size > 0);
-    if (imageFiles.length > MAX_IMAGES) throw new FormError(`Please attach no more than ${MAX_IMAGES} images.`);
-    for (const file of imageFiles) {
-      if (!ALLOWED_IMAGE_TYPES.has(file.type)) throw new FormError(`${file.name} must be a PNG, JPG, or WebP image.`);
-      if (file.size > MAX_IMAGE_BYTES) throw new FormError(`${file.name} must be 2 MB or smaller.`);
-    }
-    const totalImageBytes = imageFiles.reduce((sum, file) => sum + file.size, 0);
-    if (totalImageBytes > MAX_TOTAL_IMAGE_BYTES) throw new FormError('Reference images must be 4 MB or smaller in total.');
-
     const client = createClient({
       projectId,
       dataset,
@@ -357,21 +310,46 @@ export const POST: APIRoute = async ({ request }) => {
       token: writeToken,
       useCdn: false,
     });
-    const selections = await getMenuSelections(client, { sizeId, tierId, frostingId, addOnIds, inspirationIds });
-    const calculatedTotal = Math.round((
-      Number(selections.size.basePrice || 0)
-      + Number(selections.tier?.priceModifier || 0)
-      + Number(selections.frosting?.priceModifier || 0)
-      + selections.addOns.reduce((sum, addOn) => sum + Number(addOn.priceModifier || 0), 0)
-    ) * 100) / 100;
+    const size = await getCakeSize(client, sizeId);
+    const customizationsRestricted = cakeSizeHasNoCustomizations(size.name);
 
-    const referenceImages = await Promise.all(imageFiles.map(async (file) => {
-      const asset = await client.assets.upload('image', Buffer.from(await file.arrayBuffer()), {
-        filename: file.name,
-        contentType: file.type,
-      });
-      return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
-    }));
+    if (customizationsRestricted) {
+      const hasCustomizations = Boolean(
+        cakeFlavor
+        || customFlavorRequest
+        || flowers
+        || flowersRequest
+        || specializedDesign
+        || specializedDesignRequest
+        || customFilling
+        || customFillingRequest
+        || customButtercream
+        || customButtercreamRequest
+      );
+      if (hasCustomizations) {
+        throw new FormError('The 4 inch, 2 layer cake does not support additional customizations.');
+      }
+    } else {
+      if (!Object.hasOwn(CAKE_FLAVOR_LABELS, cakeFlavor)) throw new FormError('Please choose a cake flavor.');
+      if (cakeFlavor === 'custom' && !customFlavorRequest) throw new FormError('Please describe your custom cake flavor.');
+      if (cakeFlavor !== 'custom' && customFlavorRequest) throw new FormError('Custom flavor details require the custom cake flavor option.');
+      if (flowers && !flowersRequest) throw new FormError('Please add details for flowers.');
+      if (!flowers && flowersRequest) throw new FormError('Flower details require the flowers option.');
+      if (specializedDesign && !specializedDesignRequest) throw new FormError('Please add specialized design details.');
+      if (!specializedDesign && specializedDesignRequest) throw new FormError('Design details require the specialized design option.');
+      if (customFilling && !customFillingRequest) throw new FormError('Please describe your custom filling.');
+      if (!customFilling && customFillingRequest) throw new FormError('Filling details require the custom filling option.');
+      if (customButtercream && !customButtercreamRequest) throw new FormError('Please describe your custom buttercream.');
+      if (!customButtercream && customButtercreamRequest) throw new FormError('Buttercream details require the custom buttercream option.');
+    }
+
+    const selectedCustomizationCount = customizationsRestricted
+      ? 0
+      : [cakeFlavor === 'custom', flowers, specializedDesign, customFilling, customButtercream]
+        .filter(Boolean).length;
+    const calculatedTotal = Math.round((
+      Number(size.basePrice || 0) + selectedCustomizationCount * CUSTOMIZATION_PRICE
+    ) * 100) / 100;
 
     const order = await client.create({
       _type: 'cakeOrder',
@@ -379,20 +357,17 @@ export const POST: APIRoute = async ({ request }) => {
       email: email || undefined,
       phone: phone || undefined,
       eventDate,
-      cakeSize: asReference(selections.size._id),
-      tierOption: selections.tier ? asReference(selections.tier._id) : undefined,
-      cakeFrosting: selections.frosting ? asReference(selections.frosting._id) : undefined,
-      addOns: selections.addOns.map((addOn) => ({
-        _key: sanityArrayKey(),
-        ...asReference(addOn._id),
-      })),
-      inspirationSelections: selections.inspiration.map((item) => asReference(item._id)),
-      customFlavorRequest: flavorPath === 'custom' ? customFlavorRequest : undefined,
-      letBakerChooseFlavor: flavorPath === 'surprise',
-      customFillingRequest: fillingPath === 'custom' ? customFillingRequest : undefined,
-      letBakerChooseFilling: fillingPath === 'surprise',
-      referenceImages,
-      notes: notes || undefined,
+      cakeSize: asReference(size._id),
+      cakeFlavor: customizationsRestricted ? undefined : cakeFlavor,
+      customFlavorRequest: cakeFlavor === 'custom' ? customFlavorRequest : undefined,
+      flowers,
+      flowersRequest: flowers ? flowersRequest : undefined,
+      specializedDesign,
+      specializedDesignRequest: specializedDesign ? specializedDesignRequest : undefined,
+      customFilling,
+      customFillingRequest: customFilling ? customFillingRequest : undefined,
+      customButtercream,
+      customButtercreamRequest: customButtercream ? customButtercreamRequest : undefined,
       calculatedTotal,
       status: 'new',
       createdAt: new Date().toISOString(),
@@ -404,15 +379,13 @@ export const POST: APIRoute = async ({ request }) => {
       ['Event date', eventDate],
       ['Email', email],
       ['Phone', phone],
-      ['Size', selections.size.name],
-      ['Tiers', selections.tier?.label],
-      ['Flavor', flavorPath === 'surprise' ? "Baker's choice" : customFlavorRequest],
-      ['Filling', fillingPath === 'surprise' ? "Baker's choice" : customFillingRequest],
-      ['Frosting', selections.frosting?.name],
-      ['Add-ons', selections.addOns.map((addOn) => addOn.name).filter(Boolean).join(', ') || 'None'],
-      ['Inspiration', selections.inspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
-      ['Reference images', imageFiles.map((file) => file.name).join(', ') || 'None'],
-      ['Notes', notes],
+      ['Size', size.name],
+      ['Cake flavor', customizationsRestricted ? 'Offered as-is' : CAKE_FLAVOR_LABELS[cakeFlavor as keyof typeof CAKE_FLAVOR_LABELS]],
+      ['Custom flavor', cakeFlavor === 'custom' ? customFlavorRequest : undefined],
+      ['Flowers', flowers ? flowersRequest : 'None'],
+      ['Specialized designs', specializedDesign ? specializedDesignRequest : 'None'],
+      ['Custom filling', customFilling ? customFillingRequest : 'None'],
+      ['Custom buttercream', customButtercream ? customButtercreamRequest : 'None'],
       ['Starting estimate', dollars(calculatedTotal)],
     ]);
     const studioUrl = import.meta.env.SANITY_STUDIO_URL?.replace(/\/$/, '');
