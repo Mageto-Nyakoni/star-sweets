@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
+import { bakeryMenu } from '../data/bakeryMenu';
 import { cakeSizeHasNoCustomizations } from '../lib/orderRules';
 
 let orderOptions = fallbackOrderOptions;
@@ -22,7 +23,8 @@ if (isSanityConfigured()) {
 const money = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const priceLabel = (amount = 0, base = false) => {
@@ -42,25 +44,24 @@ const galleryTags = Array.from(new Set(
 ---
 
 <Layout
-  title="Custom Cake Orders - Star Sweets"
-  description="Build a Star Sweets cake request with live pricing and streamlined customization options."
+  title="Order Cakes & Baked Goods - Star Sweets"
+  description="Order cakes, cupcakes, cookies, breads, and pastries from Star Sweets with a live estimate"
 >
   <Navbar />
 
   <main class="order-page">
     <section class="order-intro" aria-labelledby="order-title">
       <div>
-        <p class="order-kicker">Custom cake request</p>
-        <h1 id="order-title">Build your celebration cake</h1>
+        <p class="order-kicker">Made to order</p>
+        <h1 id="order-title">Order something sweet</h1>
         <p>
-          Choose a size, cake flavor, and any finishing touches.
-          Your running estimate updates as you build.
+          Pick what you'd like. You'll see the estimate change as you go
         </p>
       </div>
       <a class="order-intro-link" href="#cake-builder">Start order</a>
     </section>
 
-    <form id="cake-builder" class="order-builder" enctype="multipart/form-data" novalidate>
+    <form id="cake-builder" class="order-builder is-starting" enctype="multipart/form-data" novalidate>
       <input
         class="order-honeypot"
         type="text"
@@ -71,46 +72,37 @@ const galleryTags = Array.from(new Set(
       />
 
       <div class="order-form">
-        <section class="order-section" aria-labelledby="contact-heading">
-          <div class="section-copy">
-            <p class="step-label">1</p>
-            <div>
-              <h2 id="contact-heading">Contact and date</h2>
-              <p>Name, an event date at least 4 days away, and one way to reach you are required.</p>
+        <section class="order-section order-start" aria-labelledby="order-choice-heading">
+          <fieldset>
+            <legend id="order-choice-heading">What do you want to order?</legend>
+            <p class="field-note">Pick one or more</p>
+            <div class="order-type-grid">
+              <label class="choice-card order-type-card">
+                <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
+                <span><strong>Cakes</strong></span>
+              </label>
+              <label class="choice-card order-type-card">
+                <input type="checkbox" name="includeCupcakes" value="yes" aria-controls="cupcakes-options" />
+                <span><strong>Cupcakes</strong></span>
+              </label>
+              <label class="choice-card order-type-card">
+                <input type="checkbox" name="includeBakery" value="yes" aria-controls="bakery-options" />
+                <span><strong>Other baked goods</strong></span>
+              </label>
             </div>
-          </div>
-
-          <div class="field-grid">
-            <label>
-              <span>Name</span>
-              <input type="text" name="customerName" autocomplete="name" required />
-            </label>
-            <label>
-              <span>Event date</span>
-              <input type="date" name="eventDate" required />
-              <small class="field-note" data-min-event-date-note></small>
-            </label>
-            <label>
-              <span>Email</span>
-              <input type="email" name="email" autocomplete="email" />
-            </label>
-            <label>
-              <span>Phone</span>
-              <input type="tel" name="phone" autocomplete="tel" />
-            </label>
-          </div>
+          </fieldset>
         </section>
 
-        <section class="order-section" aria-labelledby="size-heading">
+        <section class="order-section order-reveal hidden" id="cake-options" aria-labelledby="size-heading" data-cake-section>
           <div class="section-copy">
-            <p class="step-label">2</p>
+            <p class="step-label">3</p>
             <div>
               <h2 id="size-heading">Cake foundation</h2>
-              <p>Base prices come from Sanity and stay editable in Studio.</p>
+              <p>Start with the size</p>
             </div>
           </div>
 
-          <fieldset>
+          <fieldset data-cake-sizes>
             <legend>Size</legend>
             <div class="option-grid">
               {orderOptions.sizes.map((size) => (
@@ -141,17 +133,17 @@ const galleryTags = Array.from(new Set(
             role="status"
             hidden
           >
-            <strong>This cake is offered as-is.</strong>
-            <p>The 4 inch, 2 layer cake does not support additional customizations.</p>
+            <strong>This cake is offered as-is</strong>
+            <p>I can't customize the 4 inch, 2 layer cake</p>
           </div>
         </section>
 
-        <section class="order-section" aria-labelledby="customization-heading" data-customization-section>
+        <section class="order-section order-reveal hidden" aria-labelledby="customization-heading" data-customization-section>
           <div class="section-copy">
-            <p class="step-label">3</p>
+            <p class="step-label">4</p>
             <div>
               <h2 id="customization-heading">Customize your cake</h2>
-              <p>Basic flavors are included. Each additional customization is $10.</p>
+              <p>Vanilla, chocolate, and red velvet are included. Each custom option adds $10</p>
             </div>
           </div>
 
@@ -160,17 +152,17 @@ const galleryTags = Array.from(new Set(
             <div class="option-grid compact">
               <label class="choice-card">
                 <input type="radio" name="cakeFlavor" value="vanilla" data-label="Vanilla" data-price="0" checked />
-                <span><strong>Vanilla</strong><small>Classic vanilla cake.</small></span>
+                <span><strong>Vanilla</strong><small>Classic vanilla cake</small></span>
                 <em>Included</em>
               </label>
               <label class="choice-card">
                 <input type="radio" name="cakeFlavor" value="chocolate" data-label="Chocolate" data-price="0" />
-                <span><strong>Chocolate</strong><small>Classic chocolate cake.</small></span>
+                <span><strong>Chocolate</strong><small>Classic chocolate cake</small></span>
                 <em>Included</em>
               </label>
               <label class="choice-card">
                 <input type="radio" name="cakeFlavor" value="red-velvet" data-label="Red Velvet" data-price="0" />
-                <span><strong>Red Velvet</strong><small>Classic red velvet cake.</small></span>
+                <span><strong>Red Velvet</strong><small>Classic red velvet cake</small></span>
                 <em>Included</em>
               </label>
               <label class="choice-card">
@@ -181,7 +173,7 @@ const galleryTags = Array.from(new Set(
                   data-label="Custom Cake Flavor"
                   data-price={customizationPrice}
                 />
-                <span><strong>Custom Cake Flavor</strong><small>Request a flavor outside the three basics.</small></span>
+                <span><strong>Custom Cake Flavor</strong><small>Request a flavor outside the three basics</small></span>
                 <em>{priceLabel(customizationPrice)}</em>
               </label>
             </div>
@@ -193,11 +185,11 @@ const galleryTags = Array.from(new Set(
               <textarea
                 name="customFlavorRequest"
                 rows="4"
-                placeholder="Describe the cake flavor you would like."
+                placeholder="Describe the cake flavor you would like"
                 disabled
               ></textarea>
             </label>
-            <p class="field-note">Custom flavor requests add $10 and are subject to baker approval.</p>
+            <p class="field-note">A custom flavor adds $10. I'll let you know if I can make it</p>
           </div>
 
           <fieldset>
@@ -205,32 +197,32 @@ const galleryTags = Array.from(new Set(
             <div class="option-grid compact">
               <label class="choice-card">
                 <input type="checkbox" name="flowers" value="yes" data-label="Flowers" data-price={customizationPrice} />
-                <span><strong>Flowers</strong><small>Add floral decorations to the cake.</small></span>
+                <span><strong>Flowers</strong><small>Add floral decorations to the cake</small></span>
                 <em>{priceLabel(customizationPrice)}</em>
               </label>
               <label class="choice-card">
                 <input type="checkbox" name="specializedDesign" value="yes" data-label="Specialized Designs" data-price={customizationPrice} />
-                <span><strong>Specialized Designs</strong><small>Request a specific theme or decorative treatment.</small></span>
+                <span><strong>Specialized Designs</strong><small>Request a specific theme or decorative treatment</small></span>
                 <em>{priceLabel(customizationPrice)}</em>
               </label>
               <label class="choice-card">
                 <input type="checkbox" name="customFilling" value="yes" data-label="Custom Filling" data-price={customizationPrice} />
-                <span><strong>Custom Filling</strong><small>Choose a filling between the cake layers.</small></span>
+                <span><strong>Custom Filling</strong><small>Choose a filling between the cake layers</small></span>
                 <em>{priceLabel(customizationPrice)}</em>
               </label>
               <label class="choice-card">
                 <input type="checkbox" name="customButtercream" value="yes" data-label="Custom Buttercream" data-price={customizationPrice} />
-                <span><strong>Custom Buttercream</strong><small>Request a custom buttercream.</small></span>
+                <span><strong>Custom Buttercream</strong><small>Request a custom buttercream</small></span>
                 <em>{priceLabel(customizationPrice)}</em>
               </label>
             </div>
           </fieldset>
 
           {[
-            ['flowers', 'Flower details', 'Describe the flowers, colors, or placement you would like.'],
-            ['specializedDesign', 'Specialized design details', 'Describe the theme or design you would like.'],
-            ['customFilling', 'Custom filling', 'Describe the filling you would like between the cake layers.'],
-            ['customButtercream', 'Custom buttercream', 'Describe the custom buttercream you would like.'],
+            ['flowers', 'Flower details', 'Describe the flowers, colors, or placement you would like'],
+            ['specializedDesign', 'Specialized design details', 'Describe the theme or design you would like'],
+            ['customFilling', 'Custom filling', 'Describe the filling you would like between the cake layers'],
+            ['customButtercream', 'Custom buttercream', 'Describe the custom buttercream you would like'],
           ].map(([name, label, placeholder]) => (
             <div class="customization-detail hidden" data-customization-detail={name}>
               <label>
@@ -241,12 +233,12 @@ const galleryTags = Array.from(new Set(
           ))}
         </section>
 
-        <section class="order-section" aria-labelledby="inspiration-heading" data-inspiration-section>
+        <section class="order-section order-reveal hidden" aria-labelledby="inspiration-heading" data-inspiration-section>
           <div class="section-copy">
-            <p class="step-label">4</p>
+            <p class="step-label">5</p>
             <div>
               <h2 id="inspiration-heading">Cake inspiration</h2>
-              <p>Choose past cake styles you like or upload your own reference photos.</p>
+              <p>See a cake you like? Pick up to three, or upload your own photos</p>
             </div>
           </div>
 
@@ -320,7 +312,7 @@ const galleryTags = Array.from(new Set(
               )}
 
               <p class="inspiration-picker-status" data-inspiration-status aria-live="polite">
-                Choose up to 3 cakes. Open any cake to see its details.
+                Choose up to 3 cakes. Open any cake to see its details
               </p>
 
               <div class="inspiration-selected-tray" data-inspiration-selected-tray hidden>
@@ -383,14 +375,14 @@ const galleryTags = Array.from(new Set(
                   )}
                   <div class="inspiration-dialog-section">
                     <h4>Cake details</h4>
-                    <p>{item.cakeDetails || 'More cake details coming soon.'}</p>
+                    <p>{item.cakeDetails || 'More cake details coming soon'}</p>
                   </div>
                   <div class="inspiration-dialog-section">
                     <h4>Add-ons</h4>
                     {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
                       <ul>{item.addOns.map((addOn) => <li>{addOn}</li>)}</ul>
                     ) : (
-                      <p>No add-ons listed for this cake.</p>
+                      <p>No add-ons listed for this cake</p>
                     )}
                   </div>
                   <button
@@ -401,7 +393,7 @@ const galleryTags = Array.from(new Set(
                     Use as inspiration
                   </button>
                   <p class="inspiration-dialog-limit" data-inspiration-dialog-limit hidden>
-                    You already have 3 cakes selected. Remove one from “Your inspiration” to choose this cake.
+                    You already have 3 cakes selected. Remove one from “Your inspiration” to choose this cake
                   </p>
                 </div>
               </div>
@@ -417,29 +409,117 @@ const galleryTags = Array.from(new Set(
               accept="image/png,image/jpeg,image/webp"
               multiple
             />
-            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total.</small>
+            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total</small>
           </label>
           <ul id="file-list" class="file-list" aria-live="polite"></ul>
         </section>
+        {[
+          { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens. If you have a look in mind, tell me" },
+          { key: 'bakery', title: 'Cookies, breads, and pastries', categories: ['Cookies', 'Breads', 'Pastries'], description: "Add what you'd like. The quantities are for the portions shown" },
+        ].map((group) => (
+          <section class="order-section order-reveal hidden" data-order-panel={group.key} id={`${group.key}-options`} aria-labelledby={`${group.key}-heading`}>
+            <div class="section-copy">
+              <p class="step-label"></p>
+              <div>
+                <h2 id={`${group.key}-heading`}>{group.title}</h2>
+                <p>{group.description}</p>
+              </div>
+            </div>
+            {group.categories.map((category) => (
+            <fieldset>
+              <legend>{category}</legend>
+              <div class="bakery-grid">
+                {bakeryMenu.filter((item) => item.category === category).map((item) => (
+                  <div class="bakery-card">
+                    <div>
+                      <strong>{item.name}</strong>
+                      <small>{item.portion}</small>
+                      <em>{item.price === null ? 'Price TBD' : money.format(item.price)}</em>
+                    </div>
+                    <label>
+                      <span>Quantity</span>
+                      <input type="number" disabled name={`quantity-${item.id}`} min="0" max="99" step="1" value="0"
+                        aria-label={`Quantity: ${item.name}, ${item.portion}`} data-bakery-quantity
+                        data-product-id={item.id} data-label={`${item.name} (${item.portion})`}
+                        data-price={item.price ?? ''} data-pricing-pending={item.price === null ? 'true' : 'false'} />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {category === 'Cupcakes' && (
+                <div class="cupcake-options hidden" data-cupcake-options>
+                  <fieldset>
+                    <legend>Cupcake flavor</legend>
+                    <div class="flavor-tabs">
+                      <label><input type="radio" name="cupcakeFlavor" value="vanilla" disabled /> Vanilla</label>
+                      <label><input type="radio" name="cupcakeFlavor" value="chocolate" disabled /> Chocolate</label>
+                    </div>
+                  </fieldset>
+                  <label>
+                    <span>Visual suggestions (optional)</span>
+                    <textarea name="cupcakeVisualSuggestions" rows="3" maxlength="2000" disabled
+                      placeholder="Share colors, a theme, or a look you like"></textarea>
+                  </label>
+                  <p class="field-note">Cupcakes come in vanilla or chocolate. You can suggest colors or a look, but I can't make other changes</p>
+                </div>
+              )}
+              {category === 'Cookies' && <p class="field-note">Baker's Choice isn't in the total yet. I'll confirm the price with you</p>}
+            </fieldset>
+            ))}
+          </section>
+        ))}
+
+        <section class="order-section order-reveal hidden" data-contact-section aria-labelledby="contact-heading">
+          <div class="section-copy">
+            <p class="step-label">1</p>
+            <div>
+              <h2 id="contact-heading">Contact and date</h2>
+              <p>I'll need your name, the date, and an email or phone number. Please order at least four days ahead</p>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              <span>Name</span>
+              <input type="text" name="customerName" autocomplete="name" required />
+            </label>
+            <label>
+              <span>Event date</span>
+              <input type="date" name="eventDate" required />
+              <small class="field-note" data-min-event-date-note></small>
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" />
+            </label>
+            <label>
+              <span>Phone</span>
+              <input type="tel" name="phone" autocomplete="tel" />
+            </label>
+          </div>
+        </section>
+
       </div>
 
-      <aside class="order-summary" aria-labelledby="summary-heading">
+      <aside class="order-summary order-reveal hidden" aria-labelledby="summary-heading">
         <div class="summary-inner">
           <p class="summary-source">
-            {orderSource === 'sanity' ? 'Live menu pricing' : 'Sample pricing until Sanity is connected'}
+            {orderSource === 'sanity' ? 'Live menu pricing' : 'Menu pricing · cake prices are samples'}
           </p>
           <h2 id="summary-heading">Estimate</h2>
           <output id="order-total" for="cake-builder">$0</output>
           <p class="summary-note">
-            Each selected customization adds $10. Requests are confirmed after baker review.
+            Cake customizations add $10 each. I'll confirm the order and final price after I review your request
           </p>
+
+          <p class="summary-note" data-pending-price-note hidden>Baker's Choice isn't included in this subtotal. I'll confirm its price with you</p>
 
           <dl id="summary-lines" class="summary-lines"></dl>
 
           <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
 
           <button class="submit-button" type="submit" data-submit-button>
-            Send cake request
+            Send order request
           </button>
         </div>
 
@@ -504,7 +584,8 @@ const galleryTags = Array.from(new Set(
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       });
       const minEventLeadDays = 4;
       const maxInspirationSelections = 3;
@@ -585,11 +666,11 @@ const galleryTags = Array.from(new Set(
       function syncMinimumEventDate() {
         const minDate = minimumEventDate();
         eventDateInput.min = formatDateOnly(minDate);
-        eventDateNote.textContent = `Earliest available event date: ${formatDisplayDate(minDate)}.`;
+        eventDateNote.textContent = `Earliest available event date: ${formatDisplayDate(minDate)}`;
       }
 
       function customizationsAreRestricted() {
-        return checked('cakeSize')?.dataset.customizations === 'none';
+        return !checked('includeCake') || checked('cakeSize')?.dataset.customizations === 'none';
       }
 
       function setCustomizationDetails() {
@@ -610,7 +691,13 @@ const galleryTags = Array.from(new Set(
 
       function setCustomizationAvailability() {
         const restricted = customizationsAreRestricted();
-        sizeRestrictionNotice.hidden = !restricted;
+        const includeCake = Boolean(checked('includeCake'));
+        form.querySelector('[data-cake-section]').classList.toggle('hidden', !includeCake);
+        const sizes = form.querySelector('[data-cake-sizes]');
+        sizes.classList.toggle('hidden', !includeCake);
+        sizes.querySelectorAll('input').forEach((input) => { input.disabled = !includeCake; });
+        form.querySelector('.pricing-explainer').classList.toggle('hidden', !includeCake);
+        sizeRestrictionNotice.hidden = !includeCake || !restricted;
         [customizationSection, inspirationSection].forEach((section) => {
           section.classList.toggle('hidden', restricted);
           section.querySelectorAll('input, textarea').forEach((control) => {
@@ -682,8 +769,8 @@ const galleryTags = Array.from(new Set(
         if (inspirationStatus) {
           inspirationStatus.textContent = statusMessage
             || (selectedInputs.length
-              ? `${selectedInputs.length} of ${maxInspirationSelections} cakes selected.`
-              : `Choose up to ${maxInspirationSelections} cakes. Open any cake to see its details.`);
+              ? `${selectedInputs.length} of ${maxInspirationSelections} cakes selected`
+              : `Choose up to ${maxInspirationSelections} cakes. Open any cake to see its details`);
           inspirationStatus.classList.toggle('is-limit', Boolean(statusMessage));
         }
       }
@@ -693,7 +780,7 @@ const galleryTags = Array.from(new Set(
         if (!(input instanceof HTMLInputElement) || input.disabled) return;
 
         if (!input.checked && checkedAll('inspirationSelections').length >= maxInspirationSelections) {
-          syncInspirationPicker(`You can choose up to ${maxInspirationSelections} inspiration cakes.`);
+          syncInspirationPicker(`You can choose up to ${maxInspirationSelections} inspiration cakes`);
           return;
         }
 
@@ -721,68 +808,118 @@ const galleryTags = Array.from(new Set(
         const dt = document.createElement('dt');
         const dd = document.createElement('dd');
         dt.textContent = label;
-        dd.innerHTML = `<span>${value || 'Not selected'}</span><strong>${amountLabel || (amount ? formatter.format(amount) : 'Included')}</strong>`;
+        const description = document.createElement('span');
+        const price = document.createElement('strong');
+        description.textContent = value || 'Not selected';
+        price.textContent = amountLabel || (amount ? formatter.format(amount) : 'Included');
+        dd.append(description, price);
         summaryLines.append(dt, dd);
       }
 
+      const bakeryQuantities = Array.from(form.querySelectorAll('[data-bakery-quantity]'));
+
+      function syncOrderSections() {
+        const includeCake = Boolean(checked('includeCake'));
+        const includeCupcakes = Boolean(checked('includeCupcakes'));
+        const includeBakery = Boolean(checked('includeBakery'));
+        const hasSelection = includeCake || includeCupcakes || includeBakery;
+        form.classList.toggle('is-starting', !hasSelection);
+        form.querySelector('.order-summary').classList.toggle('hidden', !hasSelection);
+        const contact = form.querySelector('[data-contact-section]');
+        contact.classList.toggle('hidden', !hasSelection);
+        contact.querySelectorAll('input').forEach((input) => { input.disabled = !hasSelection; });
+        form.querySelectorAll('[data-order-panel]').forEach((panel) => {
+          const enabled = panel.dataset.orderPanel === 'cupcakes' ? includeCupcakes : includeBakery;
+          panel.classList.toggle('hidden', !enabled);
+          panel.querySelectorAll('[data-bakery-quantity]').forEach((input) => {
+            input.disabled = !enabled;
+            if (!enabled) input.value = '0';
+          });
+        });
+        setCustomizationAvailability();
+        syncCupcakeOptions();
+        let step = 2;
+        form.querySelectorAll('.order-section:not(.hidden) .step-label').forEach((label) => {
+          label.textContent = String(step++);
+        });
+        updateEstimate();
+      }
+
+      function selectedBakeryItems() {
+        return bakeryQuantities.filter((input) => !input.disabled && Number(input.value) > 0);
+      }
+
+      function syncCupcakeOptions() {
+        const selected = Boolean(checked('includeCupcakes'));
+        const panel = form.querySelector('[data-cupcake-options]');
+        panel.classList.toggle('hidden', !selected);
+        panel.querySelectorAll('input, textarea').forEach((input) => {
+          input.disabled = !selected;
+          if (!selected) {
+            if (input.type === 'radio') input.checked = false;
+            else input.value = '';
+          }
+        });
+        if (selected && !checked('cupcakeFlavor')) panel.querySelector('input').checked = true;
+      }
+
       function updateEstimate() {
-        const size = checked('cakeSize');
+        const includeCake = Boolean(checked('includeCake'));
+        const size = includeCake ? checked('cakeSize') : null;
         const flavor = checked('cakeFlavor');
-        const paidCustomizations = paidCustomizationNames.map(checked).filter(Boolean);
-        const gallery = checkedAll('inspirationSelections');
-        const files = Array.from(fileInput.files || []);
         const restricted = customizationsAreRestricted();
+        const paidCustomizations = restricted ? [] : paidCustomizationNames.map(checked).filter(Boolean);
+        const bakeryItems = selectedBakeryItems();
+        const pricingPending = bakeryItems.some((input) => input.dataset.pricingPending === 'true');
+        const total = priceOf(size) + (restricted ? 0 : priceOf(flavor))
+          + paidCustomizations.reduce((sum, input) => sum + priceOf(input), 0)
+          + bakeryItems.reduce((sum, input) => sum + priceOf(input) * Number(input.value), 0);
 
-        const total = restricted
-          ? priceOf(size)
-          : [
-            priceOf(size),
-            priceOf(flavor),
-            ...paidCustomizations.map(priceOf),
-          ].reduce((sum, value) => sum + value, 0);
-
-        totalOutput.value = formatter.format(total);
+        totalOutput.value = pricingPending && total === 0 ? 'Price TBD' : formatter.format(total);
+        document.getElementById('summary-heading').textContent = pricingPending ? 'Priced subtotal' : 'Estimate';
+        form.querySelector('[data-pending-price-note]').hidden = !pricingPending;
         summaryLines.replaceChildren();
-        addSummaryLine('Size', labelOf(size), priceOf(size));
+        bakeryItems.forEach((input) => {
+          const cupcake = input.dataset.productId === 'cupcakes-dozen';
+          const flavorLabel = cupcake ? ` · ${checked('cupcakeFlavor')?.value || 'choose a flavor'}` : '';
+          addSummaryLine(`× ${input.value}`, labelOf(input) + flavorLabel,
+            priceOf(input) * Number(input.value), input.dataset.pricingPending === 'true' ? 'Price TBD' : '');
+        });
+        if (!includeCake) return;
+        addSummaryLine('Cake size', labelOf(size), priceOf(size));
         if (restricted) {
-          addSummaryLine('Customizations', 'Not available for this size', 0, 'As-is');
+          addSummaryLine('Cake customizations', 'Not available for this size', 0, 'As-is');
           return;
         }
         addSummaryLine('Cake flavor', labelOf(flavor), priceOf(flavor));
         paidCustomizations.forEach((input) => {
           addSummaryLine(labelOf(input), 'Selected', priceOf(input));
         });
-        addSummaryLine(
-          'Inspiration',
-          gallery.length ? gallery.map(labelOf).join(', ') : 'None selected',
-          0
-        );
-        addSummaryLine(
-          'Reference photos',
-          files.length ? `${files.length} selected` : 'None selected',
-          0
-        );
+        const gallery = checkedAll('inspirationSelections');
+        const files = Array.from(fileInput.files || []);
+        addSummaryLine('Cake inspiration', gallery.length ? gallery.map(labelOf).join(', ') : 'None selected', 0);
+        addSummaryLine('Cake reference photos', files.length ? `${files.length} selected` : 'None selected', 0);
       }
 
       function validateFiles() {
         const files = Array.from(fileInput.files || []);
         fileList.replaceChildren();
         if (files.length > maxFiles) {
-          return `Please attach no more than ${maxFiles} images.`;
+          return `Please attach no more than ${maxFiles} images`;
         }
 
         for (const file of files) {
           if (!allowedTypes.includes(file.type)) {
-            return `${file.name} is not a PNG, JPG, or WebP image.`;
+            return `${file.name} is not a PNG, JPG, or WebP image`;
           }
           if (file.size > maxFileSize) {
-            return `${file.name} is larger than 2 MB.`;
+            return `${file.name} is larger than 2 MB`;
           }
         }
 
         const totalFileSize = files.reduce((total, file) => total + file.size, 0);
         if (totalFileSize > maxTotalFileSize) {
-          return 'Reference images must be 4 MB or smaller in total.';
+          return 'Reference images must be 4 MB or smaller in total';
         }
 
         files.forEach((file) => {
@@ -801,33 +938,45 @@ const galleryTags = Array.from(new Set(
         const phone = form.elements.phone.value.trim();
         const cakeFlavor = checked('cakeFlavor')?.value;
 
-        if (!name) errors.push('Name is required.');
-        if (!eventDate) errors.push('Event date is required.');
+        if (!checked('includeCake') && !selectedBakeryItems().length) errors.push('Choose at least one item to order');
+        if (checked('includeCake') && !checked('cakeSize')) errors.push('Choose a cake size');
+        bakeryQuantities.forEach((input) => {
+          if (!input.disabled && (!input.value || !input.checkValidity())) errors.push(`Enter a whole-number quantity from 0 to 99 for ${labelOf(input)}`);
+        });
+        if (checked('includeCupcakes') && Number(form.elements['quantity-cupcakes-dozen'].value) < 1) {
+          errors.push('Choose at least one dozen cupcakes, or deselect Cupcakes');
+        }
+        if (checked('includeCupcakes') && !checked('cupcakeFlavor')) {
+          errors.push('Choose vanilla or chocolate for your cupcakes');
+        }
+        if (email && !form.elements.email.checkValidity()) errors.push('Please enter a valid email address');
+        if (!name) errors.push('Name is required');
+        if (!eventDate) errors.push('Event date is required');
         if (eventDate) {
           const parsedEventDate = dateValueToLocalDate(eventDate);
           const minDate = minimumEventDate();
           if (!parsedEventDate) {
-            errors.push('Choose a valid event date.');
+            errors.push('Choose a valid event date');
           } else if (parsedEventDate < minDate) {
-            errors.push(`Choose an event date at least 4 days away (${formatDisplayDate(minDate)} or later).`);
+            errors.push(`Choose an event date at least 4 days away (${formatDisplayDate(minDate)} or later)`);
           }
         }
-        if (!email && !phone) errors.push('Please enter an email or phone number.');
+        if (!email && !phone) errors.push('Please enter an email or phone number');
         if (!customizationsAreRestricted()) {
-          if (!cakeFlavor) errors.push('Choose a cake flavor.');
+          if (!cakeFlavor) errors.push('Choose a cake flavor');
           if (cakeFlavor === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
-            errors.push('Describe your custom cake flavor.');
+            errors.push('Describe your custom cake flavor');
           }
           paidCustomizationNames.forEach((name) => {
             if (checked(name) && !form.elements[`${name}Request`].value.trim()) {
-              errors.push(`Add details for ${labelOf(checked(name)).toLowerCase()}.`);
+              errors.push(`Add details for ${labelOf(checked(name)).toLowerCase()}`);
             }
           });
 
           const fileError = validateFiles();
           if (fileError) errors.push(fileError);
           if (checkedAll('inspirationSelections').length > maxInspirationSelections) {
-            errors.push(`Choose no more than ${maxInspirationSelections} inspiration cakes.`);
+            errors.push(`Choose no more than ${maxInspirationSelections} inspiration cakes`);
           }
         }
         return errors;
@@ -906,8 +1055,11 @@ const galleryTags = Array.from(new Set(
       });
 
       form.addEventListener('change', (event) => {
-        if (event.target.name === 'cakeSize') {
-          setCustomizationAvailability();
+        if (['cakeSize', 'includeCake', 'includeCupcakes', 'includeBakery'].includes(event.target.name)) {
+          if (event.target.name === 'includeCupcakes' && event.target.checked) {
+            form.elements['quantity-cupcakes-dozen'].value = '1';
+          }
+          syncOrderSections();
         }
         if (event.target.name === 'cakeFlavor' || paidCustomizationNames.includes(event.target.name)) {
           setCustomizationDetails();
@@ -921,6 +1073,8 @@ const galleryTags = Array.from(new Set(
       });
 
       form.addEventListener('input', () => {
+        syncCupcakeOptions();
+        updateEstimate();
         if (message.classList.contains('error')) return;
         message.textContent = '';
       });
@@ -932,16 +1086,16 @@ const galleryTags = Array.from(new Set(
         const errors = validateForm();
         message.classList.toggle('error', errors.length > 0);
         if (errors.length) {
-          message.textContent = errors.join(' ');
+          message.textContent = errors.join(' · ');
           return;
         }
 
         const submitButton = form.querySelector('[data-submit-button]');
         const originalLabel = submitButton.textContent;
         submitButton.disabled = true;
-        submitButton.textContent = 'Sending request...';
+        submitButton.textContent = 'Sending request';
         message.classList.remove('error');
-        message.textContent = 'Saving your cake request...';
+        message.textContent = 'Saving your order request';
 
         try {
           const response = await fetch('/api/orders', {
@@ -952,19 +1106,18 @@ const galleryTags = Array.from(new Set(
           const result = await response.json().catch(() => ({}));
 
           if (!response.ok) {
-            throw new Error(result.error || 'Unable to send your request. Please try again.');
+            throw new Error((result.error || 'Unable to send your request. Please try again').replace(/\.+$/, ''));
           }
 
-          message.textContent = result.message || 'Your cake request is in. I will be in touch soon.';
+          message.textContent = (result.message || 'Your order request is in. I will be in touch soon').replace(/\.+$/, '');
           form.reset();
           fileList.replaceChildren();
-          setCustomizationAvailability();
-          updateEstimate();
+          syncOrderSections();
         } catch (error) {
           message.classList.add('error');
           message.textContent = error instanceof Error
-            ? error.message
-            : 'Unable to send your request. Please try again.';
+            ? error.message.replace(/\.+$/, '')
+            : 'Unable to send your request. Please try again';
         } finally {
           submitButton.disabled = false;
           submitButton.textContent = originalLabel;
@@ -972,8 +1125,7 @@ const galleryTags = Array.from(new Set(
       });
 
       syncMinimumEventDate();
-      setCustomizationAvailability();
-      updateEstimate();
+      syncOrderSections();
     </script>
   </main>
 

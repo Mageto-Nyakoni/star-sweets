@@ -2,7 +2,7 @@ import { defineField, defineType } from 'sanity';
 
 export const cakeOrder = defineType({
   name: 'cakeOrder',
-  title: 'Cake Order',
+  title: 'Order',
   type: 'document',
   fields: [
     defineField({
@@ -33,7 +33,52 @@ export const cakeOrder = defineType({
       title: 'Cake Size',
       type: 'reference',
       to: [{ type: 'cakeSize' }],
-      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'bakeryItems',
+      title: 'Cupcakes and Baked Goods',
+      type: 'array',
+      readOnly: true,
+      of: [{
+        type: 'object',
+        name: 'bakeryOrderItem',
+        fields: [
+          defineField({ name: 'productId', title: 'Product ID', type: 'string' }),
+          defineField({ name: 'name', title: 'Item', type: 'string' }),
+          defineField({ name: 'portion', title: 'Portion', type: 'string' }),
+          defineField({ name: 'quantity', title: 'Quantity', type: 'number' }),
+          defineField({ name: 'unitPrice', title: 'Unit Price', type: 'number', description: 'Blank means price TBD.' }),
+          defineField({ name: 'lineTotal', title: 'Line Total', type: 'number', description: 'Blank means price TBD.' }),
+        ],
+        preview: {
+          select: { name: 'name', portion: 'portion', quantity: 'quantity', total: 'lineTotal' },
+          prepare: ({ name, portion, quantity, total }) => ({
+            title: `${quantity} × ${name}`,
+            subtitle: `${portion} · ${typeof total === 'number' ? `$${total.toFixed(2)}` : 'Price TBD'}`,
+          }),
+        },
+      }],
+    }),
+    defineField({
+      name: 'cupcakeFlavor',
+      title: 'Cupcake Flavor',
+      type: 'string',
+      options: { list: [{ title: 'Vanilla', value: 'vanilla' }, { title: 'Chocolate', value: 'chocolate' }] },
+      hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
+    }),
+    defineField({
+      name: 'cupcakeVisualSuggestions',
+      title: 'Cupcake Visual Suggestions',
+      type: 'text',
+      rows: 3,
+      hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
+    }),
+    defineField({
+      name: 'pricingPending',
+      title: 'Baker’s Choice Price Pending',
+      description: 'The calculated total is a subtotal and excludes items with TBD pricing.',
+      type: 'boolean',
+      readOnly: true,
     }),
     defineField({
       name: 'cakeFlavor',
@@ -224,14 +269,16 @@ export const cakeOrder = defineType({
       eventDate: 'eventDate',
       status: 'status',
       total: 'calculatedTotal',
+      pricingPending: 'pricingPending',
     },
-    prepare({ customerName, eventDate, status, total }) {
+    prepare({ customerName, eventDate, status, total, pricingPending }) {
       return {
-        title: customerName || 'New cake order',
+        title: customerName || 'New order',
         subtitle: [
           eventDate,
           status,
           typeof total === 'number' ? `$${total}` : null,
+          pricingPending ? 'Baker’s Choice price TBD' : null,
         ].filter(Boolean).join(' - '),
       };
     },

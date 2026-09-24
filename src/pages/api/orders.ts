@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@sanity/client';
+import { readBakeryOrder } from '../../data/bakeryMenu';
 import { cakeSizeHasNoCustomizations } from '../../lib/orderRules';
 
 export const prerender = false;
@@ -220,10 +221,10 @@ function adminEmailTemplate({
     : '';
 
   return emailShell({
-    preheader: `New cake request from ${customerName} for ${formattedDate}.`,
-    eyebrow: 'New cake request',
+    preheader: `New order request from ${customerName} for ${formattedDate}.`,
+    eyebrow: 'New order request',
     title: 'A new celebration is taking shape.',
-    intro: `${customerName} sent a cake request for ${formattedDate}. Review the details below and follow up to confirm availability and final pricing.`,
+    intro: `${customerName} sent an order request for ${formattedDate}. Review the details below and follow up to confirm availability and final pricing.`,
     content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fffaf7">${rows}</table>${studioButton}`,
   });
 }
@@ -232,20 +233,26 @@ function customerEmailTemplate({
   customerName,
   eventDate,
   calculatedTotal,
+  pricingPending,
+  rows,
 }: {
   customerName: string;
   eventDate: string;
   calculatedTotal: number;
+  pricingPending: boolean;
+  rows: string;
 }) {
   const formattedDate = displayEventDate(eventDate);
-  const estimate = dollars(calculatedTotal);
+  const estimate = pricingPending
+    ? calculatedTotal > 0 ? `${dollars(calculatedTotal)} + Baker’s Choice price TBD` : 'Price TBD'
+    : dollars(calculatedTotal);
 
   return emailShell({
-    preheader: `We received your Star Sweets cake request for ${formattedDate}.`,
+    preheader: `We received your Star Sweets order request for ${formattedDate}.`,
     eyebrow: 'Request received',
-    title: 'Your cake request is in!',
+    title: 'Your order request is in!',
     intro: `Thanks, ${customerName}. Your request has been received, and I will follow up soon to confirm the details and final price.`,
-    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Starting estimate</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">The estimate includes each selected $10 customization. Nothing is confirmed until we follow up with you.</div>`,
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">${pricingPending ? 'Priced subtotal' : 'Starting estimate'}</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">${pricingPending ? 'Baker’s Choice pricing is TBD and excluded from the subtotal. ' : ''}Nothing is confirmed until we follow up with you.</div><table role="presentation" width="100%" style="margin-top:18px;border-collapse:collapse">${rows}</table>`,
   });
 }
 
@@ -272,16 +279,16 @@ async function getOrderSelections(
   inspirationIds: string[]
 ) {
   const [size, inspiration] = await Promise.all([
-    client.fetch<CakeSizeOption | null>(
+    sizeId ? client.fetch<CakeSizeOption | null>(
       `*[_type == "cakeSize" && _id == $id && isActive != false][0]{_id, name, basePrice}`,
       { id: sizeId }
-    ),
+    ) : Promise.resolve(null),
     client.fetch<InspirationOption[]>(
       `*[_type == "inspirationGallery" && _id in $ids && isActive != false]{_id, caption}`,
       { ids: inspirationIds }
     ),
   ]);
-  if (!size) throw new FormError('Choose a currently available cake size.');
+  if (sizeId && !size) throw new FormError('Choose a currently available cake size.');
   if (inspiration.length !== inspirationIds.length) {
     throw new FormError('One or more inspiration selections are no longer available.');
   }
@@ -302,7 +309,7 @@ export const POST: APIRoute = async ({ request }) => {
   const notificationEmail = import.meta.env.ORDER_NOTIFICATION_EMAIL;
 
   if (!projectId || !writeToken || !brevoApiKey || !fromEmail || !notificationEmail) {
-    return json({ error: 'Cake ordering is not configured yet. Please contact Star Sweets directly.' }, 503);
+    return json({ error: 'Ordering is not configured yet. Please contact Star Sweets directly.' }, 503);
   }
 
   try {
@@ -326,7 +333,14 @@ export const POST: APIRoute = async ({ request }) => {
     const sizeId = textValue(formData, 'cakeSize', 100);
     const inspirationIds = uniqueValues(formData, 'inspirationSelections');
 
-    if (!customerName || !eventDate || !sizeId) throw new FormError('Please complete your name, event date, and cake size.');
+    let bakeryOrder: ReturnType<typeof readBakeryOrder>;
+    try {
+      bakeryOrder = readBakeryOrder(formData);
+    } catch (error) {
+      throw new FormError(error instanceof Error ? error.message : 'Invalid bakery selections.');
+    }
+    if (!customerName || !eventDate) throw new FormError('Please complete your name and event date.');
+    if (!sizeId && !bakeryOrder.items.length) throw new FormError('Choose at least one item to order.');
     if (inspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
       throw new FormError(`Please choose no more than ${MAX_INSPIRATION_SELECTIONS} inspiration cakes.`);
     }
@@ -356,7 +370,7 @@ export const POST: APIRoute = async ({ request }) => {
       useCdn: false,
     });
     const { size, inspiration } = await getOrderSelections(client, sizeId, inspirationIds);
-    const customizationsRestricted = cakeSizeHasNoCustomizations(size.name);
+    const customizationsRestricted = !size || cakeSizeHasNoCustomizations(size.name);
 
     if (customizationsRestricted) {
       const hasCustomizations = Boolean(
@@ -374,7 +388,9 @@ export const POST: APIRoute = async ({ request }) => {
         || imageFiles.length
       );
       if (hasCustomizations) {
-        throw new FormError('The 4 inch, 2 layer cake does not support additional customizations.');
+        throw new FormError(size
+          ? 'The 4 inch, 2 layer cake does not support additional customizations.'
+          : 'Cake customizations require a cake order.');
       }
     } else {
       if (!Object.hasOwn(CAKE_FLAVOR_LABELS, cakeFlavor)) throw new FormError('Please choose a cake flavor.');
@@ -395,7 +411,7 @@ export const POST: APIRoute = async ({ request }) => {
       : [cakeFlavor === 'custom', flowers, specializedDesign, customFilling, customButtercream]
         .filter(Boolean).length;
     const calculatedTotal = Math.round((
-      Number(size.basePrice || 0) + selectedCustomizationCount * CUSTOMIZATION_PRICE
+      Number(size?.basePrice || 0) + selectedCustomizationCount * CUSTOMIZATION_PRICE + bakeryOrder.subtotal
     ) * 100) / 100;
 
     const referenceImages = await Promise.all(imageFiles.map(async (file) => {
@@ -412,7 +428,11 @@ export const POST: APIRoute = async ({ request }) => {
       email: email || undefined,
       phone: phone || undefined,
       eventDate,
-      cakeSize: asReference(size._id),
+      cakeSize: size ? asReference(size._id) : undefined,
+      bakeryItems: bakeryOrder.items.map((item) => ({ _type: 'bakeryOrderItem', _key: sanityArrayKey(), ...item })),
+      cupcakeFlavor: bakeryOrder.cupcakeFlavor,
+      cupcakeVisualSuggestions: bakeryOrder.cupcakeVisualSuggestions,
+      pricingPending: bakeryOrder.pricingPending,
       cakeFlavor: customizationsRestricted ? undefined : cakeFlavor,
       customFlavorRequest: cakeFlavor === 'custom' ? customFlavorRequest : undefined,
       flowers,
@@ -439,16 +459,27 @@ export const POST: APIRoute = async ({ request }) => {
       ['Event date', eventDate],
       ['Email', email],
       ['Phone', phone],
-      ['Size', size.name],
-      ['Cake flavor', customizationsRestricted ? 'Offered as-is' : CAKE_FLAVOR_LABELS[cakeFlavor as keyof typeof CAKE_FLAVOR_LABELS]],
-      ['Custom flavor', cakeFlavor === 'custom' ? customFlavorRequest : undefined],
-      ['Flowers', flowers ? flowersRequest : 'None'],
-      ['Specialized designs', specializedDesign ? specializedDesignRequest : 'None'],
-      ['Custom filling', customFilling ? customFillingRequest : 'None'],
-      ['Custom buttercream', customButtercream ? customButtercreamRequest : 'None'],
-      ['Inspiration', inspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
-      ['Reference photos', imageFiles.map((file) => file.name).join(', ') || 'None'],
-      ['Starting estimate', dollars(calculatedTotal)],
+      ...bakeryOrder.items.map((item): [string, string] => [
+        `${item.quantity} × ${item.name} (${item.portion})`,
+        item.lineTotal === null ? 'Price TBD' : `${dollars(item.unitPrice!)} each · ${dollars(item.lineTotal)}`,
+      ]),
+      ['Cupcake flavor', bakeryOrder.cupcakeFlavor],
+      ['Cupcake visual suggestions', bakeryOrder.cupcakeVisualSuggestions],
+      ...(size ? [
+        ['Size', size.name],
+        ['Cake flavor', customizationsRestricted ? 'Offered as-is' : CAKE_FLAVOR_LABELS[cakeFlavor as keyof typeof CAKE_FLAVOR_LABELS]],
+        ['Custom flavor', cakeFlavor === 'custom' ? customFlavorRequest : undefined],
+        ['Flowers', flowers ? flowersRequest : 'None'],
+        ['Specialized designs', specializedDesign ? specializedDesignRequest : 'None'],
+        ['Custom filling', customFilling ? customFillingRequest : 'None'],
+        ['Custom buttercream', customButtercream ? customButtercreamRequest : 'None'],
+        ['Inspiration', inspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
+        ['Reference photos', imageFiles.map((file) => file.name).join(', ') || 'None'],
+      ] as Array<[string, string | undefined]> : []),
+      [bakeryOrder.pricingPending ? 'Priced subtotal' : 'Starting estimate',
+        bakeryOrder.pricingPending
+          ? `${dollars(calculatedTotal)} · Baker’s Choice price TBD, excluded from subtotal`
+          : dollars(calculatedTotal)],
     ]);
     const studioUrl = import.meta.env.SANITY_STUDIO_URL?.replace(/\/$/, '');
     const orderLink = studioUrl ? `${studioUrl}/structure/cakeOrder;${order._id}` : '';
@@ -458,7 +489,7 @@ export const POST: APIRoute = async ({ request }) => {
         sender: { name: 'Star Sweets', email: fromEmail },
         to: notificationEmail.split(',').map((address) => address.trim()).filter(Boolean).map((address) => ({ email: address })),
         replyTo: email ? { email } : undefined,
-        subject: `New Cake request From ${customerName} for ${eventDate}`,
+        subject: `New order request from ${customerName} for ${eventDate}`,
         htmlContent: adminEmailTemplate({ customerName, eventDate, rows, orderLink }),
       });
 
@@ -467,8 +498,8 @@ export const POST: APIRoute = async ({ request }) => {
           await sendBrevoEmail(brevoApiKey, {
             sender: { name: 'Star Sweets', email: fromEmail },
             to: [{ email, name: customerName }],
-            subject: 'Star Sweets received your cake request',
-            htmlContent: customerEmailTemplate({ customerName, eventDate, calculatedTotal }),
+            subject: 'Star Sweets received your order request',
+            htmlContent: customerEmailTemplate({ customerName, eventDate, calculatedTotal, pricingPending: bakeryOrder.pricingPending, rows }),
           });
         } catch (error) {
           console.error('Customer confirmation email failed:', error instanceof Error ? error.message : error);
@@ -482,10 +513,10 @@ export const POST: APIRoute = async ({ request }) => {
       await client.patch(order._id).set({ notificationStatus: 'failed', notificationError }).commit();
     }
 
-    return json({ message: 'Your cake request is in. Star Sweets will be in touch soon.' }, 201);
+    return json({ message: 'Your order request is in. Star Sweets will be in touch soon.' }, 201);
   } catch (error) {
     if (error instanceof FormError) return json({ error: error.message }, 400);
-    console.error('Cake order submission failed:', error);
+    console.error('Order submission failed:', error);
     return json({ error: 'Unable to send your request right now. Please try again shortly.' }, 500);
   }
 };

@@ -88,6 +88,55 @@
   min-width: 0;
 }
 
+.order-builder.is-starting .order-form {
+  grid-column: 1 / -1;
+}
+
+.order-start legend {
+  margin-bottom: 0.5rem;
+  color: var(--ss-cherry);
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.order-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.order-type-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.order-type-card input { margin-top: 0.15rem; }
+
+.order-type-card strong {
+  font-size: clamp(0.875rem, 1.2vw, 1rem);
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.order-reveal:not(.hidden) {
+  animation: surface-order 280ms ease-out both;
+}
+
+@keyframes surface-order {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-reveal:not(.hidden) { animation: none; }
+  .order-type-card { transition: none; }
+}
+
 .order-section,
 .summary-inner,
 .pricing-explainer {
@@ -172,6 +221,7 @@ input[type='text'],
 input[type='email'],
 input[type='tel'],
 input[type='date'],
+input[type='number'],
 textarea {
   width: 100%;
   border: 1px solid rgba(140, 26, 26, 0.16);
@@ -205,6 +255,34 @@ textarea:focus {
 .option-grid.compact {
   grid-template-columns: 1fr;
 }
+
+.bakery-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bakery-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid rgba(140, 26, 26, 0.14);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.bakery-card strong,
+.bakery-card small,
+.bakery-card em {
+  display: block;
+}
+
+.bakery-card strong { color: var(--ss-cherry); }
+.bakery-card small { color: var(--ss-mist); }
+.bakery-card em { margin-top: 0.35rem; color: #55706a; font-style: normal; font-weight: 800; }
+.bakery-card label > span { font-size: 0.7rem; }
+.cupcake-options { margin-top: 1rem; }
 
 .choice-card {
   position: relative;
@@ -917,6 +995,10 @@ body.inspiration-dialog-open {
 }
 
 @media (max-width: 920px) {
+  .order-type-card strong {
+    font-size: 1rem;
+  }
+
   .order-intro,
   .order-builder {
     grid-template-columns: 1fr;
@@ -929,7 +1011,6 @@ body.inspiration-dialog-open {
 
   .order-summary {
     position: static;
-    order: -1;
   }
 
   .inspiration-item {
@@ -958,6 +1039,7 @@ body.inspiration-dialog-open {
   }
 
   .field-grid,
+  .order-type-grid,
   .option-grid,
   .flavor-tabs {
     grid-template-columns: 1fr;
