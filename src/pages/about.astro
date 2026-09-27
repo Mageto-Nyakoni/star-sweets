@@ -27,7 +27,7 @@ if (isSanityConfigured()) {
     <header class="about-hero">
       <p class="home-eyebrow">{aboutPage.heroEyebrow}</p>
       <h1>{aboutPage.heroTitle}</h1>
-      <p class="placement-copy">{aboutPage.heroIntroduction}</p>
+      <p class="placement-text">{aboutPage.heroIntroduction}</p>
     </header>
 
     <section class="about-story" aria-labelledby="meet-baker">
@@ -46,7 +46,7 @@ if (isSanityConfigured()) {
         <p class="home-eyebrow">{aboutPage.storyEyebrow}</p>
         <h2 id="meet-baker" class="placement-heading">{aboutPage.storyHeading}</h2>
         {aboutPage.biography.map((paragraph) => (
-          <p class="placement-copy">{paragraph}</p>
+          <p class="placement-text">{paragraph}</p>
         ))}
       </div>
     </section>
@@ -61,7 +61,7 @@ if (isSanityConfigured()) {
           <article>
             <span>{String(index + 1).padStart(2, '0')}</span>
             <h3 class="placement-heading">{value.title}</h3>
-            <p class="placement-copy">{value.description}</p>
+            <p class="placement-text">{value.description}</p>
           </article>
         ))}
       </div>
