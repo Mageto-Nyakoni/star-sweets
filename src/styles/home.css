@@ -202,7 +202,7 @@
 .work-carousel {
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-inline: 18%;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -599,6 +599,11 @@ body.work-dialog-open {
 .about-values-grid article {
   padding-top: 1rem;
   border-top: 2px solid var(--ss-pink-dk);
+}
+
+.about-values-grid article:only-child {
+  grid-column: 1 / -1;
+  max-width: 36rem;
 }
 
 .about-values-grid span {

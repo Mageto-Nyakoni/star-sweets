@@ -194,8 +194,6 @@ export const aboutPage = defineType({
     valuesHeading: '[Add a heading for what matters to you]',
     values: [
       { _key: 'value-one', title: 'There are no boundaries for imagination', description: 'Thinking outside the box is where uniqueness and creativity live. My goal for each cake is to stand apart and shine in their own way.' },
-      { _key: 'value-two', title: '[Second value]', description: '[Explain another part of your approach or service.]' },
-      { _key: 'value-three', title: '[Third value]', description: '[Explain what customers can expect from you.]' },
     ],
     ctaEyebrow: "Let's make something memorable",
     ctaHeading: 'Ready to plan your cake?',

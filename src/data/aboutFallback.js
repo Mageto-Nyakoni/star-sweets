@@ -17,8 +17,6 @@ export const aboutPageFallback = {
   valuesHeading: '[Add a heading for what matters to you]',
   values: [
     { _key: 'value-one', title: 'There are no boundaries for imagination', description: 'Thinking outside the box is where uniqueness and creativity live. My goal for each cake is to stand apart and shine in their own way.' },
-    { _key: 'value-two', title: '[Second value]', description: '[Explain another part of your approach or service.]' },
-    { _key: 'value-three', title: '[Third value]', description: '[Explain what customers can expect from you.]' },
   ],
   ctaEyebrow: "Let's make something memorable",
   ctaHeading: 'Ready to plan your cake?',
@@ -30,14 +28,24 @@ export const aboutPageFallback = {
 export function withAboutPageFallback(content) {
   if (!content) return aboutPageFallback;
 
+  const publishedValues = Array.isArray(content.values)
+    ? content.values.filter((value) =>
+      typeof value?.title === 'string'
+      && typeof value?.description === 'string'
+      && value.title.trim() !== ''
+      && value.description.trim() !== ''
+      && !value.title.trim().startsWith('[')
+      && !value.description.trim().startsWith('['))
+    : [];
+
   return {
     ...aboutPageFallback,
     ...content,
     biography: Array.isArray(content.biography) && content.biography.length
       ? content.biography.filter(Boolean)
       : aboutPageFallback.biography,
-    values: Array.isArray(content.values) && content.values.length
-      ? content.values
+    values: publishedValues.length
+      ? publishedValues
       : aboutPageFallback.values,
   };
 }
