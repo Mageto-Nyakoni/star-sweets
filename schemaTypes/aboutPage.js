@@ -183,7 +183,7 @@ export const aboutPage = defineType({
     homeIntroduction: 'Emily is a 23 year old self-taught baker, food enthusiast, and dental student. She enjoys sharing her love of food, especially sweet treats, with friends, family, and everyone in between. She hopes to bring smiles to others from her kitchen and dental practice!',
     heroEyebrow: 'The story behind the sweets',
     heroTitle: 'About Star Sweets',
-    heroIntroduction: 'Pushing the boundaries of creativity with custom flavors and designs. From birthdays to graduations, these cakes are sure to make you feel like a star on your special day.',
+    heroIntroduction: '',
     storyEyebrow: 'Your introduction',
     storyHeading: 'Emily',
     biography: [
