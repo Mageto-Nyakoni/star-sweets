@@ -2,7 +2,7 @@ export const aboutPageFallback = {
   homeEyebrow: 'Meet the baker',
   homeHeading: '[Add a short heading about yourself]',
   homeIntroduction: 'Emily is a 23 year old self-taught baker, food enthusiast, and dental student. She enjoys sharing her love of food, especially sweet treats, with friends, family, and everyone in between. She hopes to bring smiles to others from her kitchen and dental practice!',
-  portraitUrl: '/Users/mageto/Star-Sweets/StarSweetsLogo.png',
+  portraitUrl: '/BakerHeadshot.png',
   portraitAlt: 'Star Sweets baker',
   heroEyebrow: 'The story behind the sweets',
   heroTitle: 'About Star Sweets',
