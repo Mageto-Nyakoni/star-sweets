@@ -31,7 +31,7 @@
 }
 
 .placement-copy {
-  color: #ffff !important;
+  color: var(--ss-blush) !important;
   font-style: italic;
 }
 
