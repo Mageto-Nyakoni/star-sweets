@@ -6,7 +6,7 @@ export const aboutPageFallback = {
   portraitAlt: 'Star Sweets baker',
   heroEyebrow: 'The story behind the sweets',
   heroTitle: 'About Star Sweets',
-  heroIntroduction: 'Pushing the boundaries of creativity with custom flavors and designs. From birthdays to graduations, these cakes are sure to make you feel like a star on your special day',
+  heroIntroduction: '',
   storyEyebrow: 'Meet The Baker',
   storyHeading: 'Emily',
   biography: [
