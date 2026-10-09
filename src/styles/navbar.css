@@ -6,6 +6,12 @@
   border-bottom: 1px solid var(--ss-blush);
 }
 
+.desktop-nav { display: none; }
+
+@media (min-width: 768px) {
+  .desktop-nav { display: flex; }
+}
+
 .navbar-home {
   background: transparent;
   border-bottom: 0;

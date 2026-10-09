@@ -5,6 +5,7 @@
 @import './sections.css';
 @import './founder.css';
 @import './home.css';
+@import './gallery.css';
 @import './order.css';
 
 @tailwind base;

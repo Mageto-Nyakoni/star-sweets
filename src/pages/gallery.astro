@@ -1,0 +1,90 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { fetchInstagramPosts, isInstagramConfigured } from '../lib/instagram.js';
+
+const instagramUrl = 'https://www.instagram.com/star.sweets25/';
+const isPreview = import.meta.env.DEV && Astro.url.searchParams.get('preview') === '1';
+const showSamplePosts = isPreview || !isInstagramConfigured();
+const CardContent = showSamplePosts ? 'div' : 'a';
+let posts = [];
+
+if (showSamplePosts) {
+  const { instagramPreviewPosts } = await import('../data/instagramPreview.js');
+  posts = instagramPreviewPosts;
+  Astro.response.headers.set('Cache-Control', 'no-store');
+  Astro.response.headers.set('X-Robots-Tag', 'noindex');
+} else {
+  try {
+    posts = await fetchInstagramPosts();
+  } catch (error) {
+    console.error('Could not load Instagram gallery:', error);
+  }
+}
+---
+
+<Layout
+  title="Gallery | Star Sweets"
+  description="Browse cakes and baked goods previously made by Star Sweets, with photos from our Instagram."
+>
+  <Navbar />
+
+  <main class="gallery-page">
+    <section class="gallery-section" aria-labelledby="gallery-title">
+      <div class="gallery-section-heading">
+        <div>
+          <p class="home-eyebrow">{showSamplePosts ? 'Lorem ipsum' : 'Made by Star Sweets'}</p>
+          <h1 id="gallery-title">Gallery</h1>
+        </div>
+        {!showSamplePosts && <a href={instagramUrl} target="_blank" rel="noopener noreferrer">Visit @star.sweets25 <span aria-hidden="true">↗</span></a>}
+      </div>
+      <p class="gallery-intro">{showSamplePosts ? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' : 'Cakes and baked goods made for past celebrations.'}</p>
+
+      {showSamplePosts && (
+        <p class="gallery-preview-notice">Placeholder preview. Images and captions will come from Instagram after the account is connected.</p>
+      )}
+
+      {posts.length > 0 ? (
+        <div class="gallery-grid">
+          {posts.map((post, index) => (
+            <article class:list={['gallery-card', { 'gallery-card-sample': showSamplePosts }]}>
+              <CardContent class="gallery-card-inner" href={showSamplePosts ? undefined : post.permalink} target={showSamplePosts ? undefined : '_blank'} rel={showSamplePosts ? undefined : 'noopener noreferrer'} aria-label={showSamplePosts ? undefined : `View ${post.title} on Instagram`}>
+                <div class="gallery-card-image">
+                  {showSamplePosts ? (
+                    <span class="gallery-image-placeholder" role="img" aria-label="Image placeholder">
+                      <svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
+                        <rect x="8" y="12" width="64" height="56" rx="6" stroke="currentColor" stroke-width="2" />
+                        <circle cx="56" cy="28" r="6" stroke="currentColor" stroke-width="2" />
+                        <path d="M10 60 30 38 44 52 51 45 70 64" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  ) : (
+                    <img src={post.imageUrl} alt={post.title} loading={index < 3 ? 'eager' : 'lazy'} />
+                  )}
+                  {post.isVideo && <span class="gallery-video-label">Video</span>}
+                </div>
+                <div class="gallery-card-copy">
+                  <h3>{post.title}</h3>
+                  <span>{showSamplePosts ? 'Lorem ipsum' : 'View on Instagram'} {!showSamplePosts && <span aria-hidden="true">↗</span>}</span>
+                </div>
+              </CardContent>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="gallery-empty">
+          <span class="gallery-empty-star" aria-hidden="true">✳</span>
+          <h3>More creations are coming soon.</h3>
+          <p>In the meantime, you can browse my latest work on Instagram or start planning your own cake.</p>
+          <div class="gallery-empty-actions">
+            <a class="home-button home-button-primary" href={instagramUrl} target="_blank" rel="noopener noreferrer">See my Instagram</a>
+            <a class="home-button home-button-secondary" href="/order">Build your cake</a>
+          </div>
+        </div>
+      )}
+    </section>
+  </main>
+
+  <SiteFooter />
+</Layout>
