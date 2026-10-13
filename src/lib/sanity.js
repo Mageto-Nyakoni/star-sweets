@@ -74,6 +74,14 @@ export async function fetchAboutPage() {
   );
 }
 
+export async function fetchHomePage() {
+  return getClient().fetch(
+    `*[_type == "homePage" && _id == "homePage"][0] {
+      "bannerImageUrl": bannerImage.asset->url
+    }`
+  );
+}
+
 export async function fetchInstagramGallerySettings() {
   return getClient().fetch(
     `*[_type == "instagramGallerySettings" && _id == "instagramGallerySettings"][0] {

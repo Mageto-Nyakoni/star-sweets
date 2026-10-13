@@ -3,8 +3,9 @@ import { structureTool } from 'sanity/structure';
 import { schemaTypes } from './schemaTypes/index.js';
 
 const ABOUT_PAGE_TYPE = 'aboutPage';
+const HOME_PAGE_TYPE = 'homePage';
 const INSTAGRAM_GALLERY_TYPE = 'instagramGallerySettings';
-const SINGLETON_TYPES = [ABOUT_PAGE_TYPE, INSTAGRAM_GALLERY_TYPE];
+const SINGLETON_TYPES = [HOME_PAGE_TYPE, ABOUT_PAGE_TYPE, INSTAGRAM_GALLERY_TYPE];
 
 export default defineConfig({
   name: 'star-sweets',
@@ -16,6 +17,14 @@ export default defineConfig({
       structure: (S) => S.list()
         .title('Content')
         .items([
+          S.listItem()
+            .id('homePage')
+            .title('Home Page')
+            .child(
+              S.document()
+                .schemaType(HOME_PAGE_TYPE)
+                .documentId('homePage')
+            ),
           S.listItem()
             .id('aboutPage')
             .title('About Page')

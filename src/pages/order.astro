@@ -3,9 +3,9 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import OrderInspirationPicker from '../components/OrderInspirationPicker.astro';
+import CakeSizeGuide from '../components/CakeSizeGuide.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { bakeryMenu } from '../data/bakeryMenu';
-import { cakeSizeHasNoCustomizations } from '../lib/orderRules';
 
 let orderOptions = fallbackOrderOptions;
 let orderSource = 'sample';
@@ -33,7 +33,6 @@ const priceLabel = (amount = 0, base = false) => {
   return base ? money.format(value) : value === 0 ? 'Included' : `+${money.format(value)}`;
 };
 
-const firstSizeId = orderOptions.sizes?.[0]?._id;
 const customizationPrice = 10;
 const cakeGalleryItems = Array.isArray(orderOptions.gallery) ? orderOptions.gallery : [];
 const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOptions.cupcakeGallery : [];
@@ -54,7 +53,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           Pick what you'd like. You'll see the estimate change as you go
         </p>
       </div>
-      <a class="order-intro-link" href="#cake-builder">Start order</a>
     </section>
 
     <form id="cake-builder" class="order-builder is-starting" enctype="multipart/form-data" novalidate>
@@ -68,11 +66,14 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       />
 
       <div class="order-form">
-        <section class="order-section order-start" aria-labelledby="order-choice-heading">
-          <fieldset>
-            <legend id="order-choice-heading">What do you want to order?</legend>
+        <details class="order-section order-start" data-form-step>
+          <summary class="section-copy">
+            <p class="step-label">1</p>
+            <h2 id="order-choice-heading">What do you want to order?</h2>
+          </summary>
+          <fieldset aria-labelledby="order-choice-heading">
             <p class="field-note">Pick one or more</p>
-            <p class="order-service-note">Orders are for the Boston metropolitan area, with pickup in Quincy or Fenway</p>
+            <p class="order-service-note">I take orders in the Boston metro area. Pickup is in Quincy or Fenway</p>
             <div class="order-type-grid">
               <label class="choice-card order-type-card">
                 <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
@@ -88,38 +89,17 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
               </label>
             </div>
           </fieldset>
-        </section>
+          <button class="step-continue" type="button" data-step-continue>Continue</button>
+        </details>
 
-        <section class="order-section order-reveal hidden" id="cake-options" aria-labelledby="size-heading" data-cake-section>
-          <div class="section-copy">
+        <details class="order-section order-reveal hidden" id="cake-options" data-form-step data-cake-section>
+          <summary class="section-copy">
             <p class="step-label">3</p>
-            <h2 id="size-heading">Cake foundation</h2>
-            <p class="field-note">Start with the size</p>
-          </div>
+            <h2 id="size-heading">Cake size</h2>
+          </summary>
 
-          <fieldset data-cake-sizes>
-            <legend>Size</legend>
-            <div class="option-grid">
-              {orderOptions.sizes.map((size) => (
-                <label class="choice-card">
-                  <input
-                    type="radio"
-                    name="cakeSize"
-                    value={size._id}
-                    data-label={size.name}
-                    data-price={size.basePrice}
-                    data-customizations={cakeSizeHasNoCustomizations(size.name) ? 'none' : 'allowed'}
-                    checked={size._id === firstSizeId}
-                    required
-                  />
-                  <span>
-                    <strong>{size.name}</strong>
-                    {size.servings && <small>{size.servings}</small>}
-                  </span>
-                  <em>{priceLabel(size.basePrice, true)}</em>
-                </label>
-              ))}
-            </div>
+          <fieldset data-cake-sizes aria-labelledby="size-heading">
+            <CakeSizeGuide sizes={orderOptions.sizes} />
           </fieldset>
 
           <div
@@ -131,14 +111,15 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             <strong>This cake is offered as-is</strong>
             <p>I can't customize the 4 inch, 2 layer cake</p>
           </div>
-        </section>
+          <button class="step-continue" type="button" data-step-continue>Continue</button>
+        </details>
 
-        <section class="order-section order-reveal hidden" aria-labelledby="customization-heading" data-customization-section>
-          <div class="section-copy">
+        <details class="order-section order-reveal hidden" data-form-step data-customization-section>
+          <summary class="section-copy">
             <p class="step-label">4</p>
             <h2 id="customization-heading">Customize your cake</h2>
             <p class="field-note">Vanilla, chocolate, and red velvet are included. Each custom option adds $10</p>
-          </div>
+          </summary>
 
           <fieldset>
             <legend>Cake flavor</legend>
@@ -186,6 +167,22 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           </div>
 
           <fieldset>
+            <legend>Frosting flavor</legend>
+            <div class="option-grid compact">
+              <label class="choice-card">
+                <input type="radio" name="frostingFlavor" value="vanilla-swiss-meringue" data-label="Vanilla Swiss meringue buttercream" checked />
+                <span><strong>Vanilla Swiss meringue buttercream</strong></span>
+                <em>Included</em>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="frostingFlavor" value="chocolate-swiss-meringue" data-label="Chocolate Swiss meringue buttercream" />
+                <span><strong>Chocolate Swiss meringue buttercream</strong></span>
+                <em>Included</em>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
             <legend>Additional customizations</legend>
             <div class="option-grid compact">
               <label class="choice-card">
@@ -224,27 +221,31 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
               </label>
             </div>
           ))}
-        </section>
+          <button class="step-continue" type="button" data-step-continue>Continue</button>
+        </details>
 
-        <section class="order-section order-reveal hidden" aria-labelledby="inspiration-heading" data-inspiration-section>
-          <div class="section-copy">
+        <details class="order-section order-reveal hidden" data-form-step data-inspiration-section>
+          <summary class="section-copy">
             <p class="step-label">5</p>
             <h2 id="inspiration-heading">Cake inspiration</h2>
-            <p class="field-note">See a cake you like? Pick up to three, or upload your own photos</p>
-          </div>
+            <p class="field-note" data-inspiration-section-note>Optional · Photos and notes</p>
+          </summary>
 
-          <OrderInspirationPicker kind="cake" items={cakeGalleryItems} />
-        </section>
+          <div class="inspiration-section-content">
+            <OrderInspirationPicker kind="cake" items={cakeGalleryItems} />
+          </div>
+          <button class="step-continue" type="button" data-step-continue>Continue</button>
+        </details>
         {[
           { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens. If you have a look in mind, tell me" },
           { key: 'bakery', title: 'Cookies, breads, and pastries', categories: ['Cookies', 'Breads', 'Pastries'], description: "Add what you'd like. The quantities are for the portions shown" },
         ].map((group) => (
-          <section class="order-section order-reveal hidden" data-order-panel={group.key} id={`${group.key}-options`} aria-labelledby={`${group.key}-heading`}>
-            <div class="section-copy">
+          <details class="order-section order-reveal hidden" data-form-step data-order-panel={group.key} id={`${group.key}-options`}>
+            <summary class="section-copy">
               <p class="step-label"></p>
               <h2 id={`${group.key}-heading`}>{group.title}</h2>
               <p class="field-note">{group.description}</p>
-            </div>
+            </summary>
             {group.categories.map((category) => (
             <fieldset>
               <legend>{category}</legend>
@@ -280,7 +281,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
                     <textarea name="cupcakeVisualSuggestions" rows="3" maxlength="2000" disabled
                       placeholder="Share colors, a theme, or a look you like"></textarea>
                   </label>
-                  <p class="field-note">Cupcakes come in vanilla or chocolate. Share the colors or style you have in mind, and I’ll confirm the design with you</p>
+                  <p class="field-note">Cupcakes come in vanilla or chocolate. Share the colors or style you have in mind, and I'll confirm the design with you</p>
                 </div>
               )}
               {category === 'Cookies' && <p class="field-note">Baker's Choice isn't in the total yet. I'll confirm the price with you</p>}
@@ -293,15 +294,16 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
                 <OrderInspirationPicker kind="cupcake" items={cupcakeGalleryItems} />
               </div>
             )}
-          </section>
+            <button class="step-continue" type="button" data-step-continue>Continue</button>
+          </details>
         ))}
 
-        <section class="order-section order-reveal hidden" data-contact-section aria-labelledby="contact-heading">
-          <div class="section-copy">
+        <details class="order-section order-reveal hidden" data-form-step data-contact-section>
+          <summary class="section-copy">
             <p class="step-label">1</p>
             <h2 id="contact-heading">Contact, date, and pickup</h2>
-            <p class="field-note">I'll need your name, the date, and an email or phone number. Please order at least four days ahead</p>
-          </div>
+            <p class="field-note">I'll need your name, event date, and a mobile number for texts. Please order at least one week ahead</p>
+          </summary>
 
           <div class="field-grid">
             <label>
@@ -314,18 +316,43 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
               <small class="field-note" data-min-event-date-note></small>
             </label>
             <label>
-              <span>Email</span>
+              <span>Email (optional)</span>
               <input type="email" name="email" autocomplete="email" />
             </label>
             <label>
-              <span>Phone</span>
-              <input type="tel" name="phone" autocomplete="tel" />
+              <span>Mobile number for texts</span>
+              <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required aria-describedby="text-number-note" />
+              <small id="text-number-note" class="field-note">I'll text you here to confirm your order and payment details</small>
             </label>
           </div>
 
+          <details class="allergy-section" data-allergy-section>
+            <summary>
+              <span id="allergy-heading">Allergies and dietary needs</span>
+              <small data-allergy-summary>None to report</small>
+            </summary>
+            <fieldset aria-labelledby="allergy-heading">
+              <p class="field-note">I can accommodate allergies and use separate equipment. List anything you need to avoid, including cross-contact concerns. I'll confirm ingredients with you by text</p>
+              <div class="allergy-options">
+                <label class="choice-card">
+                  <input type="radio" name="allergyStatus" value="none" checked required />
+                  <span><strong>None to report</strong></span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="allergyStatus" value="details" aria-controls="allergy-details" required />
+                  <span><strong>Allergy or dietary need to share</strong></span>
+                </label>
+              </div>
+              <label class="allergy-details hidden" id="allergy-details" data-allergy-details>
+                <span>What should I know?</span>
+                <textarea name="allergyDetails" rows="4" maxlength="1000" placeholder="List the ingredients or allergens to avoid and any cross-contact concerns" disabled></textarea>
+              </label>
+            </fieldset>
+          </details>
+
           <div class="pickup-section">
             <h3>Boston metro pickup</h3>
-            <p class="field-note">All Star Sweets orders are based in the Boston metropolitan area. Choose where you can pick up your order; I'll confirm the exact address and time with you</p>
+            <p class="field-note">Pickup is available in Quincy or Fenway for Boston metro orders. I'll confirm the exact address and time with you</p>
             <fieldset>
               <legend>Preferred pickup location</legend>
               <div class="pickup-options">
@@ -341,71 +368,87 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             </fieldset>
             <label class="pickup-confirmation">
               <input type="checkbox" name="bostonMetroConfirmed" value="yes" required />
-              <span>I confirm that I'm in the Boston metropolitan area and can pick up my order in Quincy or Fenway</span>
+              <span>Confirm you're in the Boston metropolitan area and can pick up your order in Quincy or Fenway</span>
             </label>
           </div>
-        </section>
+          <button class="step-continue" type="button" data-step-continue>Review order</button>
+        </details>
 
       </div>
 
       <aside class="order-summary order-reveal hidden" aria-labelledby="summary-heading">
-        <div class="summary-inner">
-          <p class="summary-source">
-            {orderSource === 'sanity' ? 'Live menu pricing' : 'Menu pricing · cake prices are samples'}
-          </p>
-          <h2 id="summary-heading">Estimate</h2>
-          <output id="order-total" for="cake-builder">$0</output>
+        <details class="summary-inner" data-form-step data-review-step>
+          <summary class="summary-toggle">
+            <p class="summary-source">
+              {orderSource === 'sanity' ? 'Live menu pricing' : 'Menu pricing · cake prices are samples'}
+            </p>
+            <h2 id="summary-heading">Estimate</h2>
+            <output id="order-total" for="cake-builder">$0</output>
+          </summary>
+          <div class="summary-details">
           <p class="summary-note">
-            Cake customizations add $10 each. I'll confirm the order and final price after I review your request
+            *This is just an estimate and pricing is subject to change. I'll confirm the final price once you submit your request.
           </p>
 
           <p class="summary-note" data-pending-price-note hidden>Baker's Choice isn't included in this subtotal. I'll confirm its price with you</p>
 
           <dl id="summary-lines" class="summary-lines"></dl>
 
+          <section class="order-next-steps" aria-labelledby="order-next-steps-heading">
+            <h3 id="order-next-steps-heading">What happens next</h3>
+            <ol>
+              <li>I'll review your date, order details, and any allergy notes.</li>
+              <li>I'll text you within 24 hours to discuss the details, final price, and payment. Your order is confirmed once we agree by text.</li>
+              <li>I'll send the exact pickup address and time for Quincy or Fenway.</li>
+            </ol>
+          </section>
+
           <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
 
           <button class="submit-button" type="submit" data-submit-button>
             Send order request
           </button>
-        </div>
+          </div>
+        </details>
 
         <section class="pricing-explainer" aria-labelledby="pricing-explainer-heading">
           <p class="pricing-explainer-kicker">Behind the price</p>
           <h2 id="pricing-explainer-heading">Wondering what goes into the price?</h2>
           <p class="pricing-explainer-placeholder">
             I started making these cakes as a hobby, and I still do it because I love it.
-            I'm also a full-time dental student, so the time I put into each cake matters. 
-            The price should be a reflection of the quality, time, and work put in each cake.
+            I'm also a full-time dental student. My prices reflect the ingredients and hours I put into each cake.
           </p>
           <div class="pricing-explainer-points">
             <p>
               <strong>Ingredients</strong>
               <span>
-                Total cost of quality ingredients and supplies can add up quickly.
-                Taking into consideration the use of unique flavors or specialty decorations 
-                can push that number higher.
+                Ingredients and supplies are part of each cake's cost. Special flavors and decorations can cost more.
               </span>
             </p>
             <p>
               <strong>Time and craft</strong>
               <span>
-                Every cake takes at least six hours, and plenty can take longer. I use that time to bake,
-                build, decorate, and work on every component until the cake tastes as good as it looks.
-                Getting all the details right takes time and patience.
+                Every cake takes at least six hours. I bake, assemble, and decorate each one by hand.
+                Detailed designs take longer.
               </span>
             </p>
             <p>
               <strong>Custom design</strong>
               <span>
-                These cakes are essentially edible art, and I want to bring your vision to life. Custom 
-                designs often require special molds or additional ingredients to craft the perfect
-                design.
+                Custom designs can call for special molds or extra ingredients. I use them when your design needs them.
               </span>
             </p>
           </div>
         </section>
       </aside>
+
+      <div class="mobile-estimate-bar hidden" data-mobile-estimate aria-label="Current estimate">
+        <div class="mobile-estimate-copy">
+          <span data-mobile-estimate-label>Estimate</span>
+          <output data-mobile-estimate-total for="cake-builder">$0.00</output>
+        </div>
+        <button type="button" data-mobile-estimate-review>Review order <span aria-hidden="true">&uarr;</span></button>
+      </div>
     </form>
 
     <dialog class="order-confirmation" id="order-confirmation" aria-labelledby="order-confirmation-title" aria-describedby="order-confirmation-copy">
@@ -414,7 +457,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         <button class="order-confirmation-close" type="button" data-confirmation-close aria-label="Close confirmation">&times;</button>
         <img class="order-confirmation-logo" src="/StarSweets-logo-trimmed.png" alt="Star Sweets" width="216" height="135" />
         <h2 id="order-confirmation-title">Your request is in</h2>
-        <p id="order-confirmation-copy">I've saved your order request. I'll review it and get back to you at the email or phone number you gave me. Your date, pickup details, and final price aren't confirmed yet.</p>
+        <p id="order-confirmation-copy">I've saved your request. I'll text you within 24 hours to confirm the order details, final price, and payment arrangements. I'll confirm your order and pickup after we agree by text.</p>
         <button class="order-confirmation-done" type="button" data-confirmation-close>Done</button>
       </div>
     </dialog>
@@ -431,13 +474,29 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       const sizeRestrictionNotice = form.querySelector('[data-size-restriction-notice]');
       const customizationSection = form.querySelector('[data-customization-section]');
       const inspirationSection = form.querySelector('[data-inspiration-section]');
+      const formSteps = Array.from(form.querySelectorAll('[data-form-step]'));
+      const stepBodies = new Map(formSteps.map((step) => {
+        const body = document.createElement('div');
+        body.className = 'step-body';
+        const summary = step.querySelector(':scope > summary');
+        while (summary.nextSibling) body.append(summary.nextSibling);
+        step.append(body);
+        return [step, body];
+      }));
+      const choiceStep = form.querySelector('.order-start');
+      const reviewStep = form.querySelector('[data-review-step]');
+      const allergySection = form.querySelector('[data-allergy-section]');
+      const mobileEstimate = form.querySelector('[data-mobile-estimate]');
+      const mobileEstimateLabel = mobileEstimate.querySelector('[data-mobile-estimate-label]');
+      const mobileEstimateTotal = mobileEstimate.querySelector('[data-mobile-estimate-total]');
+      const allergyDetailsPanel = form.querySelector('[data-allergy-details]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      const minEventLeadDays = 4;
+      const minEventLeadDays = 7;
       const maxInspirationSelections = 3;
       const maxFiles = 5;
       const maxFileSize = 2 * 1024 * 1024;
@@ -451,6 +510,123 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         'customFilling',
         'customButtercream',
       ];
+
+      function visibleSteps() {
+        return formSteps.filter((step) => !step.closest('.hidden'));
+      }
+
+      let activeStepTransition = null;
+
+      function finishStepTransition() {
+        if (!activeStepTransition) return;
+        const { animations, closing, bodies } = activeStepTransition;
+        activeStepTransition = null;
+        animations.forEach((animation) => animation.cancel());
+        closing.forEach((panel) => { panel.open = false; });
+        form.style.overflowAnchor = '';
+        bodies.forEach((body) => {
+          body.style.height = '';
+          body.style.opacity = '';
+          body.style.overflow = '';
+        });
+      }
+
+      function openStep(step, scroll = false) {
+        if (step?.closest('.hidden')) return;
+        finishStepTransition();
+        const closing = formSteps.filter((panel) => panel.open && panel !== step);
+        const opening = step && !step.open ? step : null;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (reducedMotion) {
+          closing.forEach((panel) => { panel.open = false; });
+          if (opening) opening.open = true;
+          if (scroll && step) step.scrollIntoView({ block: 'start' });
+          return;
+        }
+
+        const animations = [];
+        const bodies = [];
+        let collapseAbove = 0;
+        const timing = { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' };
+
+        closing.forEach((panel) => {
+          const body = stepBodies.get(panel);
+          const height = body.getBoundingClientRect().height;
+          if (step && (panel.compareDocumentPosition(step) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+            const summaryMargin = panel.matches('.order-section')
+              ? Number.parseFloat(window.getComputedStyle(panel.querySelector(':scope > summary')).marginBottom) || 0
+              : 0;
+            collapseAbove += height + summaryMargin;
+          }
+          body.style.height = `${height}px`;
+          body.style.overflow = 'hidden';
+          bodies.push(body);
+          animations.push(body.animate([
+            { height: `${height}px`, opacity: 1 },
+            { height: '0px', opacity: 0 },
+          ], timing));
+        });
+
+        if (opening) {
+          opening.open = true;
+          const body = stepBodies.get(opening);
+          const height = body.scrollHeight;
+          body.style.height = '0px';
+          body.style.overflow = 'hidden';
+          bodies.push(body);
+          animations.push(body.animate([
+            { height: '0px', opacity: 0 },
+            { height: `${height}px`, opacity: 1 },
+          ], timing));
+        }
+
+        if (!animations.length) {
+          if (scroll && step) step.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+
+        const transition = { animations, closing, bodies };
+        activeStepTransition = transition;
+        form.style.overflowAnchor = 'none';
+        if (scroll && step) {
+          const margin = Number.parseFloat(window.getComputedStyle(step).scrollMarginTop) || 0;
+          const top = window.scrollY + step.getBoundingClientRect().top - collapseAbove - margin;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+        Promise.all(animations.map((animation) => animation.finished)).then(() => {
+          if (activeStepTransition !== transition) return;
+          finishStepTransition();
+        }).catch(() => {});
+      }
+
+      formSteps.forEach((step) => {
+        step.querySelector(':scope > summary')?.addEventListener('click', (event) => {
+          event.preventDefault();
+          if (step.open) openStep(null);
+          else openStep(step);
+        });
+      });
+
+      form.querySelectorAll('[data-step-continue]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const current = button.closest('[data-form-step]');
+          if (current === choiceStep && !checked('includeCake') && !checked('includeCupcakes') && !checked('includeBakery')) return;
+          const steps = visibleSteps();
+          openStep(steps[steps.indexOf(current) + 1], true);
+        });
+      });
+
+      mobileEstimate.querySelector('[data-mobile-estimate-review]').addEventListener('click', () => {
+        openStep(reviewStep, true);
+      });
+
+      if ('IntersectionObserver' in window) {
+        const summaryObserver = new IntersectionObserver(([entry]) => {
+          mobileEstimate.classList.toggle('is-at-summary', entry.isIntersecting);
+        }, { threshold: 0.05 });
+        summaryObserver.observe(form.querySelector('.summary-inner'));
+      }
 
       function checked(name) {
         return form.querySelector(`[name="${name}"]:checked`);
@@ -469,30 +645,23 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       }
 
       function formatDateOnly(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return date.toISOString().slice(0, 10);
       }
 
       function formatDisplayDate(date) {
         return new Intl.DateTimeFormat('en-US', {
+          timeZone: 'UTC',
           month: 'long',
           day: 'numeric',
           year: 'numeric',
         }).format(date);
       }
 
-      function startOfToday() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return today;
-      }
-
       function minimumEventDate() {
-        const date = startOfToday();
-        date.setDate(date.getDate() + minEventLeadDays);
-        return date;
+        const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
+        return new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) + minEventLeadDays));
       }
 
       function dateValueToLocalDate(value) {
@@ -502,12 +671,12 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const year = Number(match[1]);
         const monthIndex = Number(match[2]) - 1;
         const day = Number(match[3]);
-        const date = new Date(year, monthIndex, day);
+        const date = new Date(Date.UTC(year, monthIndex, day));
 
         if (
-          date.getFullYear() !== year
-          || date.getMonth() !== monthIndex
-          || date.getDate() !== day
+          date.getUTCFullYear() !== year
+          || date.getUTCMonth() !== monthIndex
+          || date.getUTCDate() !== day
         ) {
           return null;
         }
@@ -541,6 +710,16 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         });
       }
 
+      function syncAllergyDetails() {
+        const hasDetails = checked('allergyStatus')?.value === 'details';
+        const input = form.elements.allergyDetails;
+        allergyDetailsPanel.classList.toggle('hidden', !hasDetails);
+        allergySection.querySelector('[data-allergy-summary]').textContent = hasDetails
+          ? 'Allergy or dietary need' : 'None to report';
+        input.disabled = !hasDetails || form.classList.contains('is-starting');
+        if (!hasDetails) input.value = '';
+      }
+
       function setCustomizationAvailability() {
         const restricted = customizationsAreRestricted();
         const includeCake = Boolean(checked('includeCake'));
@@ -571,6 +750,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         }
 
         if (!checked('cakeFlavor')) form.querySelector('[name="cakeFlavor"]').checked = true;
+        if (!checked('frostingFlavor')) form.querySelector('[name="frostingFlavor"]').checked = true;
         setCustomizationDetails();
         cakePicker.sync();
       }
@@ -583,6 +763,10 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const items = Array.from(group.querySelectorAll('[data-inspiration-item]'));
         const inputs = Array.from(group.querySelectorAll(`[name="${selectionName}"]`));
         const filters = Array.from(group.querySelectorAll('[data-inspiration-filter]'));
+        const browseButton = group.querySelector('[data-inspiration-browse]');
+        const previewLimit = Number(group.dataset.inspirationPreviewLimit) || 0;
+        let browsingAll = false;
+        let selectedTag = '';
         const status = group.querySelector('[data-inspiration-status]');
         const tray = group.querySelector('[data-inspiration-selected-tray]');
         const count = group.querySelector('[data-inspiration-count]');
@@ -590,6 +774,32 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const fileList = group.querySelector('[data-reference-file-list]');
         const selectedInputs = () => inputs.filter((input) => input.checked);
         const inputFor = (id) => inputs.find((input) => input.value === id);
+
+        function updateVisibleItems() {
+          items.forEach((item, index) => {
+            let tags = [];
+            try { tags = JSON.parse(item.dataset.inspirationTags || '[]'); } catch { tags = []; }
+            item.hidden = Boolean(previewLimit && !browsingAll && index >= previewLimit)
+              || Boolean(selectedTag && !tags.includes(selectedTag));
+          });
+          carousel?.scrollTo({ left: 0, behavior: 'auto' });
+        }
+
+        function resetView() {
+          browsingAll = false;
+          selectedTag = '';
+          group.classList.toggle('is-previewing', Boolean(previewLimit));
+          if (browseButton) {
+            browseButton.setAttribute('aria-expanded', 'false');
+            browseButton.textContent = `Browse all ${items.length} styles`;
+          }
+          filters.forEach((button) => {
+            const active = !button.dataset.inspirationFilter;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+          });
+          updateVisibleItems();
+        }
 
         function sync(statusMessage = '') {
           const selected = selectedInputs();
@@ -630,7 +840,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             status.textContent = statusMessage
               || (selected.length
                 ? `${selected.length} of ${maxInspirationSelections} ${noun} selected`
-                : `Choose up to ${maxInspirationSelections} ${noun}. Open any to see its details`);
+                : `Pick up to ${maxInspirationSelections} ${noun}`);
             status.classList.toggle('is-limit', Boolean(statusMessage));
           }
         }
@@ -681,19 +891,30 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
 
         filters.forEach((button) => {
           button.addEventListener('click', () => {
-            const selectedTag = button.dataset.inspirationFilter || '';
+            selectedTag = button.dataset.inspirationFilter || '';
             filters.forEach((filterButton) => {
               const isActive = filterButton === button;
               filterButton.classList.toggle('is-active', isActive);
               filterButton.setAttribute('aria-pressed', String(isActive));
             });
-            items.forEach((item) => {
-              let tags = [];
-              try { tags = JSON.parse(item.dataset.inspirationTags || '[]'); } catch { tags = []; }
-              item.hidden = Boolean(selectedTag) && !tags.includes(selectedTag);
-            });
-            carousel?.scrollTo({ left: 0, behavior: 'auto' });
+            updateVisibleItems();
           });
+        });
+
+        browseButton?.addEventListener('click', () => {
+          browsingAll = !browsingAll;
+          if (!browsingAll) {
+            selectedTag = '';
+            filters.forEach((button) => {
+              const active = !button.dataset.inspirationFilter;
+              button.classList.toggle('is-active', active);
+              button.setAttribute('aria-pressed', String(active));
+            });
+          }
+          group.classList.toggle('is-previewing', !browsingAll);
+          browseButton.setAttribute('aria-expanded', String(browsingAll));
+          browseButton.textContent = browsingAll ? 'Show fewer styles' : `Browse all ${items.length} styles`;
+          updateVisibleItems();
         });
 
         group.querySelector('[data-inspiration-previous]')?.addEventListener('click', () => scroll(-1));
@@ -735,7 +956,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           updateEstimate();
         });
 
-        return { group, fileInput, fileList, selectedInputs, sync, validateFiles };
+        return { group, fileInput, fileList, selectedInputs, sync, validateFiles, resetView };
       }
 
       function addSummaryLine(label, value, amount, amountLabel = '') {
@@ -758,10 +979,14 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const includeBakery = Boolean(checked('includeBakery'));
         const hasSelection = includeCake || includeCupcakes || includeBakery;
         form.classList.toggle('is-starting', !hasSelection);
+        form.classList.toggle('has-mobile-estimate', hasSelection);
+        mobileEstimate.classList.toggle('hidden', !hasSelection);
         form.querySelector('.order-summary').classList.toggle('hidden', !hasSelection);
+        choiceStep.querySelector('[data-step-continue]').disabled = !hasSelection;
         const contact = form.querySelector('[data-contact-section]');
         contact.classList.toggle('hidden', !hasSelection);
         contact.querySelectorAll('input').forEach((input) => { input.disabled = !hasSelection; });
+        syncAllergyDetails();
         form.querySelectorAll('[data-order-panel]').forEach((panel) => {
           const enabled = panel.dataset.orderPanel === 'cupcakes' ? includeCupcakes : includeBakery;
           panel.classList.toggle('hidden', !enabled);
@@ -773,9 +998,12 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         setCustomizationAvailability();
         syncCupcakeOptions();
         let step = 2;
-        form.querySelectorAll('.order-section:not(.hidden) .step-label').forEach((label) => {
+        form.querySelectorAll('.order-section:not(.hidden):not(.order-start) > summary .step-label').forEach((label) => {
           label.textContent = String(step++);
         });
+        if (formSteps.some((panel) => panel.open && panel.closest('.hidden'))) {
+          openStep(choiceStep);
+        }
         updateEstimate();
       }
 
@@ -795,7 +1023,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           }
         });
         if (selected && !checked('cupcakeFlavor')) panel.querySelector('input').checked = true;
-        cupcakePicker.group.querySelectorAll('input').forEach((input) => {
+        cupcakePicker.group.querySelectorAll('input, textarea').forEach((input) => {
           input.disabled = !selected;
           if (!selected) {
             if (input.type === 'checkbox') input.checked = false;
@@ -819,10 +1047,18 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           + bakeryItems.reduce((sum, input) => sum + priceOf(input) * Number(input.value), 0);
 
         totalOutput.value = pricingPending && total === 0 ? 'Price TBD' : formatter.format(total);
-        document.getElementById('summary-heading').textContent = pricingPending ? 'Priced subtotal' : 'Estimate';
-        form.querySelector('.summary-note').textContent = includeCake
-          ? "Cake customizations add $10 each. I'll confirm the order and final price after I review your request"
-          : "I'll confirm the order and final price after I review your request";
+        const estimateLabel = pricingPending ? 'Priced subtotal' : 'Estimate';
+        document.getElementById('summary-heading').textContent = estimateLabel;
+        mobileEstimateLabel.textContent = estimateLabel;
+        mobileEstimateTotal.value = totalOutput.value;
+        const inspirationParts = [];
+        const selectedStyles = cakePicker.selectedInputs().length;
+        const referencePhotos = cakePicker.fileInput.files.length;
+        if (selectedStyles) inspirationParts.push(`${selectedStyles} style${selectedStyles === 1 ? '' : 's'} selected`);
+        if (referencePhotos) inspirationParts.push(`${referencePhotos} photo${referencePhotos === 1 ? '' : 's'} added`);
+        if (form.elements.cakeInspirationComments.value.trim()) inspirationParts.push('Notes added');
+        inspirationSection.querySelector('[data-inspiration-section-note]').textContent = inspirationParts.length
+          ? inspirationParts.join(' · ') : 'Optional · Photos and notes';
         form.querySelector('[data-pending-price-note]').hidden = !pricingPending;
         summaryLines.replaceChildren();
         bakeryItems.forEach((input) => {
@@ -835,6 +1071,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           const cupcakeGallery = cupcakePicker.selectedInputs();
           const cupcakeFiles = Array.from(cupcakePicker.fileInput.files || []);
           addSummaryLine('Cupcake inspiration', cupcakeGallery.length ? cupcakeGallery.map(labelOf).join(', ') : 'None selected', 0);
+          if (form.elements.cupcakeInspirationComments.value.trim()) addSummaryLine('Cupcake inspiration comments', form.elements.cupcakeInspirationComments.value.trim(), 0);
           addSummaryLine('Cupcake reference photos', cupcakeFiles.length ? `${cupcakeFiles.length} selected` : 'None selected', 0);
         }
         if (!includeCake) return;
@@ -844,12 +1081,14 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           return;
         }
         addSummaryLine('Cake flavor', labelOf(flavor), priceOf(flavor));
+        addSummaryLine('Frosting flavor', labelOf(checked('frostingFlavor')), 0);
         paidCustomizations.forEach((input) => {
           addSummaryLine(labelOf(input), 'Selected', priceOf(input));
         });
         const gallery = cakePicker.selectedInputs();
         const files = Array.from(cakePicker.fileInput.files || []);
         addSummaryLine('Cake inspiration', gallery.length ? gallery.map(labelOf).join(', ') : 'None selected', 0);
+        if (form.elements.cakeInspirationComments.value.trim()) addSummaryLine('Cake inspiration comments', form.elements.cakeInspirationComments.value.trim(), 0);
         addSummaryLine('Cake reference photos', files.length ? `${files.length} selected` : 'None selected', 0);
       }
 
@@ -859,6 +1098,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const eventDate = form.elements.eventDate.value;
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.trim();
+        const allergyStatus = checked('allergyStatus')?.value;
+        const allergyDetails = form.elements.allergyDetails.value.trim();
         const cakeFlavor = checked('cakeFlavor')?.value;
         const pickupLocation = checked('pickupLocation')?.value;
 
@@ -896,14 +1137,19 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           if (!parsedEventDate) {
             errors.push('Choose a valid event date');
           } else if (parsedEventDate < minDate) {
-            errors.push(`Choose an event date at least 4 days away (${formatDisplayDate(minDate)} or later)`);
+            errors.push(`Choose an event date at least one week away (${formatDisplayDate(minDate)} or later)`);
           }
         }
-        if (!email && !phone) errors.push('Please enter an email or phone number');
+        if (phone.replace(/\D/g, '').length < 10 || phone.replace(/\D/g, '').length > 15) {
+          errors.push('Enter a mobile number with 10 to 15 digits so I can text you');
+        }
+        if (!allergyStatus) errors.push('Tell me whether you have any allergies or dietary needs');
+        if (allergyStatus === 'details' && !allergyDetails) errors.push('Describe your allergy or dietary need');
         if (!pickupLocation) errors.push('Choose Quincy or Fenway for pickup');
         if (!checked('bostonMetroConfirmed')) errors.push('Confirm that you are in the Boston metro area and can pick up your order');
         if (!customizationsAreRestricted()) {
           if (!cakeFlavor) errors.push('Choose a cake flavor');
+          if (!checked('frostingFlavor')) errors.push('Choose a frosting flavor');
           if (cakeFlavor === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
             errors.push('Describe your custom cake flavor');
           }
@@ -923,6 +1169,10 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       }
 
       form.addEventListener('change', (event) => {
+        if (event.target.name === 'allergyStatus') {
+          syncAllergyDetails();
+          if (event.target.value === 'none') allergySection.open = false;
+        }
         if (['cakeSize', 'includeCake', 'includeCupcakes', 'includeBakery'].includes(event.target.name)) {
           if (event.target.name === 'includeCupcakes' && event.target.checked) {
             form.elements['quantity-cupcakes-dozen'].value = '1';
@@ -933,6 +1183,13 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           setCustomizationDetails();
         }
         updateEstimate();
+        if (event.target.name === 'cakeSize' && event.target.checked) {
+          const cakeStep = form.querySelector('[data-cake-section]');
+          if (cakeStep.open) {
+            const steps = visibleSteps();
+            openStep(steps[steps.indexOf(cakeStep) + 1], true);
+          }
+        }
       });
 
       form.addEventListener('input', () => {
@@ -952,7 +1209,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
 
       confirmation.addEventListener('close', () => {
         confetti.replaceChildren();
-        document.querySelector('.order-intro-link')?.focus();
+        choiceStep.querySelector(':scope > summary')?.focus();
       });
 
       function showOrderConfirmation() {
@@ -973,6 +1230,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         confirmation.showModal();
       }
 
+      let pendingRequestId = null;
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (form.elements.website.value) return;
@@ -990,12 +1248,13 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         submitButton.textContent = 'Sending request';
         message.classList.remove('error');
         message.textContent = 'Saving your order request';
+        pendingRequestId ||= crypto.randomUUID();
 
         try {
           const response = await fetch('/api/orders', {
             method: 'POST',
             body: new FormData(form),
-            headers: { Accept: 'application/json' },
+            headers: { Accept: 'application/json', 'Idempotency-Key': pendingRequestId },
           });
           const result = await response.json().catch(() => ({}));
 
@@ -1004,9 +1263,14 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           }
 
           message.textContent = '';
+          pendingRequestId = null;
           form.reset();
           cakePicker.fileList.replaceChildren();
           cupcakePicker.fileList.replaceChildren();
+          cakePicker.resetView();
+          cupcakePicker.resetView();
+          formSteps.forEach((panel) => { panel.open = false; });
+          allergySection.open = false;
           syncOrderSections();
           showOrderConfirmation();
         } catch (error) {

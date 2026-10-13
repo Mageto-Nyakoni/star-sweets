@@ -1,5 +1,9 @@
 # Star Sweets
 
+## Homepage banner
+
+Open **Home Page** in [Star Sweets Sanity Studio](https://star-sweets.sanity.studio/), replace the **Banner image**, and publish. This image controls the large homepage banner independently of the **Previous Orders and Baked Goods** gallery. The current banner photo has been copied into this field, so gallery changes will not replace it.
+
 ## Instagram gallery
 
 The `/gallery` page reads recent posts from `@star.sweets25` through the Instagram API with Instagram Login. It needs one secret: an **Instagram User access token** for that account. You do not need an Instagram account ID or a Facebook Page access token for this integration. The Meta developer login and the Instagram login may belong to different accounts. An Instagram **Business or Creator** account is a professional account type; it does not mean you need to submit company registration documents for a gallery that only reads your own account. Use Meta's **Standard Access** with your Instagram account assigned a role on the developer app. Business verification can be required if you later seek Advanced Access for other people's accounts.
@@ -57,3 +61,7 @@ The page requests up to 24 recent posts and caches a successful response for 15 
 The cupcake picker uses **Past Orders Gallery** photos in Sanity, separate from the Instagram gallery. To add a photo, open a Past Orders Gallery entry (or create one), choose **Cupcakes** under **Show in order form for**, add a caption and photo, then publish. Photos without that choice stay in the cake picker. Until a cupcake photo is published, customers can still upload their own cupcake reference images.
 
 An order can include up to three selected styles and five uploaded images for each of cakes and cupcakes. All uploaded reference images together must be 4 MB or smaller. Cupcake selections and uploads appear in the order document and both order emails.
+
+## Order submission safeguards
+
+The order form sends an idempotency key with each request and keeps it when the customer retries after an error. The API limits each visitor IP to five submission attempts per hour. Sanity stores the counter under a keyed hash of the IP, so the raw address is not saved in the counter document. A two-minute processing lease prevents simultaneous retries from uploading the same photos twice; if an upload stops partway through, the customer can retry after the lease expires. Successful new orders use private, dotted Sanity document IDs. The `orderSubmissionRate` and `orderSubmissionAttempt` documents are internal records and do not need Studio schema entries.

@@ -5,6 +5,8 @@ const singular = isCupcake ? 'cupcake' : 'cake';
 const plural = isCupcake ? 'cupcakes' : 'cakes';
 const selectionName = isCupcake ? 'cupcakeInspirationSelections' : 'inspirationSelections';
 const uploadName = isCupcake ? 'cupcakeReferenceImages' : 'referenceImages';
+const commentName = isCupcake ? 'cupcakeInspirationComments' : 'cakeInspirationComments';
+const hasBrowseToggle = !isCupcake && items.length > 3;
 const tags = Array.from(new Set(
   items.flatMap((item) => Array.isArray(item.tags) ? item.tags : [])
     .map((tag) => String(tag).trim())
@@ -12,7 +14,7 @@ const tags = Array.from(new Set(
 )).sort((a, b) => a.localeCompare(b));
 ---
 
-<div class="order-inspiration-group" data-inspiration-group={kind} data-inspiration-noun={plural} data-selection-name={selectionName}>
+<div class:list={['order-inspiration-group', { 'has-browse-toggle': hasBrowseToggle, 'is-previewing': hasBrowseToggle }]} data-inspiration-group={kind} data-inspiration-noun={plural} data-selection-name={selectionName} data-inspiration-preview-limit={hasBrowseToggle ? '3' : undefined}>
   <fieldset>
     <legend>Past {singular} gallery</legend>
     <div class="inspiration-picker">
@@ -26,7 +28,7 @@ const tags = Array.from(new Set(
       )}
 
       {items.length > 0 ? (
-        <div class="inspiration-carousel" data-inspiration-carousel aria-label={`Past ${singular} inspiration`}>
+        <div class="inspiration-carousel" id={`${kind}-inspiration-gallery`} data-inspiration-carousel aria-label={`Past ${singular} inspiration`}>
           <div class="inspiration-track" data-inspiration-track>
             {items.map((item, index) => (
               <article
@@ -34,6 +36,7 @@ const tags = Array.from(new Set(
                 data-inspiration-item
                 data-inspiration-id={item._id}
                 data-inspiration-tags={JSON.stringify(Array.isArray(item.tags) ? item.tags : [])}
+                hidden={hasBrowseToggle && index >= 3}
               >
                 <input
                   id={`${kind}-inspiration-${index}`}
@@ -74,6 +77,12 @@ const tags = Array.from(new Set(
         <p class="inspiration-empty">No past {singular} photos yet. You can upload your own below.</p>
       )}
 
+      {hasBrowseToggle && (
+        <button type="button" class="inspiration-browse-button" data-inspiration-browse aria-controls="cake-inspiration-gallery" aria-expanded="false">
+          Browse all {items.length} styles
+        </button>
+      )}
+
       {items.length > 1 && (
         <div class="inspiration-carousel-controls" aria-label={`Past ${singular} gallery controls`}>
           <button type="button" data-inspiration-previous aria-label={`Show previous ${plural}`}>
@@ -87,7 +96,7 @@ const tags = Array.from(new Set(
 
       {items.length > 0 && (
         <p class="inspiration-picker-status" data-inspiration-status aria-live="polite">
-          Choose up to 3 {plural}. Open any {singular} to see its details
+          Pick up to 3 {plural}
         </p>
       )}
 
@@ -167,4 +176,8 @@ const tags = Array.from(new Set(
     <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total for your order</small>
   </label>
   <ul class="file-list" data-reference-file-list aria-live="polite"></ul>
+  <label class="inspiration-comments">
+    <span>Comments about your {singular} inspiration (optional)</span>
+    <textarea name={commentName} rows="3" maxlength="2000" placeholder="Tell me what you like or what you would change" disabled={isCupcake}></textarea>
+  </label>
 </div>

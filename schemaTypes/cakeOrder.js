@@ -19,8 +19,28 @@ export const cakeOrder = defineType({
     }),
     defineField({
       name: 'phone',
-      title: 'Phone',
+      title: 'Mobile Number for Texts',
       type: 'string',
+    }),
+    defineField({
+      name: 'allergyStatus',
+      title: 'Allergies and Dietary Needs',
+      type: 'string',
+      readOnly: true,
+      options: {
+        list: [
+          { title: 'None reported', value: 'none' },
+          { title: 'Details provided', value: 'details' },
+        ],
+      },
+    }),
+    defineField({
+      name: 'allergyDetails',
+      title: 'Allergy or Dietary Details',
+      type: 'text',
+      rows: 4,
+      readOnly: true,
+      hidden: ({ document }) => document?.allergyStatus !== 'details',
     }),
     defineField({
       name: 'eventDate',
@@ -101,6 +121,13 @@ export const cakeOrder = defineType({
       hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
     }),
     defineField({
+      name: 'cupcakeInspirationComments',
+      title: 'Cupcake Inspiration Comments',
+      type: 'text',
+      rows: 3,
+      hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
+    }),
+    defineField({
       name: 'cupcakeReferenceImages',
       title: 'Cupcake Reference Images',
       type: 'array',
@@ -124,6 +151,17 @@ export const cakeOrder = defineType({
           { title: 'Chocolate', value: 'chocolate' },
           { title: 'Red Velvet', value: 'red-velvet' },
           { title: 'Custom Cake Flavor (+$10)', value: 'custom' },
+        ],
+      },
+    }),
+    defineField({
+      name: 'frostingFlavor',
+      title: 'Frosting Flavor',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Vanilla Swiss meringue buttercream', value: 'vanilla-swiss-meringue' },
+          { title: 'Chocolate Swiss meringue buttercream', value: 'chocolate-swiss-meringue' },
         ],
       },
     }),
@@ -229,6 +267,12 @@ export const cakeOrder = defineType({
       type: 'array',
       description: 'Past cake styles the customer marked as inspiration.',
       of: [{ type: 'reference', to: [{ type: 'inspirationGallery' }] }],
+    }),
+    defineField({
+      name: 'cakeInspirationComments',
+      title: 'Cake Inspiration Comments',
+      type: 'text',
+      rows: 3,
     }),
     defineField({
       name: 'referenceImages',

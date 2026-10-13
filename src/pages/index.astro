@@ -7,13 +7,15 @@ import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.
 
 let galleryItems = fallbackOrderOptions.gallery;
 let aboutPage = aboutPageFallback;
+let bannerImageUrl;
 
-const { isSanityConfigured, fetchAboutPage, fetchCakeOrderOptions } = await import('../lib/sanity.js');
+const { isSanityConfigured, fetchAboutPage, fetchCakeOrderOptions, fetchHomePage } = await import('../lib/sanity.js');
 
 if (isSanityConfigured()) {
-  const [orderResult, aboutResult] = await Promise.allSettled([
+  const [orderResult, aboutResult, homeResult] = await Promise.allSettled([
     fetchCakeOrderOptions(),
     fetchAboutPage(),
+    fetchHomePage(),
   ]);
 
   if (orderResult.status === 'fulfilled') {
@@ -24,10 +26,13 @@ if (isSanityConfigured()) {
   if (aboutResult.status === 'fulfilled') {
     aboutPage = withAboutPageFallback(aboutResult.value);
   }
+
+  if (homeResult.status === 'fulfilled') {
+    bannerImageUrl = homeResult.value?.bannerImageUrl;
+  }
 }
 
-const featuredImage = galleryItems.find((item) => item.imageUrl)?.imageUrl;
-const heroStyle = featuredImage ? `--home-hero-image: url("${featuredImage}")` : undefined;
+const heroStyle = bannerImageUrl ? `--home-hero-image: url("${bannerImageUrl}")` : undefined;
 const visibleGalleryItems = galleryItems;
 ---
 
@@ -38,7 +43,7 @@ const visibleGalleryItems = galleryItems;
   <Navbar homepage />
 
   <main class="home-page">
-    <section class:list={['home-hero', { 'has-image': featuredImage }]} style={heroStyle} aria-labelledby="home-title">
+    <section class:list={['home-hero', { 'has-image': bannerImageUrl }]} style={heroStyle} aria-labelledby="home-title">
       <div class="home-hero-inner">
         <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" />
         <p class="home-eyebrow">Based in Boston, MA</p>

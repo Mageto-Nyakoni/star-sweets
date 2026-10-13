@@ -11,14 +11,21 @@ const MAX_TOTAL_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_INSPIRATION_SELECTIONS = 3;
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_EVENT_LEAD_DAYS = 4;
+const MIN_EVENT_LEAD_DAYS = 7;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const CUSTOMIZATION_PRICE = 10;
+const MAX_SUBMISSIONS_PER_HOUR = 5;
+const SUBMISSION_LEASE_MS = 2 * 60 * 1000;
+const IDEMPOTENCY_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CAKE_FLAVOR_LABELS = {
   vanilla: 'Vanilla',
   chocolate: 'Chocolate',
   'red-velvet': 'Red Velvet',
   custom: 'Custom Cake Flavor',
+} as const;
+const FROSTING_FLAVOR_LABELS = {
+  'vanilla-swiss-meringue': 'Vanilla Swiss meringue buttercream',
+  'chocolate-swiss-meringue': 'Chocolate Swiss meringue buttercream',
 } as const;
 const PICKUP_LOCATION_LABELS = {
   quincy: 'Quincy',
@@ -51,6 +58,97 @@ type BrevoMessage = {
 
 class FormError extends Error {}
 
+function hex(bytes: ArrayBuffer) {
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmac(value: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
+}
+
+async function fingerprintSubmission(formData: FormData, secret: string) {
+  const entries: Array<string[]> = [];
+  for (const [name, value] of formData) {
+    if (typeof value === 'string') {
+      entries.push([name, value]);
+    } else {
+      const digest = hex(await crypto.subtle.digest('SHA-256', await value.arrayBuffer()));
+      entries.push([name, value.name, value.type, String(value.size), digest]);
+    }
+  }
+  return hmac(JSON.stringify(entries), secret);
+}
+
+async function reserveSubmission(client: ReturnType<typeof createClient>, request: Request, secret: string) {
+  // Vercel replaces this header with the visitor's IP before the function runs.
+  const visitor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const digest = await hmac(visitor, secret);
+  const hour = Math.floor(Date.now() / (60 * 60 * 1000));
+  const id = `orderRate.${digest}`;
+  let counter = await client.createIfNotExists({ _id: id, _type: 'orderSubmissionRate', hour, count: 0 });
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (counter.hour === hour && counter.count >= MAX_SUBMISSIONS_PER_HOUR) return false;
+    try {
+      const patch = client.patch(id).ifRevisionId(counter._rev);
+      await (counter.hour === hour
+        ? patch.inc({ count: 1 })
+        : patch.set({ hour, count: 1 })).commit();
+      return true;
+    } catch (error) {
+      if (!isConflict(error)) throw error;
+      const latest = await client.getDocument<typeof counter>(id);
+      if (!latest) throw new Error('Order submission counter disappeared.');
+      counter = latest;
+    }
+  }
+  throw new Error('Order submission counter was too busy.');
+}
+
+async function acquireSubmissionLease(
+  client: ReturnType<typeof createClient>,
+  requestId: string,
+  fingerprint: string
+): Promise<'acquired' | 'processing' | 'different'> {
+  const id = `orderAttempt.${requestId}`;
+  const claim = crypto.randomUUID();
+  let attempt = await client.createIfNotExists({
+    _id: id,
+    _type: 'orderSubmissionAttempt',
+    fingerprint,
+    claim,
+    leaseExpiresAt: Date.now() + SUBMISSION_LEASE_MS,
+  });
+
+  for (let retry = 0; retry < 20; retry += 1) {
+    if (attempt.claim === claim) return 'acquired';
+    if (attempt.fingerprint !== fingerprint) return 'different';
+    if (attempt.leaseExpiresAt > Date.now()) return 'processing';
+    try {
+      await client.patch(id).ifRevisionId(attempt._rev).set({
+        claim,
+        leaseExpiresAt: Date.now() + SUBMISSION_LEASE_MS,
+      }).commit();
+      return 'acquired';
+    } catch (error) {
+      if (!isConflict(error)) throw error;
+      const latest = await client.getDocument<typeof attempt>(id);
+      if (!latest) throw new Error('Order submission lease disappeared.');
+      attempt = latest;
+    }
+  }
+  throw new Error('Order submission lease was too busy.');
+}
+
+function isConflict(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const status = 'statusCode' in error ? error.statusCode : 'status' in error ? error.status : undefined;
+  return status === 409;
+}
+
 function json(body: Record<string, string>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -78,7 +176,7 @@ function textValue(formData: FormData, name: string, maxLength = 2000) {
 }
 
 function uniqueValues(formData: FormData, name: string) {
-  return [...new Set(formData.getAll(name).filter((value): value is string => typeof value === 'string' && value))];
+  return [...new Set(formData.getAll(name).filter((value): value is string => typeof value === 'string' && value.length > 0))];
 }
 
 function checkboxValue(formData: FormData, name: string) {
@@ -111,7 +209,7 @@ function escapeHtml(value: string) {
     '>': '&gt;',
     "'": '&#39;',
     '"': '&quot;',
-  }[character]));
+  }[character] || character));
 }
 
 function orderRows(rows: Array<[string, string | undefined]>) {
@@ -146,9 +244,11 @@ function formatDateOnly(date: Date) {
 }
 
 function minimumEventDate() {
-  const now = new Date();
-  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return new Date(todayUtc + MIN_EVENT_LEAD_DAYS * MS_PER_DAY);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
+  const today = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+  return new Date(today + MIN_EVENT_LEAD_DAYS * MS_PER_DAY);
 }
 
 function displayEventDate(value: string) {
@@ -229,7 +329,7 @@ function adminEmailTemplate({
     preheader: `New order request from ${customerName} for ${formattedDate}.`,
     eyebrow: 'New order request',
     title: 'A new celebration is taking shape.',
-    intro: `${customerName} sent an order request for ${formattedDate}. Review the details below and follow up to confirm availability and final pricing.`,
+    intro: `${customerName} sent an order request for ${formattedDate}. Review the details below, then text the customer within 24 hours to confirm availability, final pricing, and payment arrangements.`,
     content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fffaf7">${rows}</table>${studioButton}`,
   });
 }
@@ -253,11 +353,11 @@ function customerEmailTemplate({
     : dollars(calculatedTotal);
 
   return emailShell({
-    preheader: `We received your Star Sweets order request for ${formattedDate}.`,
+    preheader: `I received your Star Sweets order request for ${formattedDate}.`,
     eyebrow: 'Request received',
     title: 'Your order request is in!',
-    intro: `Thanks, ${customerName}. Your request has been received, and I will follow up soon to confirm the details and final price.`,
-    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">${pricingPending ? 'Priced subtotal' : 'Starting estimate'}</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">${pricingPending ? 'Baker’s Choice pricing is TBD and excluded from the subtotal. ' : ''}Nothing is confirmed until we follow up with you.</div><table role="presentation" width="100%" style="margin-top:18px;border-collapse:collapse">${rows}</table>`,
+    intro: `Thanks, ${customerName}. I'll review your request and text you within 24 hours to discuss the details, final price, and payment.`,
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">${pricingPending ? 'Priced subtotal' : 'Starting estimate'}</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">${pricingPending ? 'Baker’s Choice pricing is TBD and excluded from the subtotal. ' : ''}This is a request. I'll confirm your order, final price, payment arrangements, and pickup after we agree by text.</div><table role="presentation" width="100%" style="margin-top:18px;border-collapse:collapse">${rows}</table>`,
   });
 }
 
@@ -336,22 +436,38 @@ export const POST: APIRoute = async ({ request }) => {
   const notificationEmail = import.meta.env.ORDER_NOTIFICATION_EMAIL;
 
   if (!projectId || !writeToken || !brevoApiKey || !fromEmail || !notificationEmail) {
-    return json({ error: 'Ordering is not configured yet. Please contact Star Sweets directly.' }, 503);
+    return json({ error: 'The form is temporarily unavailable. Please contact me directly.' }, 503);
   }
 
   try {
     const formData = await request.formData();
     if (textValue(formData, 'website')) return json({ message: 'Thanks!' });
+    const requestId = request.headers.get('idempotency-key')?.toLowerCase();
+    if (!requestId || !IDEMPOTENCY_KEY_RE.test(requestId)) {
+      throw new FormError('Please refresh the order form and try again.');
+    }
 
     const customerName = textValue(formData, 'customerName', 120);
     const eventDate = textValue(formData, 'eventDate', 10);
     const email = textValue(formData, 'email', 254).toLowerCase();
     const phone = textValue(formData, 'phone', 80);
+    const allergyStatus = textValue(formData, 'allergyStatus', 20);
+    const allergyDetailsValue = formData.get('allergyDetails');
+    if (allergyDetailsValue !== null && typeof allergyDetailsValue !== 'string') {
+      throw new FormError('Please enter your allergy details as text.');
+    }
+    if (typeof allergyDetailsValue === 'string' && allergyDetailsValue.length > 1000) {
+      throw new FormError('Please keep allergy details under 1,000 characters.');
+    }
+    const allergyDetails = typeof allergyDetailsValue === 'string' ? allergyDetailsValue.trim() : '';
     const bostonMetroConfirmed = formData.getAll('bostonMetroConfirmed').length === 1
       && formData.get('bostonMetroConfirmed') === 'yes';
     const pickupLocation = textValue(formData, 'pickupLocation', 20);
     const cakeFlavor = textValue(formData, 'cakeFlavor', 20);
+    const frostingFlavor = textValue(formData, 'frostingFlavor', 40);
     const customFlavorRequest = textValue(formData, 'customFlavorRequest');
+    const cakeInspirationComments = textValue(formData, 'cakeInspirationComments');
+    const cupcakeInspirationComments = textValue(formData, 'cupcakeInspirationComments');
     const flowers = checkboxValue(formData, 'flowers');
     const flowersRequest = textValue(formData, 'flowersRequest');
     const specializedDesign = checkboxValue(formData, 'specializedDesign');
@@ -382,13 +498,25 @@ export const POST: APIRoute = async ({ request }) => {
     if (cupcakeInspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
       throw new FormError(`Please choose no more than ${MAX_INSPIRATION_SELECTIONS} inspiration cupcakes.`);
     }
-    if (!email && !phone) throw new FormError('Please provide an email address or phone number.');
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      throw new FormError('Please provide a mobile number with 10 to 15 digits so I can text you.');
+    }
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
+    if (allergyStatus !== 'none' && allergyStatus !== 'details') {
+      throw new FormError('Please tell me whether you have any allergies or dietary needs.');
+    }
+    if (allergyStatus === 'details' && !allergyDetails) {
+      throw new FormError('Please describe your allergy or dietary need.');
+    }
+    if (allergyStatus === 'none' && allergyDetails) {
+      throw new FormError('Please select the allergy option that matches your details.');
+    }
     const parsedEventDate = dateOnlyToUtc(eventDate);
     if (!parsedEventDate) throw new FormError('Please choose a valid event date.');
     const firstAvailableEventDate = minimumEventDate();
     if (parsedEventDate < firstAvailableEventDate) {
-      throw new FormError(`Please choose an event date at least 4 days away (${formatDateOnly(firstAvailableEventDate)} or later).`);
+      throw new FormError(`Please choose an event date at least one week away (${formatDateOnly(firstAvailableEventDate)} or later).`);
     }
 
     const imageFiles = imageFilesFrom(formData, 'referenceImages');
@@ -397,7 +525,7 @@ export const POST: APIRoute = async ({ request }) => {
       throw new FormError('Reference images must be 4 MB or smaller in total for your order.');
     }
     const hasCupcakes = bakeryOrder.items.some((item) => item.productId === 'cupcakes-dozen');
-    if (!hasCupcakes && (cupcakeInspirationIds.length || cupcakeImageFiles.length)) {
+    if (!hasCupcakes && (cupcakeInspirationIds.length || cupcakeImageFiles.length || cupcakeInspirationComments)) {
       throw new FormError('Cupcake inspiration requires a cupcake order.');
     }
 
@@ -408,13 +536,27 @@ export const POST: APIRoute = async ({ request }) => {
       token: writeToken,
       useCdn: false,
     });
+    const orderId = `cakeOrder.${requestId}`;
+    const submissionFingerprint = await fingerprintSubmission(formData, writeToken);
+    const existingOrder = await client.getDocument(orderId);
+    if (existingOrder) {
+      if (existingOrder.submissionFingerprint !== submissionFingerprint) {
+        return json({ error: 'This request was already used for a different order. Please refresh the form and try again.' }, 409);
+      }
+      return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
+    }
+    if (!await reserveSubmission(client, request, writeToken)) {
+      return json({ error: 'Too many order requests right now. Please try again later or contact me directly.' }, 429);
+    }
     const { size, inspiration, cupcakeInspiration } = await getOrderSelections(client, sizeId, inspirationIds, cupcakeInspirationIds);
     const customizationsRestricted = !size || cakeSizeHasNoCustomizations(size.name);
 
     if (customizationsRestricted) {
       const hasCustomizations = Boolean(
         cakeFlavor
+        || frostingFlavor
         || customFlavorRequest
+        || cakeInspirationComments
         || flowers
         || flowersRequest
         || specializedDesign
@@ -433,6 +575,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } else {
       if (!Object.hasOwn(CAKE_FLAVOR_LABELS, cakeFlavor)) throw new FormError('Please choose a cake flavor.');
+      if (!Object.hasOwn(FROSTING_FLAVOR_LABELS, frostingFlavor)) throw new FormError('Please choose a frosting flavor.');
       if (cakeFlavor === 'custom' && !customFlavorRequest) throw new FormError('Please describe your custom cake flavor.');
       if (cakeFlavor !== 'custom' && customFlavorRequest) throw new FormError('Custom flavor details require the custom cake flavor option.');
       if (flowers && !flowersRequest) throw new FormError('Please add details for flowers.');
@@ -453,26 +596,40 @@ export const POST: APIRoute = async ({ request }) => {
       Number(size?.basePrice || 0) + selectedCustomizationCount * CUSTOMIZATION_PRICE + bakeryOrder.subtotal
     ) * 100) / 100;
 
+    const lease = await acquireSubmissionLease(client, requestId, submissionFingerprint);
+    if (lease === 'different') {
+      return json({ error: 'This request was already used for a different order. Please refresh the form and try again.' }, 409);
+    }
+    if (lease === 'processing') {
+      return json({ error: 'Your request is still being saved. Please try again in two minutes.' }, 409);
+    }
+
     const referenceImages = await Promise.all(imageFiles.map(async (file) => {
-      const asset = await client.assets.upload('image', Buffer.from(await file.arrayBuffer()), {
+      const asset = await client.assets.upload('image', new Blob([await file.arrayBuffer()], { type: file.type }), {
         filename: file.name,
         contentType: file.type,
       });
       return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
     }));
     const cupcakeReferenceImages = await Promise.all(cupcakeImageFiles.map(async (file) => {
-      const asset = await client.assets.upload('image', Buffer.from(await file.arrayBuffer()), {
+      const asset = await client.assets.upload('image', new Blob([await file.arrayBuffer()], { type: file.type }), {
         filename: file.name,
         contentType: file.type,
       });
       return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
     }));
 
-    const order = await client.create({
+    const submissionClaim = crypto.randomUUID();
+    const order = await client.createIfNotExists({
+      _id: orderId,
       _type: 'cakeOrder',
+      submissionFingerprint,
+      submissionClaim,
       customerName,
       email: email || undefined,
       phone: phone || undefined,
+      allergyStatus,
+      allergyDetails: allergyStatus === 'details' ? allergyDetails : undefined,
       eventDate,
       bostonMetroConfirmed,
       pickupLocation,
@@ -480,6 +637,7 @@ export const POST: APIRoute = async ({ request }) => {
       bakeryItems: bakeryOrder.items.map((item) => ({ _type: 'bakeryOrderItem', _key: sanityArrayKey(), ...item })),
       cupcakeFlavor: bakeryOrder.cupcakeFlavor,
       cupcakeVisualSuggestions: bakeryOrder.cupcakeVisualSuggestions,
+      cupcakeInspirationComments: cupcakeInspirationComments || undefined,
       cupcakeInspirationSelections: cupcakeInspiration.map((item) => ({
         _key: sanityArrayKey(),
         ...asReference(item._id),
@@ -487,6 +645,7 @@ export const POST: APIRoute = async ({ request }) => {
       cupcakeReferenceImages,
       pricingPending: bakeryOrder.pricingPending,
       cakeFlavor: customizationsRestricted ? undefined : cakeFlavor,
+      frostingFlavor: customizationsRestricted ? undefined : frostingFlavor,
       customFlavorRequest: cakeFlavor === 'custom' ? customFlavorRequest : undefined,
       flowers,
       flowersRequest: flowers ? flowersRequest : undefined,
@@ -500,12 +659,19 @@ export const POST: APIRoute = async ({ request }) => {
         _key: sanityArrayKey(),
         ...asReference(item._id),
       })),
+      cakeInspirationComments: cakeInspirationComments || undefined,
       referenceImages,
       calculatedTotal,
       status: 'new',
       createdAt: new Date().toISOString(),
       notificationStatus: 'pending',
     });
+    if (order.submissionClaim !== submissionClaim) {
+      if (order.submissionFingerprint !== submissionFingerprint) {
+        return json({ error: 'This request was already used for a different order. Please refresh the form and try again.' }, 409);
+      }
+      return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
+    }
 
     const rows = orderRows([
       ['Customer', customerName],
@@ -514,6 +680,7 @@ export const POST: APIRoute = async ({ request }) => {
       ['Pickup location', PICKUP_LOCATION_LABELS[pickupLocation as keyof typeof PICKUP_LOCATION_LABELS]],
       ['Email', email],
       ['Phone', phone],
+      ['Allergies and dietary needs', allergyStatus === 'details' ? allergyDetails : 'None reported'],
       ...bakeryOrder.items.map((item): [string, string] => [
         `${item.quantity} × ${item.name} (${item.portion})`,
         item.lineTotal === null ? 'Price TBD' : `${dollars(item.unitPrice!)} each · ${dollars(item.lineTotal)}`,
@@ -522,17 +689,20 @@ export const POST: APIRoute = async ({ request }) => {
       ['Cupcake visual suggestions', bakeryOrder.cupcakeVisualSuggestions],
       ...(hasCupcakes ? [
         ['Cupcake inspiration', cupcakeInspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
+        ['Cupcake inspiration comments', cupcakeInspirationComments],
         ['Cupcake reference photos', cupcakeImageFiles.map((file) => file.name).join(', ') || 'None'],
       ] as Array<[string, string | undefined]> : []),
       ...(size ? [
         ['Size', size.name],
         ['Cake flavor', customizationsRestricted ? 'Offered as-is' : CAKE_FLAVOR_LABELS[cakeFlavor as keyof typeof CAKE_FLAVOR_LABELS]],
+        ['Frosting flavor', customizationsRestricted ? 'Offered as-is' : FROSTING_FLAVOR_LABELS[frostingFlavor as keyof typeof FROSTING_FLAVOR_LABELS]],
         ['Custom flavor', cakeFlavor === 'custom' ? customFlavorRequest : undefined],
         ['Flowers', flowers ? flowersRequest : 'None'],
         ['Specialized designs', specializedDesign ? specializedDesignRequest : 'None'],
         ['Custom filling', customFilling ? customFillingRequest : 'None'],
         ['Custom buttercream', customButtercream ? customButtercreamRequest : 'None'],
         ['Inspiration', inspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
+        ['Cake inspiration comments', cakeInspirationComments],
         ['Reference photos', imageFiles.map((file) => file.name).join(', ') || 'None'],
       ] as Array<[string, string | undefined]> : []),
       [bakeryOrder.pricingPending ? 'Priced subtotal' : 'Starting estimate',
@@ -546,7 +716,7 @@ export const POST: APIRoute = async ({ request }) => {
     try {
       await sendBrevoEmail(brevoApiKey, {
         sender: { name: 'Star Sweets', email: fromEmail },
-        to: notificationEmail.split(',').map((address) => address.trim()).filter(Boolean).map((address) => ({ email: address })),
+        to: String(notificationEmail).split(',').map((address) => address.trim()).filter(Boolean).map((address) => ({ email: address })),
         replyTo: email ? { email } : undefined,
         subject: `New order request from ${customerName} for ${eventDate}`,
         htmlContent: adminEmailTemplate({ customerName, eventDate, rows, orderLink }),
@@ -572,7 +742,7 @@ export const POST: APIRoute = async ({ request }) => {
       await client.patch(order._id).set({ notificationStatus: 'failed', notificationError }).commit();
     }
 
-    return json({ message: 'Your order request is in. Star Sweets will be in touch soon.' }, 201);
+    return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
   } catch (error) {
     if (error instanceof FormError) return json({ error: error.message }, 400);
     console.error('Order submission failed:', error);

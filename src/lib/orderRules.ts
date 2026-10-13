@@ -9,5 +9,5 @@ function normalizeCakeSizeName(name: string) {
 export function cakeSizeHasNoCustomizations(name?: string) {
   if (!name) return false;
 
-  return /^4 (?:inch|inches|in) 2 layers?(?: cake)?$/.test(normalizeCakeSizeName(name));
+  return /^4 (?:inch|inches|in) 2 layers?(?: cake)?(?: round)?$/.test(normalizeCakeSizeName(name));
 }

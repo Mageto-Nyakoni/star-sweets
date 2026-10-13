@@ -1,0 +1,88 @@
+---
+import { cakeSizeHasNoCustomizations } from '../lib/orderRules';
+
+const { sizes = [] } = Astro.props;
+
+const chartItems = sizes.map((size) => {
+  const diameter = Number(/(\d+(?:\.\d+)?)\s*(?:inch|inches|in)\b/i.exec(size.name)?.[1]);
+  return {
+    ...size,
+    diameter: Number.isFinite(diameter) && diameter > 0 ? diameter : null,
+    shape: /heart/i.test(size.name) ? 'heart' : 'round',
+    layers: /(\d+)\s*layers?/i.exec(size.name)?.[1],
+    servings: size.servings && (/^serves\b/i.test(size.servings) ? size.servings : `Serves ${size.servings}`),
+  };
+});
+const largestDiameter = Math.max(1, ...chartItems.map((item) => item.diameter || 0));
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const heartPath = 'M 0 -10 C -7 -14 -24 -13 -24 -4 C -24 3 -10 8 0 12 C 10 8 24 3 24 -4 C 24 -13 7 -14 0 -10 Z';
+const cardWidth = 3.37 / largestDiameter * 112;
+const cardHeight = cardWidth * 2.125 / 3.37;
+const cardX = 180 - cardWidth;
+const cardY = 136 - cardHeight;
+---
+
+{chartItems.length > 0 && (
+  <div class="cake-size-guide">
+    <p>Credit card for scale. Heights are illustrative.</p>
+    <div class="cake-size-guide-list">
+      {chartItems.map((item, index) => {
+        const cakeWidth = (item.diameter || 0) / largestDiameter * 112;
+        const radius = cakeWidth / 2;
+        const bodyHeight = item.layers === '2' ? 38 : 54;
+        const topY = 54;
+        const bottomY = topY + bodyHeight;
+        const topRy = cakeWidth * 0.16;
+        const heartScaleX = cakeWidth / 48;
+        const heartHeightRatio = (2 / 3 * 1.25) / 1.10;
+        const heartScaleY = heartScaleX * heartHeightRatio;
+        const heartBodyHeight = bodyHeight * heartHeightRatio;
+        const heartY = 42 + 12 * heartScaleX + bodyHeight - 12 * heartScaleY - heartBodyHeight;
+        const heartDepth = heartBodyHeight / heartScaleY;
+        const heartLeftSide = `M -24 -4 C -24 3 -10 8 0 12 L 0 ${12 + heartDepth} C -10 ${8 + heartDepth} -24 ${3 + heartDepth} -24 ${-4 + heartDepth} Z`;
+        const heartRightSide = `M 0 12 C 10 8 24 3 24 -4 L 24 ${-4 + heartDepth} C 24 ${3 + heartDepth} 10 ${8 + heartDepth} 0 ${12 + heartDepth} Z`;
+        return (
+          <label class="cake-size-guide-item">
+            <input
+              type="radio"
+              name="cakeSize"
+              value={item._id}
+              data-label={item.name}
+              data-price={item.basePrice}
+              data-customizations={cakeSizeHasNoCustomizations(item.name) ? 'none' : 'allowed'}
+              checked={index === 0}
+              required
+            />
+            <span class="cake-size-guide-select-mark" aria-hidden="true"></span>
+            {item.diameter ? <svg viewBox="0 0 180 155" aria-hidden="true">
+              <line x1="10" y1="142" x2="180" y2="142" class="cake-size-guide-ground" />
+              {item.shape === 'heart' ? (
+                <>
+                  <path d={heartLeftSide} transform={`translate(70 ${heartY}) scale(${heartScaleX} ${heartScaleY})`} class="cake-size-guide-side" />
+                  <path d={heartRightSide} transform={`translate(70 ${heartY}) scale(${heartScaleX} ${heartScaleY})`} class="cake-size-guide-side cake-size-guide-heart-right" />
+                  <path d={heartPath} transform={`translate(70 ${heartY}) scale(${heartScaleX} ${heartScaleY})`} class="cake-size-guide-cake" />
+                  <path d={heartPath} transform={`translate(70 ${heartY}) scale(${heartScaleX * 0.78} ${heartScaleY * 0.78})`} class="cake-size-guide-detail" />
+                </>
+              ) : (
+                <>
+                  <path d={`M ${70 - radius} ${topY} L ${70 - radius} ${bottomY} C ${70 - radius} ${bottomY + topRy} ${70 + radius} ${bottomY + topRy} ${70 + radius} ${bottomY} L ${70 + radius} ${topY} Z`} class="cake-size-guide-side" />
+                  <ellipse cx="70" cy={topY} rx={radius} ry={topRy} class="cake-size-guide-cake" />
+                  <ellipse cx="70" cy={topY} rx={radius * 0.8} ry={topRy * 0.75} class="cake-size-guide-detail" />
+                </>
+              )}
+              <rect x={cardX} y={cardY} width={cardWidth} height={cardHeight} rx="3" class="cake-size-guide-card" />
+              <rect x={cardX + cardWidth * 0.12} y={cardY + cardHeight * 0.18} width={cardWidth * 0.16} height={cardHeight * 0.2} rx="1" class="cake-size-guide-card-chip" />
+              <line x1={cardX + cardWidth * 0.12} y1={cardY + cardHeight * 0.7} x2={cardX + cardWidth * 0.65} y2={cardY + cardHeight * 0.7} class="cake-size-guide-card-line" />
+            </svg> : <span class="cake-size-guide-no-art">No size illustration</span>}
+            <span class="cake-size-guide-details">
+              <strong>{item.diameter ? <>{item.diameter}&Prime; {item.shape}</> : item.name}</strong>
+              {item.layers && <small>{item.layers} layers</small>}
+              {item.servings && <small>{item.servings}</small>}
+              <span class="cake-size-guide-price">{money.format(Number(item.basePrice) || 0)}</span>
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  </div>
+)}
