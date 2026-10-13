@@ -3,6 +3,8 @@ import { structureTool } from 'sanity/structure';
 import { schemaTypes } from './schemaTypes/index.js';
 
 const ABOUT_PAGE_TYPE = 'aboutPage';
+const INSTAGRAM_GALLERY_TYPE = 'instagramGallerySettings';
+const SINGLETON_TYPES = [ABOUT_PAGE_TYPE, INSTAGRAM_GALLERY_TYPE];
 
 export default defineConfig({
   name: 'star-sweets',
@@ -22,8 +24,16 @@ export default defineConfig({
                 .schemaType(ABOUT_PAGE_TYPE)
                 .documentId('aboutPage')
             ),
+          S.listItem()
+            .id('instagramGallery')
+            .title('Instagram Gallery')
+            .child(
+              S.document()
+                .schemaType(INSTAGRAM_GALLERY_TYPE)
+                .documentId('instagramGallerySettings')
+            ),
           S.divider(),
-          ...S.documentTypeListItems().filter((item) => item.getId() !== ABOUT_PAGE_TYPE),
+          ...S.documentTypeListItems().filter((item) => !SINGLETON_TYPES.includes(item.getId())),
         ]),
     }),
   ],
@@ -32,12 +42,12 @@ export default defineConfig({
   },
   document: {
     actions: (previousActions, { schemaType }) => (
-      schemaType === ABOUT_PAGE_TYPE
+      SINGLETON_TYPES.includes(schemaType)
         ? previousActions.filter(({ action }) => action !== 'duplicate' && action !== 'delete')
         : previousActions
     ),
     newDocumentOptions: (previousOptions) => (
-      previousOptions.filter(({ templateId }) => templateId !== ABOUT_PAGE_TYPE)
+      previousOptions.filter(({ templateId }) => !SINGLETON_TYPES.includes(templateId))
     ),
   },
 });

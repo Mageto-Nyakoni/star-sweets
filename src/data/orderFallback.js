@@ -92,4 +92,5 @@ export const cakeOrderOptions = {
       addOns: [],
     },
   ],
+  cupcakeGallery: [],
 };

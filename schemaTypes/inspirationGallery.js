@@ -20,6 +20,20 @@ export const inspirationGallery = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'inspirationFor',
+      title: 'Show in order form for',
+      type: 'string',
+      description: 'Choose Cupcakes to show this photo in the cupcake inspiration picker. Existing photos stay in the cake picker.',
+      initialValue: 'cake',
+      options: {
+        layout: 'radio',
+        list: [
+          { title: 'Cakes', value: 'cake' },
+          { title: 'Cupcakes', value: 'cupcake' },
+        ],
+      },
+    }),
+    defineField({
       name: 'tags',
       title: 'Tags',
       type: 'array',
@@ -28,8 +42,8 @@ export const inspirationGallery = defineType({
     }),
     defineField({
       name: 'cakeDetails',
-      title: 'Cake Details',
-      description: 'Describe the flavors, filling, buttercream, design, or occasion shown in this order.',
+      title: 'Order Details',
+      description: 'Describe the flavor, design, or occasion shown in this order.',
       type: 'text',
       rows: 4,
     }),

@@ -36,23 +36,17 @@ export function normalizeInstagramPost(media) {
   );
   if (!imageUrl) return null;
 
-  const caption = typeof media.caption === 'string' ? media.caption.trim() : '';
-  const firstLine = caption.split('\n').find((line) => line.trim())?.trim() || '';
-  const title = firstLine.length > 85 ? `${firstLine.slice(0, 82).trimEnd()}…` : firstLine;
-
   return {
     id: media.id,
     imageUrl,
     permalink,
-    caption,
-    title: title || 'A Star Sweets creation',
     isVideo: media.media_type === 'VIDEO',
   };
 }
 
 async function requestInstagramPosts(token, request) {
   const url = new URL(INSTAGRAM_API_URL);
-  url.searchParams.set('fields', 'id,caption,media_type,media_url,thumbnail_url,permalink,children{media_type,media_url,thumbnail_url}');
+  url.searchParams.set('fields', 'id,media_type,media_url,thumbnail_url,permalink,children{media_type,media_url,thumbnail_url}');
   url.searchParams.set('limit', String(MAX_POSTS));
 
   const response = await request(url, {

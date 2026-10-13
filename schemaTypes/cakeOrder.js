@@ -29,6 +29,25 @@ export const cakeOrder = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'bostonMetroConfirmed',
+      title: 'Boston Metro Pickup Confirmed',
+      type: 'boolean',
+      description: 'The customer confirmed that they are in the Boston metropolitan area and can pick up the order.',
+      readOnly: true,
+    }),
+    defineField({
+      name: 'pickupLocation',
+      title: 'Preferred Pickup Location',
+      type: 'string',
+      description: 'Exact pickup address and time are confirmed after reviewing the order.',
+      options: {
+        list: [
+          { title: 'Quincy', value: 'quincy' },
+          { title: 'Fenway', value: 'fenway' },
+        ],
+      },
+    }),
+    defineField({
       name: 'cakeSize',
       title: 'Cake Size',
       type: 'reference',
@@ -71,6 +90,21 @@ export const cakeOrder = defineType({
       title: 'Cupcake Visual Suggestions',
       type: 'text',
       rows: 3,
+      hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
+    }),
+    defineField({
+      name: 'cupcakeInspirationSelections',
+      title: 'Cupcake Inspiration Selections',
+      type: 'array',
+      description: 'Past cupcake styles the customer marked as inspiration.',
+      of: [{ type: 'reference', to: [{ type: 'inspirationGallery' }] }],
+      hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
+    }),
+    defineField({
+      name: 'cupcakeReferenceImages',
+      title: 'Cupcake Reference Images',
+      type: 'array',
+      of: [{ type: 'image', options: { hotspot: true } }],
       hidden: ({ document }) => !document?.bakeryItems?.some((item) => item.productId === 'cupcakes-dozen'),
     }),
     defineField({

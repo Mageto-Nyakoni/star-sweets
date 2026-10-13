@@ -110,6 +110,16 @@
   margin-top: 1.25rem;
 }
 
+.order-service-note {
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--ss-red);
+  background: rgba(245, 234, 232, 0.48);
+  color: var(--ss-berry);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .order-type-card {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
@@ -205,6 +215,59 @@
   row-gap: 1.25rem;
 }
 
+.pickup-section {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(140, 26, 26, 0.14);
+}
+
+.pickup-section h3 {
+  margin: 0 0 0.35rem;
+  color: var(--ss-cherry);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+}
+
+.pickup-section > .field-note { margin: 0 0 1.25rem; }
+
+.pickup-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.pickup-options .choice-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 3.5rem;
+}
+
+.pickup-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(140, 26, 26, 0.18);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ss-berry);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.pickup-confirmation:has(input:checked) {
+  border-color: var(--ss-red);
+  background: rgba(196, 83, 106, 0.07);
+}
+
+.pickup-confirmation input {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--ss-maroon);
+}
+
 .order-form fieldset {
   min-width: 0;
   margin: 0 0 1.25rem;
@@ -296,6 +359,21 @@ textarea:focus {
 .bakery-card em { margin-top: 0.35rem; color: #55706a; font-style: normal; font-weight: 800; }
 .bakery-card label > span { font-size: 0.7rem; }
 .cupcake-options { margin-top: 1rem; }
+
+.cupcake-inspiration {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(140, 26, 26, 0.14);
+}
+
+.cupcake-inspiration h3 {
+  margin: 0 0 0.35rem;
+  color: var(--ss-cherry);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+}
+
+.cupcake-inspiration > .field-note { margin: 0 0 1.15rem; }
 
 .choice-card {
   position: relative;
@@ -425,6 +503,16 @@ textarea:focus {
 
 .inspiration-picker {
   min-width: 0;
+}
+
+.inspiration-empty {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid rgba(140, 26, 26, 0.14);
+  border-radius: 8px;
+  background: rgba(245, 234, 232, 0.48);
+  color: var(--ss-mist);
+  line-height: 1.5;
 }
 
 .inspiration-filters {
@@ -999,6 +1087,156 @@ body.inspiration-dialog-open {
   opacity: 0.72;
 }
 
+.order-confirmation {
+  width: min(31rem, calc(100% - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #f2bfd0;
+  border-radius: 18px;
+  background: #fffaf8;
+  color: var(--ss-cherry);
+  box-shadow: 0 1.5rem 5rem rgba(54, 12, 27, 0.26);
+}
+
+.order-confirmation::backdrop {
+  background: rgba(54, 12, 27, 0.66);
+  backdrop-filter: blur(4px);
+}
+
+.order-confirmation-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.25rem clamp(1.4rem, 6vw, 2.75rem) 2.5rem;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 0%, #fde8ef 0, #fffaf8 72%);
+  text-align: center;
+}
+
+.order-confirmation-card > :not(.order-confetti):not(.order-confirmation-close) {
+  position: relative;
+  z-index: 1;
+}
+
+.order-confirmation-close {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  right: 0.85rem;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ss-maroon);
+  cursor: pointer;
+  font-size: 1.65rem;
+}
+
+.order-confirmation-close:hover,
+.order-confirmation-close:focus-visible {
+  background: #f9dce5;
+}
+
+.order-confirmation-logo {
+  width: clamp(11rem, 45vw, 13.5rem);
+  height: auto;
+  margin-bottom: 1.2rem;
+  transform-origin: center bottom;
+}
+
+.order-confirmation[open] .order-confirmation-logo {
+  animation: order-logo-arrive 850ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes order-logo-arrive {
+  0% { opacity: 0; transform: translateY(1rem) scale(0.72) rotate(-8deg); }
+  65% { opacity: 1; transform: translateY(-0.2rem) scale(1.05) rotate(3deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+.order-confirmation h2 {
+  margin-top: 0.45rem;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 6vw, 2.45rem);
+  line-height: 1.1;
+}
+
+.order-confirmation p:last-of-type {
+  max-width: 25rem;
+  margin-top: 1rem;
+  color: var(--ss-berry);
+  line-height: 1.65;
+}
+
+.order-confirmation-done {
+  min-width: 9rem;
+  min-height: 3rem;
+  margin-top: 1.8rem;
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ss-maroon);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.order-confirmation-done:hover,
+.order-confirmation-done:focus-visible {
+  background: var(--ss-cherry);
+}
+
+.order-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.order-confetti span {
+  position: absolute;
+  top: -1.25rem;
+  left: var(--confetti-left);
+  width: 0.45rem;
+  height: 0.85rem;
+  border-radius: 2px;
+  background: var(--confetti-color);
+  opacity: 0;
+  animation: order-confetti-fall var(--confetti-duration) ease-in var(--confetti-delay) both;
+}
+
+.order-confetti span:nth-child(3n) {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+@keyframes order-confetti-fall {
+  0% { top: -1.25rem; opacity: 0; transform: translateX(0) rotate(0deg); }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: calc(100% + 1.25rem); opacity: 0; transform: translateX(var(--confetti-drift)) rotate(540deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-confirmation[open] .order-confirmation-logo {
+    animation: none;
+  }
+
+  .order-confetti {
+    display: none;
+  }
+}
+
 .order-honeypot {
   position: absolute;
   left: -100vw;
@@ -1052,6 +1290,7 @@ body.inspiration-dialog-open {
   }
 
   .field-grid,
+  .pickup-options,
   .order-type-grid,
   .option-grid,
   .flavor-tabs {

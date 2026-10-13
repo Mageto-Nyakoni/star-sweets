@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createInstagramClient, normalizeInstagramPost } from '../src/lib/instagram.js';
+import { applyInstagramGallerySettings, instagramPostKey } from '../src/lib/galleryVisibility.js';
+import { mergeInstagramGalleryPosts } from '../src/lib/gallerySync.js';
 
 test('normalizes an image post for the gallery', () => {
   const post = normalizeInstagramPost({
@@ -15,8 +17,6 @@ test('normalizes an image post for the gallery', () => {
     id: '123',
     imageUrl: 'https://example.com/cake.jpg',
     permalink: 'https://www.instagram.com/p/cake/',
-    caption: 'Birthday cake\nChocolate and berries',
-    title: 'Birthday cake',
     isVideo: false,
   });
 });
@@ -71,6 +71,7 @@ test('requests Instagram media with a private bearer token and normalizes the re
       assert.equal(url.pathname, '/v25.0/me/media');
       assert.equal(url.searchParams.get('limit'), '24');
       assert.match(url.searchParams.get('fields'), /children\{media_type,media_url,thumbnail_url\}/);
+      assert.equal(url.searchParams.get('fields').includes('caption'), false);
       assert.equal(url.searchParams.has('access_token'), false);
       assert.equal(options.headers.Authorization, 'Bearer test-token');
       assert.ok(options.signal instanceof AbortSignal);
@@ -136,4 +137,46 @@ test('rejects an unexpected response instead of treating it as an empty account'
   });
 
   await assert.rejects(fetchPosts, { message: 'Instagram media response was invalid' });
+});
+
+test('uses Sanity descriptions and visibility without showing Instagram captions', () => {
+  const posts = [
+    { permalink: 'https://www.instagram.com/p/cake-one/', caption: 'Instagram caption' },
+    { permalink: 'https://www.instagram.com/reel/cake-two/' },
+    { permalink: 'https://www.instagram.com/p/cake-three/' },
+  ];
+
+  const result = applyInstagramGallerySettings(posts, { posts: [
+    { postUrl: 'https://instagram.com/p/cake-one/?igsh=shared', description: '  Strawberry cake  ' },
+    { postUrl: 'https://www.instagram.com/reel/cake-two/', isHidden: true },
+    { postUrl: 'https://fakeinstagram.com/p/cake-three/', isHidden: true },
+  ] });
+  assert.deepEqual(result, [
+    { ...posts[0], description: 'Strawberry cake' },
+    { ...posts[2], description: '' },
+  ]);
+  assert.equal(instagramPostKey('https://m.instagram.com/reel/cake-two/?utm_source=copy'), 'cake-two');
+  assert.equal(instagramPostKey('https://www.instagram.com/star.sweets25/'), null);
+});
+
+test('imports missing posts without changing existing Sanity edits or adding duplicates', () => {
+  const existing = [{
+    _key: 'saved',
+    postUrl: 'https://www.instagram.com/p/cake-one/',
+    description: 'Custom description',
+    isHidden: true,
+  }];
+  const feed = [
+    { permalink: 'https://www.instagram.com/p/cake-two/' },
+    { permalink: 'https://instagram.com/p/cake-one/?igsh=shared' },
+    { permalink: 'https://www.instagram.com/p/cake-two/?utm_source=copy' },
+  ];
+
+  const merged = mergeInstagramGalleryPosts(existing, feed, () => 'new');
+  assert.equal(merged.addedCount, 1);
+  assert.deepEqual(merged.posts, [
+    { _type: 'galleryPostSetting', _key: 'new', postUrl: feed[0].permalink, description: '', isHidden: false },
+    existing[0],
+  ]);
+  assert.equal(mergeInstagramGalleryPosts(merged.posts, feed, () => 'unused').addedCount, 0);
 });

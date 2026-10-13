@@ -51,22 +51,6 @@ if (isSanityConfigured()) {
       </div>
     </section>
 
-    <section class="about-values" aria-labelledby="values-title">
-      <div class="about-values-heading">
-        <p class="home-eyebrow">{aboutPage.valuesEyebrow}</p>
-        <h2 id="values-title" class="placement-heading">{aboutPage.valuesHeading}</h2>
-      </div>
-      <div class="about-values-grid">
-        {aboutPage.values.map((value, index) => (
-          <article>
-            <span>{String(index + 1).padStart(2, '0')}</span>
-            <h3 class="placement-heading">{value.title}</h3>
-            <p class="placement-text">{value.description}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-
     <section class="about-order-band">
       <div>
         <p class="home-eyebrow">{aboutPage.ctaEyebrow}</p>

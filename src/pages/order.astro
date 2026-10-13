@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import OrderInspirationPicker from '../components/OrderInspirationPicker.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { bakeryMenu } from '../data/bakeryMenu';
 import { cakeSizeHasNoCustomizations } from '../lib/orderRules';
@@ -34,13 +35,8 @@ const priceLabel = (amount = 0, base = false) => {
 
 const firstSizeId = orderOptions.sizes?.[0]?._id;
 const customizationPrice = 10;
-const galleryItems = Array.isArray(orderOptions.gallery) ? orderOptions.gallery : [];
-const galleryTags = Array.from(new Set(
-  galleryItems
-    .flatMap((item) => Array.isArray(item.tags) ? item.tags : [])
-    .map((tag) => String(tag).trim())
-    .filter(Boolean)
-)).sort((a, b) => a.localeCompare(b));
+const cakeGalleryItems = Array.isArray(orderOptions.gallery) ? orderOptions.gallery : [];
+const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOptions.cupcakeGallery : [];
 ---
 
 <Layout
@@ -76,6 +72,7 @@ const galleryTags = Array.from(new Set(
           <fieldset>
             <legend id="order-choice-heading">What do you want to order?</legend>
             <p class="field-note">Pick one or more</p>
+            <p class="order-service-note">Orders are for the Boston metropolitan area, with pickup in Quincy or Fenway</p>
             <div class="order-type-grid">
               <label class="choice-card order-type-card">
                 <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
@@ -236,176 +233,7 @@ const galleryTags = Array.from(new Set(
             <p class="field-note">See a cake you like? Pick up to three, or upload your own photos</p>
           </div>
 
-          <fieldset>
-            <legend>Past cake gallery</legend>
-            <div class="inspiration-picker" data-inspiration-picker>
-              {galleryTags.length > 0 && (
-                <div class="inspiration-filters" role="group" aria-label="Filter past cakes">
-                  <button type="button" class="is-active" data-inspiration-filter="" aria-pressed="true">All</button>
-                  {galleryTags.map((tag) => (
-                    <button type="button" data-inspiration-filter={tag} aria-pressed="false">{tag}</button>
-                  ))}
-                </div>
-              )}
-
-              <div class="inspiration-carousel" data-inspiration-carousel aria-label="Past cake inspiration">
-                <div class="inspiration-track">
-                  {galleryItems.map((item, index) => (
-                    <article
-                      class="inspiration-item"
-                      data-inspiration-item
-                      data-inspiration-id={item._id}
-                      data-inspiration-tags={JSON.stringify(Array.isArray(item.tags) ? item.tags : [])}
-                    >
-                  <input
-                    id={`inspiration-${index}`}
-                    class="inspiration-checkbox"
-                    type="checkbox"
-                    name="inspirationSelections"
-                    value={item._id}
-                    data-label={item.caption}
-                    tabindex="-1"
-                    aria-hidden="true"
-                  />
-                      <button
-                        type="button"
-                        class="gallery-choice"
-                        data-inspiration-open
-                        aria-haspopup="dialog"
-                        aria-controls={`inspiration-dialog-${index}`}
-                        aria-label={`View details for ${item.caption}`}
-                      >
-                        <span class="inspiration-selected-badge" data-inspiration-selected-badge hidden>
-                          Selected
-                        </span>
-                        {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.caption} loading="lazy" />
-                        ) : (
-                          <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
-                        )}
-                        <span class="gallery-choice-copy">
-                          <strong>{item.caption}</strong>
-                          {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
-                          <span class="gallery-view-details">View details <span aria-hidden="true">&rarr;</span></span>
-                        </span>
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              </div>
-
-              {galleryItems.length > 1 && (
-                <div class="inspiration-carousel-controls" aria-label="Past cake gallery controls">
-                  <button type="button" data-inspiration-previous aria-label="Show previous cakes">
-                    <span aria-hidden="true">&larr;</span>
-                  </button>
-                  <button type="button" data-inspiration-next aria-label="Show more cakes">
-                    <span aria-hidden="true">&rarr;</span>
-                  </button>
-                </div>
-              )}
-
-              <p class="inspiration-picker-status" data-inspiration-status aria-live="polite">
-                Choose up to 3 cakes. Open any cake to see its details
-              </p>
-
-              <div class="inspiration-selected-tray" data-inspiration-selected-tray hidden>
-                <div class="inspiration-selected-heading">
-                  <strong>Your inspiration</strong>
-                  <span><span data-inspiration-count>0</span> of 3 selected</span>
-                </div>
-                <div class="inspiration-selected-list">
-                  {galleryItems.map((item, index) => (
-                    <article data-inspiration-selected-entry={item._id} hidden>
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt="" loading="lazy" />
-                      ) : (
-                        <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
-                      )}
-                      <span>{item.caption}</span>
-                      <button
-                        type="button"
-                        data-inspiration-remove={item._id}
-                        aria-label={`Remove ${item.caption} from your inspiration`}
-                      >
-                        <span aria-hidden="true">&times;</span>
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </fieldset>
-
-          {galleryItems.map((item, index) => (
-            <dialog
-              id={`inspiration-dialog-${index}`}
-              class="inspiration-dialog"
-              aria-labelledby={`inspiration-dialog-title-${index}`}
-            >
-              <div class="inspiration-dialog-card">
-                <button
-                  type="button"
-                  class="inspiration-dialog-close"
-                  data-inspiration-dialog-close
-                  aria-label="Close cake details"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-
-                <div class="inspiration-dialog-media">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.caption} loading="lazy" />
-                  ) : (
-                    <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
-                  )}
-                </div>
-
-                <div class="inspiration-dialog-copy">
-                  <p class="inspiration-dialog-eyebrow">Past cake</p>
-                  <h3 id={`inspiration-dialog-title-${index}`}>{item.caption}</h3>
-                  {Array.isArray(item.tags) && item.tags.length > 0 && (
-                    <p class="inspiration-dialog-tags">{item.tags.join(' / ')}</p>
-                  )}
-                  <div class="inspiration-dialog-section">
-                    <h4>Cake details</h4>
-                    <p>{item.cakeDetails || 'More cake details coming soon'}</p>
-                  </div>
-                  <div class="inspiration-dialog-section">
-                    <h4>Add-ons</h4>
-                    {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
-                      <ul>{item.addOns.map((addOn) => <li>{addOn}</li>)}</ul>
-                    ) : (
-                      <p>No add-ons listed for this cake</p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    class="inspiration-use-button"
-                    data-use-inspiration={item._id}
-                  >
-                    Use as inspiration
-                  </button>
-                  <p class="inspiration-dialog-limit" data-inspiration-dialog-limit hidden>
-                    You already have 3 cakes selected. Remove one from “Your inspiration” to choose this cake
-                  </p>
-                </div>
-              </div>
-            </dialog>
-          ))}
-
-          <label class="upload-drop">
-            <span>Upload your own inspiration</span>
-            <input
-              id="reference-images"
-              type="file"
-              name="referenceImages"
-              accept="image/png,image/jpeg,image/webp"
-              multiple
-            />
-            <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total</small>
-          </label>
-          <ul id="file-list" class="file-list" aria-live="polite"></ul>
+          <OrderInspirationPicker kind="cake" items={cakeGalleryItems} />
         </section>
         {[
           { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens. If you have a look in mind, tell me" },
@@ -452,19 +280,26 @@ const galleryTags = Array.from(new Set(
                     <textarea name="cupcakeVisualSuggestions" rows="3" maxlength="2000" disabled
                       placeholder="Share colors, a theme, or a look you like"></textarea>
                   </label>
-                  <p class="field-note">Cupcakes come in vanilla or chocolate. You can suggest colors or a look, but I can't make other changes</p>
+                  <p class="field-note">Cupcakes come in vanilla or chocolate. Share the colors or style you have in mind, and I’ll confirm the design with you</p>
                 </div>
               )}
               {category === 'Cookies' && <p class="field-note">Baker's Choice isn't in the total yet. I'll confirm the price with you</p>}
             </fieldset>
             ))}
+            {group.key === 'cupcakes' && (
+              <div class="cupcake-inspiration" data-cupcake-inspiration>
+                <h3>Cupcake inspiration</h3>
+                <p class="field-note">See a cupcake style you like? Pick up to three, or upload your own photos</p>
+                <OrderInspirationPicker kind="cupcake" items={cupcakeGalleryItems} />
+              </div>
+            )}
           </section>
         ))}
 
         <section class="order-section order-reveal hidden" data-contact-section aria-labelledby="contact-heading">
           <div class="section-copy">
             <p class="step-label">1</p>
-            <h2 id="contact-heading">Contact and date</h2>
+            <h2 id="contact-heading">Contact, date, and pickup</h2>
             <p class="field-note">I'll need your name, the date, and an email or phone number. Please order at least four days ahead</p>
           </div>
 
@@ -485,6 +320,28 @@ const galleryTags = Array.from(new Set(
             <label>
               <span>Phone</span>
               <input type="tel" name="phone" autocomplete="tel" />
+            </label>
+          </div>
+
+          <div class="pickup-section">
+            <h3>Boston metro pickup</h3>
+            <p class="field-note">All Star Sweets orders are based in the Boston metropolitan area. Choose where you can pick up your order; I'll confirm the exact address and time with you</p>
+            <fieldset>
+              <legend>Preferred pickup location</legend>
+              <div class="pickup-options">
+                <label class="choice-card">
+                  <input type="radio" name="pickupLocation" value="quincy" required />
+                  <span><strong>Quincy</strong></span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="pickupLocation" value="fenway" required />
+                  <span><strong>Fenway</strong></span>
+                </label>
+              </div>
+            </fieldset>
+            <label class="pickup-confirmation">
+              <input type="checkbox" name="bostonMetroConfirmed" value="yes" required />
+              <span>I confirm that I'm in the Boston metropolitan area and can pick up my order in Quincy or Fenway</span>
             </label>
           </div>
         </section>
@@ -551,26 +408,29 @@ const galleryTags = Array.from(new Set(
       </aside>
     </form>
 
+    <dialog class="order-confirmation" id="order-confirmation" aria-labelledby="order-confirmation-title" aria-describedby="order-confirmation-copy">
+      <div class="order-confirmation-card">
+        <div class="order-confetti" aria-hidden="true"></div>
+        <button class="order-confirmation-close" type="button" data-confirmation-close aria-label="Close confirmation">&times;</button>
+        <img class="order-confirmation-logo" src="/StarSweets-logo-trimmed.png" alt="Star Sweets" width="216" height="135" />
+        <h2 id="order-confirmation-title">Your request is in</h2>
+        <p id="order-confirmation-copy">I've saved your order request. I'll review it and get back to you at the email or phone number you gave me. Your date, pickup details, and final price aren't confirmed yet.</p>
+        <button class="order-confirmation-done" type="button" data-confirmation-close>Done</button>
+      </div>
+    </dialog>
+
     <script is:inline>
       const form = document.getElementById('cake-builder');
       const totalOutput = document.getElementById('order-total');
       const summaryLines = document.getElementById('summary-lines');
       const message = document.getElementById('form-message');
-      const fileInput = document.getElementById('reference-images');
-      const fileList = document.getElementById('file-list');
+      const confirmation = document.getElementById('order-confirmation');
+      const confetti = confirmation.querySelector('.order-confetti');
       const eventDateInput = form.elements.eventDate;
       const eventDateNote = form.querySelector('[data-min-event-date-note]');
       const sizeRestrictionNotice = form.querySelector('[data-size-restriction-notice]');
       const customizationSection = form.querySelector('[data-customization-section]');
       const inspirationSection = form.querySelector('[data-inspiration-section]');
-      const inspirationCarousel = form.querySelector('[data-inspiration-carousel]');
-      const inspirationTrack = form.querySelector('.inspiration-track');
-      const inspirationItems = Array.from(form.querySelectorAll('[data-inspiration-item]'));
-      const inspirationInputs = Array.from(form.querySelectorAll('[name="inspirationSelections"]'));
-      const inspirationFilters = Array.from(form.querySelectorAll('[data-inspiration-filter]'));
-      const inspirationStatus = form.querySelector('[data-inspiration-status]');
-      const inspirationTray = form.querySelector('[data-inspiration-selected-tray]');
-      const inspirationCount = form.querySelector('[data-inspiration-count]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -583,6 +443,8 @@ const galleryTags = Array.from(new Set(
       const maxFileSize = 2 * 1024 * 1024;
       const maxTotalFileSize = 4 * 1024 * 1024;
       const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      const cakePicker = createInspirationPicker(form.querySelector('[data-inspiration-group="cake"]'));
+      const cupcakePicker = createInspirationPicker(form.querySelector('[data-inspiration-group="cupcake"]'));
       const paidCustomizationNames = [
         'flowers',
         'specializedDesign',
@@ -703,95 +565,177 @@ const galleryTags = Array.from(new Set(
         });
 
         if (restricted) {
-          fileList.replaceChildren();
-          syncInspirationPicker();
+          cakePicker.fileList.replaceChildren();
+          cakePicker.sync();
           return;
         }
 
         if (!checked('cakeFlavor')) form.querySelector('[name="cakeFlavor"]').checked = true;
         setCustomizationDetails();
-        syncInspirationPicker();
+        cakePicker.sync();
       }
 
-      function inspirationInputFor(id) {
-        return inspirationInputs.find((input) => input.value === id);
-      }
+      function createInspirationPicker(group) {
+        const noun = group.dataset.inspirationNoun;
+        const selectionName = group.dataset.selectionName;
+        const carousel = group.querySelector('[data-inspiration-carousel]');
+        const track = group.querySelector('[data-inspiration-track]');
+        const items = Array.from(group.querySelectorAll('[data-inspiration-item]'));
+        const inputs = Array.from(group.querySelectorAll(`[name="${selectionName}"]`));
+        const filters = Array.from(group.querySelectorAll('[data-inspiration-filter]'));
+        const status = group.querySelector('[data-inspiration-status]');
+        const tray = group.querySelector('[data-inspiration-selected-tray]');
+        const count = group.querySelector('[data-inspiration-count]');
+        const fileInput = group.querySelector('[data-reference-images]');
+        const fileList = group.querySelector('[data-reference-file-list]');
+        const selectedInputs = () => inputs.filter((input) => input.checked);
+        const inputFor = (id) => inputs.find((input) => input.value === id);
 
-      function syncInspirationPicker(statusMessage = '') {
-        const selectedInputs = checkedAll('inspirationSelections');
-        const selectedIds = new Set(selectedInputs.map((input) => input.value));
+        function sync(statusMessage = '') {
+          const selected = selectedInputs();
+          const selectedIds = new Set(selected.map((input) => input.value));
 
-        inspirationItems.forEach((item) => {
-          const isSelected = selectedIds.has(item.dataset.inspirationId);
-          item.classList.toggle('is-selected', isSelected);
-          const badge = item.querySelector('[data-inspiration-selected-badge]');
-          const trigger = item.querySelector('[data-inspiration-open]');
-          const input = inspirationInputFor(item.dataset.inspirationId);
-          if (badge) badge.hidden = !isSelected;
-          if (trigger && input) {
-            trigger.setAttribute(
-              'aria-label',
-              `View details for ${input.dataset.label}${isSelected ? ', selected as inspiration' : ''}`
-            );
+          items.forEach((item) => {
+            const isSelected = selectedIds.has(item.dataset.inspirationId);
+            item.classList.toggle('is-selected', isSelected);
+            const badge = item.querySelector('[data-inspiration-selected-badge]');
+            const trigger = item.querySelector('[data-inspiration-open]');
+            const input = inputFor(item.dataset.inspirationId);
+            if (badge) badge.hidden = !isSelected;
+            if (trigger && input) {
+              trigger.setAttribute('aria-label',
+                `View details for ${input.dataset.label}${isSelected ? ', selected as inspiration' : ''}`);
+            }
+          });
+
+          group.querySelectorAll('[data-inspiration-selected-entry]').forEach((entry) => {
+            entry.hidden = !selectedIds.has(entry.dataset.inspirationSelectedEntry);
+          });
+
+          group.querySelectorAll('[data-use-inspiration]').forEach((button) => {
+            const isSelected = selectedIds.has(button.dataset.useInspiration);
+            const limitReached = selected.length >= maxInspirationSelections && !isSelected;
+            const limitMessage = button.closest('dialog')?.querySelector('[data-inspiration-dialog-limit]');
+            button.textContent = isSelected
+              ? 'Remove from inspiration'
+              : limitReached ? `3 ${noun} selected` : 'Use as inspiration';
+            button.classList.toggle('is-selected', isSelected);
+            button.disabled = limitReached;
+            if (limitMessage) limitMessage.hidden = !limitReached;
+          });
+
+          if (tray) tray.hidden = selected.length === 0;
+          if (count) count.textContent = String(selected.length);
+          if (status) {
+            status.textContent = statusMessage
+              || (selected.length
+                ? `${selected.length} of ${maxInspirationSelections} ${noun} selected`
+                : `Choose up to ${maxInspirationSelections} ${noun}. Open any to see its details`);
+            status.classList.toggle('is-limit', Boolean(statusMessage));
           }
-        });
-
-        form.querySelectorAll('[data-inspiration-selected-entry]').forEach((entry) => {
-          entry.hidden = !selectedIds.has(entry.dataset.inspirationSelectedEntry);
-        });
-
-        form.querySelectorAll('[data-use-inspiration]').forEach((button) => {
-          const isSelected = selectedIds.has(button.dataset.useInspiration);
-          const selectionLimitReached = selectedInputs.length >= maxInspirationSelections && !isSelected;
-          const limitMessage = button.closest('dialog')?.querySelector('[data-inspiration-dialog-limit]');
-          button.textContent = isSelected
-            ? 'Remove from inspiration'
-            : selectionLimitReached
-              ? '3 cakes selected'
-              : 'Use as inspiration';
-          button.classList.toggle('is-selected', isSelected);
-          button.disabled = selectionLimitReached;
-          if (limitMessage) limitMessage.hidden = !selectionLimitReached;
-        });
-
-        if (inspirationTray) inspirationTray.hidden = selectedInputs.length === 0;
-        if (inspirationCount) inspirationCount.textContent = String(selectedInputs.length);
-        if (inspirationStatus) {
-          inspirationStatus.textContent = statusMessage
-            || (selectedInputs.length
-              ? `${selectedInputs.length} of ${maxInspirationSelections} cakes selected`
-              : `Choose up to ${maxInspirationSelections} cakes. Open any cake to see its details`);
-          inspirationStatus.classList.toggle('is-limit', Boolean(statusMessage));
-        }
-      }
-
-      function toggleInspiration(id, dialog) {
-        const input = inspirationInputFor(id);
-        if (!(input instanceof HTMLInputElement) || input.disabled) return;
-
-        if (!input.checked && checkedAll('inspirationSelections').length >= maxInspirationSelections) {
-          syncInspirationPicker(`You can choose up to ${maxInspirationSelections} inspiration cakes`);
-          return;
         }
 
-        input.checked = !input.checked;
-        syncInspirationPicker();
-        updateEstimate();
-        if (dialog instanceof HTMLDialogElement) dialog.close();
-      }
+        function toggle(id, dialog) {
+          const input = inputFor(id);
+          if (!(input instanceof HTMLInputElement) || input.disabled) return;
+          if (!input.checked && selectedInputs().length >= maxInspirationSelections) {
+            sync(`You can choose up to ${maxInspirationSelections} inspiration ${noun}`);
+            return;
+          }
+          input.checked = !input.checked;
+          sync();
+          updateEstimate();
+          if (dialog instanceof HTMLDialogElement) dialog.close();
+        }
 
-      function scrollInspirationGallery(direction) {
-        if (!(inspirationCarousel instanceof HTMLElement)) return;
-        const firstVisibleItem = inspirationItems.find((item) => !item.hidden);
-        if (!(firstVisibleItem instanceof HTMLElement)) return;
+        function scroll(direction) {
+          if (!(carousel instanceof HTMLElement)) return;
+          const firstVisibleItem = items.find((item) => !item.hidden);
+          if (!(firstVisibleItem instanceof HTMLElement)) return;
+          const gap = track instanceof HTMLElement
+            ? Number.parseFloat(window.getComputedStyle(track).columnGap) || 0 : 0;
+          carousel.scrollBy({
+            left: direction * (firstVisibleItem.getBoundingClientRect().width + gap),
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          });
+        }
 
-        const gap = inspirationTrack instanceof HTMLElement
-          ? Number.parseFloat(window.getComputedStyle(inspirationTrack).columnGap) || 0
-          : 0;
-        inspirationCarousel.scrollBy({
-          left: direction * (firstVisibleItem.getBoundingClientRect().width + gap),
-          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        function validateFiles() {
+          const files = Array.from(fileInput.files || []);
+          fileList.replaceChildren();
+          if (files.length > maxFiles) return `Please attach no more than ${maxFiles} images`;
+          for (const file of files) {
+            if (!allowedTypes.includes(file.type)) return `${file.name} is not a PNG, JPG, or WebP image`;
+            if (file.size > maxFileSize) return `${file.name} is larger than 2 MB`;
+          }
+          if (files.reduce((total, file) => total + file.size, 0) > maxTotalFileSize) {
+            return 'Reference images must be 4 MB or smaller in total';
+          }
+          files.forEach((file) => {
+            const item = document.createElement('li');
+            item.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
+            fileList.append(item);
+          });
+          return '';
+        }
+
+        filters.forEach((button) => {
+          button.addEventListener('click', () => {
+            const selectedTag = button.dataset.inspirationFilter || '';
+            filters.forEach((filterButton) => {
+              const isActive = filterButton === button;
+              filterButton.classList.toggle('is-active', isActive);
+              filterButton.setAttribute('aria-pressed', String(isActive));
+            });
+            items.forEach((item) => {
+              let tags = [];
+              try { tags = JSON.parse(item.dataset.inspirationTags || '[]'); } catch { tags = []; }
+              item.hidden = Boolean(selectedTag) && !tags.includes(selectedTag);
+            });
+            carousel?.scrollTo({ left: 0, behavior: 'auto' });
+          });
         });
+
+        group.querySelector('[data-inspiration-previous]')?.addEventListener('click', () => scroll(-1));
+        group.querySelector('[data-inspiration-next]')?.addEventListener('click', () => scroll(1));
+
+        group.querySelectorAll('[data-inspiration-open]').forEach((trigger) => {
+          const dialog = document.getElementById(trigger.getAttribute('aria-controls'));
+          if (!(dialog instanceof HTMLDialogElement)) return;
+          trigger.addEventListener('click', () => {
+            dialog.showModal();
+            document.body.classList.add('inspiration-dialog-open');
+          });
+          dialog.querySelector('[data-inspiration-dialog-close]')?.addEventListener('click', () => dialog.close());
+          dialog.addEventListener('click', (event) => {
+            if (event.target === dialog) dialog.close();
+          });
+          dialog.addEventListener('close', () => {
+            document.body.classList.remove('inspiration-dialog-open');
+            trigger.focus();
+          });
+        });
+
+        group.querySelectorAll('[data-use-inspiration]').forEach((button) => {
+          button.addEventListener('click', () => toggle(button.dataset.useInspiration, button.closest('dialog')));
+        });
+        group.querySelectorAll('[data-inspiration-remove]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const input = inputFor(button.dataset.inspirationRemove);
+            if (!(input instanceof HTMLInputElement)) return;
+            input.checked = false;
+            sync();
+            updateEstimate();
+          });
+        });
+        fileInput.addEventListener('change', () => {
+          const error = validateFiles();
+          message.textContent = error;
+          message.classList.toggle('error', Boolean(error));
+          updateEstimate();
+        });
+
+        return { group, fileInput, fileList, selectedInputs, sync, validateFiles };
       }
 
       function addSummaryLine(label, value, amount, amountLabel = '') {
@@ -851,6 +795,15 @@ const galleryTags = Array.from(new Set(
           }
         });
         if (selected && !checked('cupcakeFlavor')) panel.querySelector('input').checked = true;
+        cupcakePicker.group.querySelectorAll('input').forEach((input) => {
+          input.disabled = !selected;
+          if (!selected) {
+            if (input.type === 'checkbox') input.checked = false;
+            else input.value = '';
+          }
+        });
+        if (!selected) cupcakePicker.fileList.replaceChildren();
+        cupcakePicker.sync();
       }
 
       function updateEstimate() {
@@ -867,6 +820,9 @@ const galleryTags = Array.from(new Set(
 
         totalOutput.value = pricingPending && total === 0 ? 'Price TBD' : formatter.format(total);
         document.getElementById('summary-heading').textContent = pricingPending ? 'Priced subtotal' : 'Estimate';
+        form.querySelector('.summary-note').textContent = includeCake
+          ? "Cake customizations add $10 each. I'll confirm the order and final price after I review your request"
+          : "I'll confirm the order and final price after I review your request";
         form.querySelector('[data-pending-price-note]').hidden = !pricingPending;
         summaryLines.replaceChildren();
         bakeryItems.forEach((input) => {
@@ -875,6 +831,12 @@ const galleryTags = Array.from(new Set(
           addSummaryLine(`× ${input.value}`, labelOf(input) + flavorLabel,
             priceOf(input) * Number(input.value), input.dataset.pricingPending === 'true' ? 'Price TBD' : '');
         });
+        if (checked('includeCupcakes')) {
+          const cupcakeGallery = cupcakePicker.selectedInputs();
+          const cupcakeFiles = Array.from(cupcakePicker.fileInput.files || []);
+          addSummaryLine('Cupcake inspiration', cupcakeGallery.length ? cupcakeGallery.map(labelOf).join(', ') : 'None selected', 0);
+          addSummaryLine('Cupcake reference photos', cupcakeFiles.length ? `${cupcakeFiles.length} selected` : 'None selected', 0);
+        }
         if (!includeCake) return;
         addSummaryLine('Cake size', labelOf(size), priceOf(size));
         if (restricted) {
@@ -885,39 +847,10 @@ const galleryTags = Array.from(new Set(
         paidCustomizations.forEach((input) => {
           addSummaryLine(labelOf(input), 'Selected', priceOf(input));
         });
-        const gallery = checkedAll('inspirationSelections');
-        const files = Array.from(fileInput.files || []);
+        const gallery = cakePicker.selectedInputs();
+        const files = Array.from(cakePicker.fileInput.files || []);
         addSummaryLine('Cake inspiration', gallery.length ? gallery.map(labelOf).join(', ') : 'None selected', 0);
         addSummaryLine('Cake reference photos', files.length ? `${files.length} selected` : 'None selected', 0);
-      }
-
-      function validateFiles() {
-        const files = Array.from(fileInput.files || []);
-        fileList.replaceChildren();
-        if (files.length > maxFiles) {
-          return `Please attach no more than ${maxFiles} images`;
-        }
-
-        for (const file of files) {
-          if (!allowedTypes.includes(file.type)) {
-            return `${file.name} is not a PNG, JPG, or WebP image`;
-          }
-          if (file.size > maxFileSize) {
-            return `${file.name} is larger than 2 MB`;
-          }
-        }
-
-        const totalFileSize = files.reduce((total, file) => total + file.size, 0);
-        if (totalFileSize > maxTotalFileSize) {
-          return 'Reference images must be 4 MB or smaller in total';
-        }
-
-        files.forEach((file) => {
-          const item = document.createElement('li');
-          item.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
-          fileList.append(item);
-        });
-        return '';
       }
 
       function validateForm() {
@@ -927,6 +860,7 @@ const galleryTags = Array.from(new Set(
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.trim();
         const cakeFlavor = checked('cakeFlavor')?.value;
+        const pickupLocation = checked('pickupLocation')?.value;
 
         if (!checked('includeCake') && !selectedBakeryItems().length) errors.push('Choose at least one item to order');
         if (checked('includeCake') && !checked('cakeSize')) errors.push('Choose a cake size');
@@ -938,6 +872,20 @@ const galleryTags = Array.from(new Set(
         }
         if (checked('includeCupcakes') && !checked('cupcakeFlavor')) {
           errors.push('Choose vanilla or chocolate for your cupcakes');
+        }
+        if (checked('includeCupcakes')) {
+          const fileError = cupcakePicker.validateFiles();
+          if (fileError) errors.push(fileError);
+          if (cupcakePicker.selectedInputs().length > maxInspirationSelections) {
+            errors.push(`Choose no more than ${maxInspirationSelections} inspiration cupcakes`);
+          }
+        }
+        const allReferenceFiles = [
+          ...Array.from(cakePicker.fileInput.files || []),
+          ...Array.from(cupcakePicker.fileInput.files || []),
+        ];
+        if (allReferenceFiles.reduce((total, file) => total + file.size, 0) > maxTotalFileSize) {
+          errors.push('Reference images must be 4 MB or smaller in total for your order');
         }
         if (email && !form.elements.email.checkValidity()) errors.push('Please enter a valid email address');
         if (!name) errors.push('Name is required');
@@ -952,6 +900,8 @@ const galleryTags = Array.from(new Set(
           }
         }
         if (!email && !phone) errors.push('Please enter an email or phone number');
+        if (!pickupLocation) errors.push('Choose Quincy or Fenway for pickup');
+        if (!checked('bostonMetroConfirmed')) errors.push('Confirm that you are in the Boston metro area and can pick up your order');
         if (!customizationsAreRestricted()) {
           if (!cakeFlavor) errors.push('Choose a cake flavor');
           if (cakeFlavor === 'custom' && !form.elements.customFlavorRequest.value.trim()) {
@@ -963,86 +913,14 @@ const galleryTags = Array.from(new Set(
             }
           });
 
-          const fileError = validateFiles();
+          const fileError = cakePicker.validateFiles();
           if (fileError) errors.push(fileError);
-          if (checkedAll('inspirationSelections').length > maxInspirationSelections) {
+          if (cakePicker.selectedInputs().length > maxInspirationSelections) {
             errors.push(`Choose no more than ${maxInspirationSelections} inspiration cakes`);
           }
         }
         return errors;
       }
-
-      inspirationFilters.forEach((button) => {
-        button.addEventListener('click', () => {
-          const selectedTag = button.dataset.inspirationFilter || '';
-
-          inspirationFilters.forEach((filterButton) => {
-            const isActive = filterButton === button;
-            filterButton.classList.toggle('is-active', isActive);
-            filterButton.setAttribute('aria-pressed', String(isActive));
-          });
-
-          inspirationItems.forEach((item) => {
-            let tags = [];
-            try {
-              tags = JSON.parse(item.dataset.inspirationTags || '[]');
-            } catch {
-              tags = [];
-            }
-            item.hidden = Boolean(selectedTag) && !tags.includes(selectedTag);
-          });
-
-          inspirationCarousel?.scrollTo({ left: 0, behavior: 'auto' });
-        });
-      });
-
-      form.querySelector('[data-inspiration-previous]')?.addEventListener('click', () => {
-        scrollInspirationGallery(-1);
-      });
-
-      form.querySelector('[data-inspiration-next]')?.addEventListener('click', () => {
-        scrollInspirationGallery(1);
-      });
-
-      form.querySelectorAll('[data-inspiration-open]').forEach((trigger) => {
-        const dialogId = trigger.getAttribute('aria-controls');
-        const dialog = dialogId ? document.getElementById(dialogId) : null;
-        if (!(dialog instanceof HTMLDialogElement)) return;
-
-        trigger.addEventListener('click', () => {
-          dialog.showModal();
-          document.body.classList.add('inspiration-dialog-open');
-        });
-
-        dialog.querySelector('[data-inspiration-dialog-close]')?.addEventListener('click', () => {
-          dialog.close();
-        });
-
-        dialog.addEventListener('click', (event) => {
-          if (event.target === dialog) dialog.close();
-        });
-
-        dialog.addEventListener('close', () => {
-          document.body.classList.remove('inspiration-dialog-open');
-          trigger.focus();
-        });
-      });
-
-      form.querySelectorAll('[data-use-inspiration]').forEach((button) => {
-        button.addEventListener('click', () => {
-          toggleInspiration(button.dataset.useInspiration, button.closest('dialog'));
-        });
-      });
-
-      form.querySelectorAll('[data-inspiration-remove]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const input = inspirationInputFor(button.dataset.inspirationRemove);
-          if (!(input instanceof HTMLInputElement)) return;
-          input.checked = false;
-          syncInspirationPicker();
-          updateEstimate();
-        });
-      });
 
       form.addEventListener('change', (event) => {
         if (['cakeSize', 'includeCake', 'includeCupcakes', 'includeBakery'].includes(event.target.name)) {
@@ -1054,11 +932,6 @@ const galleryTags = Array.from(new Set(
         if (event.target.name === 'cakeFlavor' || paidCustomizationNames.includes(event.target.name)) {
           setCustomizationDetails();
         }
-        if (event.target === fileInput) {
-          const fileError = validateFiles();
-          message.textContent = fileError;
-          message.classList.toggle('error', Boolean(fileError));
-        }
         updateEstimate();
       });
 
@@ -1068,6 +941,37 @@ const galleryTags = Array.from(new Set(
         if (message.classList.contains('error')) return;
         message.textContent = '';
       });
+
+      confirmation.querySelectorAll('[data-confirmation-close]').forEach((button) => {
+        button.addEventListener('click', () => confirmation.close());
+      });
+
+      confirmation.addEventListener('click', (event) => {
+        if (event.target === confirmation) confirmation.close();
+      });
+
+      confirmation.addEventListener('close', () => {
+        confetti.replaceChildren();
+        document.querySelector('.order-intro-link')?.focus();
+      });
+
+      function showOrderConfirmation() {
+        const pieces = document.createDocumentFragment();
+        const shades = ['#f5a9c2', '#e8749e', '#f7c4d4', '#dc5f8c'];
+
+        for (let index = 0; index < 36; index += 1) {
+          const piece = document.createElement('span');
+          piece.style.setProperty('--confetti-left', `${3 + ((index * 37) % 94)}%`);
+          piece.style.setProperty('--confetti-delay', `${(index % 9) * 80}ms`);
+          piece.style.setProperty('--confetti-duration', `${2.8 + (index % 5) * 0.25}s`);
+          piece.style.setProperty('--confetti-drift', `${((index * 23) % 50) - 25}px`);
+          piece.style.setProperty('--confetti-color', shades[index % shades.length]);
+          pieces.appendChild(piece);
+        }
+
+        confetti.replaceChildren(pieces);
+        confirmation.showModal();
+      }
 
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -1099,10 +1003,12 @@ const galleryTags = Array.from(new Set(
             throw new Error((result.error || 'Unable to send your request. Please try again').replace(/\.+$/, ''));
           }
 
-          message.textContent = (result.message || 'Your order request is in. I will be in touch soon').replace(/\.+$/, '');
+          message.textContent = '';
           form.reset();
-          fileList.replaceChildren();
+          cakePicker.fileList.replaceChildren();
+          cupcakePicker.fileList.replaceChildren();
           syncOrderSections();
+          showOrderConfirmation();
         } catch (error) {
           message.classList.add('error');
           message.textContent = error instanceof Error

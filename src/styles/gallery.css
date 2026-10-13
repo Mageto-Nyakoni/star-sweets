@@ -141,6 +141,10 @@
   padding: 1.1rem 1.2rem;
 }
 
+.gallery-card-copy-compact {
+  min-height: 0;
+}
+
 .gallery-card h3 {
   display: -webkit-box;
   overflow: hidden;

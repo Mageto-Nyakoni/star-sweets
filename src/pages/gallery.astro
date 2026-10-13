@@ -3,23 +3,43 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { fetchInstagramPosts, isInstagramConfigured } from '../lib/instagram.js';
+import { applyInstagramGallerySettings } from '../lib/galleryVisibility.js';
+import { fetchInstagramGallerySettings, isSanityConfigured } from '../lib/sanity.js';
 
 const instagramUrl = 'https://www.instagram.com/star.sweets25/';
 const isPreview = import.meta.env.DEV && Astro.url.searchParams.get('preview') === '1';
 const showSamplePosts = isPreview || !isInstagramConfigured();
 const CardContent = showSamplePosts ? 'div' : 'a';
 let posts = [];
+let galleryUnavailable = false;
+let galleryDescription = showSamplePosts
+  ? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+  : 'Cakes and baked goods made for past celebrations.';
 
 if (showSamplePosts) {
   const { instagramPreviewPosts } = await import('../data/instagramPreview.js');
   posts = instagramPreviewPosts;
   Astro.response.headers.set('Cache-Control', 'no-store');
   Astro.response.headers.set('X-Robots-Tag', 'noindex');
+  if (!isPreview && isSanityConfigured()) {
+    try {
+      const gallerySettings = await fetchInstagramGallerySettings();
+      galleryDescription = gallerySettings?.intro?.trim() || galleryDescription;
+    } catch (error) {
+      console.error('Could not load the gallery description from Sanity:', error);
+    }
+  }
 } else {
   try {
-    posts = await fetchInstagramPosts();
+    const [instagramPosts, gallerySettings] = await Promise.all([
+      fetchInstagramPosts(),
+      fetchInstagramGallerySettings(),
+    ]);
+    posts = applyInstagramGallerySettings(instagramPosts, gallerySettings);
+    galleryDescription = gallerySettings?.intro?.trim() || galleryDescription;
   } catch (error) {
     console.error('Could not load Instagram gallery:', error);
+    galleryUnavailable = true;
   }
 }
 ---
@@ -39,17 +59,17 @@ if (showSamplePosts) {
         </div>
         {!showSamplePosts && <a href={instagramUrl} target="_blank" rel="noopener noreferrer">Visit @star.sweets25 <span aria-hidden="true">↗</span></a>}
       </div>
-      <p class="gallery-intro">{showSamplePosts ? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' : 'Cakes and baked goods made for past celebrations.'}</p>
+      <p class="gallery-intro">{galleryDescription}</p>
 
       {showSamplePosts && (
-        <p class="gallery-preview-notice">Placeholder preview. Images and captions will come from Instagram after the account is connected.</p>
+        <p class="gallery-preview-notice">Placeholder preview. Images will come from Instagram after the account is connected.</p>
       )}
 
       {posts.length > 0 ? (
         <div class="gallery-grid">
           {posts.map((post, index) => (
             <article class:list={['gallery-card', { 'gallery-card-sample': showSamplePosts }]}>
-              <CardContent class="gallery-card-inner" href={showSamplePosts ? undefined : post.permalink} target={showSamplePosts ? undefined : '_blank'} rel={showSamplePosts ? undefined : 'noopener noreferrer'} aria-label={showSamplePosts ? undefined : `View ${post.title} on Instagram`}>
+              <CardContent class="gallery-card-inner" href={showSamplePosts ? undefined : post.permalink} target={showSamplePosts ? undefined : '_blank'} rel={showSamplePosts ? undefined : 'noopener noreferrer'} aria-label={showSamplePosts ? undefined : post.description ? `View ${post.description} on Instagram` : 'View post on Instagram'}>
                 <div class="gallery-card-image">
                   {showSamplePosts ? (
                     <span class="gallery-image-placeholder" role="img" aria-label="Image placeholder">
@@ -60,12 +80,12 @@ if (showSamplePosts) {
                       </svg>
                     </span>
                   ) : (
-                    <img src={post.imageUrl} alt={post.title} loading={index < 3 ? 'eager' : 'lazy'} />
+                    <img src={post.imageUrl} alt={post.description || ''} loading={index < 3 ? 'eager' : 'lazy'} />
                   )}
                   {post.isVideo && <span class="gallery-video-label">Video</span>}
                 </div>
-                <div class="gallery-card-copy">
-                  <h3>{post.title}</h3>
+                <div class:list={['gallery-card-copy', { 'gallery-card-copy-compact': !showSamplePosts && !post.description }]}>
+                  {(showSamplePosts || post.description) && <h3>{showSamplePosts ? post.title : post.description}</h3>}
                   <span>{showSamplePosts ? 'Lorem ipsum' : 'View on Instagram'} {!showSamplePosts && <span aria-hidden="true">↗</span>}</span>
                 </div>
               </CardContent>
@@ -75,8 +95,8 @@ if (showSamplePosts) {
       ) : (
         <div class="gallery-empty">
           <span class="gallery-empty-star" aria-hidden="true">✳</span>
-          <h3>More creations are coming soon.</h3>
-          <p>In the meantime, you can browse my latest work on Instagram or start planning your own cake.</p>
+          <h3>{galleryUnavailable ? 'The gallery is temporarily unavailable.' : 'More creations are coming soon.'}</h3>
+          <p>{galleryUnavailable ? 'You can still browse my work on Instagram or start planning your own cake.' : 'In the meantime, you can browse my latest work on Instagram or start planning your own cake.'}</p>
           <div class="gallery-empty-actions">
             <a class="home-button home-button-primary" href={instagramUrl} target="_blank" rel="noopener noreferrer">See my Instagram</a>
             <a class="home-button home-button-secondary" href="/order">Build your cake</a>

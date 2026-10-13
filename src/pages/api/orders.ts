@@ -20,6 +20,10 @@ const CAKE_FLAVOR_LABELS = {
   'red-velvet': 'Red Velvet',
   custom: 'Custom Cake Flavor',
 } as const;
+const PICKUP_LOCATION_LABELS = {
+  quincy: 'Quincy',
+  fenway: 'Fenway',
+} as const;
 const PRODUCTION_ORDER_ORIGINS = new Set([
   'https://starsweets.co',
   'https://www.starsweets.co',
@@ -34,6 +38,7 @@ type CakeSizeOption = {
 type InspirationOption = {
   _id: string;
   caption?: string;
+  inspirationFor?: 'cake' | 'cupcake';
 };
 
 type BrevoMessage = {
@@ -276,7 +281,8 @@ async function sendBrevoEmail(apiKey: string, message: BrevoMessage) {
 async function getOrderSelections(
   client: ReturnType<typeof createClient>,
   sizeId: string,
-  inspirationIds: string[]
+  inspirationIds: string[],
+  cupcakeInspirationIds: string[]
 ) {
   const [size, inspiration] = await Promise.all([
     sizeId ? client.fetch<CakeSizeOption | null>(
@@ -284,15 +290,36 @@ async function getOrderSelections(
       { id: sizeId }
     ) : Promise.resolve(null),
     client.fetch<InspirationOption[]>(
-      `*[_type == "inspirationGallery" && _id in $ids && isActive != false]{_id, caption}`,
-      { ids: inspirationIds }
+      `*[_type == "inspirationGallery" && _id in $ids && isActive != false]{_id, caption, "inspirationFor": coalesce(inspirationFor, "cake")}`,
+      { ids: [...new Set([...inspirationIds, ...cupcakeInspirationIds])] }
     ),
   ]);
   if (sizeId && !size) throw new FormError('Choose a currently available cake size.');
-  if (inspiration.length !== inspirationIds.length) {
+  const byId = new Map(inspiration.map((item) => [item._id, item]));
+  const cakeInspiration = inspirationIds.map((id) => byId.get(id));
+  const cupcakeInspiration = cupcakeInspirationIds.map((id) => byId.get(id));
+  if (cakeInspiration.some((item) => item?.inspirationFor !== 'cake')
+    || cupcakeInspiration.some((item) => item?.inspirationFor !== 'cupcake')) {
     throw new FormError('One or more inspiration selections are no longer available.');
   }
-  return { size, inspiration };
+  return {
+    size,
+    inspiration: cakeInspiration as InspirationOption[],
+    cupcakeInspiration: cupcakeInspiration as InspirationOption[],
+  };
+}
+
+function imageFilesFrom(formData: FormData, name: string) {
+  const files = formData.getAll(name).filter((value): value is File => value instanceof File && value.size > 0);
+  if (files.length > MAX_IMAGES) throw new FormError(`Please attach no more than ${MAX_IMAGES} images for each item.`);
+  for (const file of files) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) throw new FormError(`${file.name} must be a PNG, JPG, or WebP image.`);
+    if (file.size > MAX_IMAGE_BYTES) throw new FormError(`${file.name} must be 2 MB or smaller.`);
+  }
+  if (files.reduce((sum, file) => sum + file.size, 0) > MAX_TOTAL_IMAGE_BYTES) {
+    throw new FormError('Reference images must be 4 MB or smaller in total for each item.');
+  }
+  return files;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -320,6 +347,9 @@ export const POST: APIRoute = async ({ request }) => {
     const eventDate = textValue(formData, 'eventDate', 10);
     const email = textValue(formData, 'email', 254).toLowerCase();
     const phone = textValue(formData, 'phone', 80);
+    const bostonMetroConfirmed = formData.getAll('bostonMetroConfirmed').length === 1
+      && formData.get('bostonMetroConfirmed') === 'yes';
+    const pickupLocation = textValue(formData, 'pickupLocation', 20);
     const cakeFlavor = textValue(formData, 'cakeFlavor', 20);
     const customFlavorRequest = textValue(formData, 'customFlavorRequest');
     const flowers = checkboxValue(formData, 'flowers');
@@ -332,6 +362,7 @@ export const POST: APIRoute = async ({ request }) => {
     const customButtercreamRequest = textValue(formData, 'customButtercreamRequest');
     const sizeId = textValue(formData, 'cakeSize', 100);
     const inspirationIds = uniqueValues(formData, 'inspirationSelections');
+    const cupcakeInspirationIds = uniqueValues(formData, 'cupcakeInspirationSelections');
 
     let bakeryOrder: ReturnType<typeof readBakeryOrder>;
     try {
@@ -340,9 +371,16 @@ export const POST: APIRoute = async ({ request }) => {
       throw new FormError(error instanceof Error ? error.message : 'Invalid bakery selections.');
     }
     if (!customerName || !eventDate) throw new FormError('Please complete your name and event date.');
+    if (!bostonMetroConfirmed) throw new FormError('Confirm that you are in the Boston metro area and can pick up your order.');
+    if (!Object.hasOwn(PICKUP_LOCATION_LABELS, pickupLocation)) {
+      throw new FormError('Choose Quincy or Fenway for pickup.');
+    }
     if (!sizeId && !bakeryOrder.items.length) throw new FormError('Choose at least one item to order.');
     if (inspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
       throw new FormError(`Please choose no more than ${MAX_INSPIRATION_SELECTIONS} inspiration cakes.`);
+    }
+    if (cupcakeInspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
+      throw new FormError(`Please choose no more than ${MAX_INSPIRATION_SELECTIONS} inspiration cupcakes.`);
     }
     if (!email && !phone) throw new FormError('Please provide an email address or phone number.');
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
@@ -353,14 +391,15 @@ export const POST: APIRoute = async ({ request }) => {
       throw new FormError(`Please choose an event date at least 4 days away (${formatDateOnly(firstAvailableEventDate)} or later).`);
     }
 
-    const imageFiles = formData.getAll('referenceImages').filter((value): value is File => value instanceof File && value.size > 0);
-    if (imageFiles.length > MAX_IMAGES) throw new FormError(`Please attach no more than ${MAX_IMAGES} images.`);
-    for (const file of imageFiles) {
-      if (!ALLOWED_IMAGE_TYPES.has(file.type)) throw new FormError(`${file.name} must be a PNG, JPG, or WebP image.`);
-      if (file.size > MAX_IMAGE_BYTES) throw new FormError(`${file.name} must be 2 MB or smaller.`);
+    const imageFiles = imageFilesFrom(formData, 'referenceImages');
+    const cupcakeImageFiles = imageFilesFrom(formData, 'cupcakeReferenceImages');
+    if ([...imageFiles, ...cupcakeImageFiles].reduce((sum, file) => sum + file.size, 0) > MAX_TOTAL_IMAGE_BYTES) {
+      throw new FormError('Reference images must be 4 MB or smaller in total for your order.');
     }
-    const totalImageBytes = imageFiles.reduce((sum, file) => sum + file.size, 0);
-    if (totalImageBytes > MAX_TOTAL_IMAGE_BYTES) throw new FormError('Reference images must be 4 MB or smaller in total.');
+    const hasCupcakes = bakeryOrder.items.some((item) => item.productId === 'cupcakes-dozen');
+    if (!hasCupcakes && (cupcakeInspirationIds.length || cupcakeImageFiles.length)) {
+      throw new FormError('Cupcake inspiration requires a cupcake order.');
+    }
 
     const client = createClient({
       projectId,
@@ -369,7 +408,7 @@ export const POST: APIRoute = async ({ request }) => {
       token: writeToken,
       useCdn: false,
     });
-    const { size, inspiration } = await getOrderSelections(client, sizeId, inspirationIds);
+    const { size, inspiration, cupcakeInspiration } = await getOrderSelections(client, sizeId, inspirationIds, cupcakeInspirationIds);
     const customizationsRestricted = !size || cakeSizeHasNoCustomizations(size.name);
 
     if (customizationsRestricted) {
@@ -421,6 +460,13 @@ export const POST: APIRoute = async ({ request }) => {
       });
       return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
     }));
+    const cupcakeReferenceImages = await Promise.all(cupcakeImageFiles.map(async (file) => {
+      const asset = await client.assets.upload('image', Buffer.from(await file.arrayBuffer()), {
+        filename: file.name,
+        contentType: file.type,
+      });
+      return { _key: sanityArrayKey(), _type: 'image', asset: asReference(asset._id) };
+    }));
 
     const order = await client.create({
       _type: 'cakeOrder',
@@ -428,10 +474,17 @@ export const POST: APIRoute = async ({ request }) => {
       email: email || undefined,
       phone: phone || undefined,
       eventDate,
+      bostonMetroConfirmed,
+      pickupLocation,
       cakeSize: size ? asReference(size._id) : undefined,
       bakeryItems: bakeryOrder.items.map((item) => ({ _type: 'bakeryOrderItem', _key: sanityArrayKey(), ...item })),
       cupcakeFlavor: bakeryOrder.cupcakeFlavor,
       cupcakeVisualSuggestions: bakeryOrder.cupcakeVisualSuggestions,
+      cupcakeInspirationSelections: cupcakeInspiration.map((item) => ({
+        _key: sanityArrayKey(),
+        ...asReference(item._id),
+      })),
+      cupcakeReferenceImages,
       pricingPending: bakeryOrder.pricingPending,
       cakeFlavor: customizationsRestricted ? undefined : cakeFlavor,
       customFlavorRequest: cakeFlavor === 'custom' ? customFlavorRequest : undefined,
@@ -457,6 +510,8 @@ export const POST: APIRoute = async ({ request }) => {
     const rows = orderRows([
       ['Customer', customerName],
       ['Event date', eventDate],
+      ['Service area', 'Boston metropolitan area (confirmed)'],
+      ['Pickup location', PICKUP_LOCATION_LABELS[pickupLocation as keyof typeof PICKUP_LOCATION_LABELS]],
       ['Email', email],
       ['Phone', phone],
       ...bakeryOrder.items.map((item): [string, string] => [
@@ -465,6 +520,10 @@ export const POST: APIRoute = async ({ request }) => {
       ]),
       ['Cupcake flavor', bakeryOrder.cupcakeFlavor],
       ['Cupcake visual suggestions', bakeryOrder.cupcakeVisualSuggestions],
+      ...(hasCupcakes ? [
+        ['Cupcake inspiration', cupcakeInspiration.map((item) => item.caption).filter(Boolean).join(', ') || 'None'],
+        ['Cupcake reference photos', cupcakeImageFiles.map((file) => file.name).join(', ') || 'None'],
+      ] as Array<[string, string | undefined]> : []),
       ...(size ? [
         ['Size', size.name],
         ['Cake flavor', customizationsRestricted ? 'Offered as-is' : CAKE_FLAVOR_LABELS[cakeFlavor as keyof typeof CAKE_FLAVOR_LABELS]],

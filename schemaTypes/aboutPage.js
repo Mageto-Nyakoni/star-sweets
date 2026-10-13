@@ -7,7 +7,6 @@ export const aboutPage = defineType({
   groups: [
     { name: 'homepage', title: 'Homepage preview', default: true },
     { name: 'story', title: 'About page' },
-    { name: 'values', title: 'Values' },
     { name: 'cta', title: 'Call to action' },
     { name: 'seo', title: 'Search and sharing' },
   ],
@@ -95,51 +94,6 @@ export const aboutPage = defineType({
       validation: (Rule) => Rule.required().min(1).max(6),
     }),
     defineField({
-      name: 'valuesEyebrow',
-      title: 'Values Eyebrow',
-      type: 'string',
-      group: 'values',
-      validation: (Rule) => Rule.required().max(80),
-    }),
-    defineField({
-      name: 'valuesHeading',
-      title: 'Values Heading',
-      type: 'string',
-      group: 'values',
-      validation: (Rule) => Rule.required().max(120),
-    }),
-    defineField({
-      name: 'values',
-      title: 'Values',
-      type: 'array',
-      group: 'values',
-      of: [
-        {
-          type: 'object',
-          name: 'aboutValue',
-          fields: [
-            defineField({
-              name: 'title',
-              title: 'Title',
-              type: 'string',
-              validation: (Rule) => Rule.required().max(80),
-            }),
-            defineField({
-              name: 'description',
-              title: 'Description',
-              type: 'text',
-              rows: 3,
-              validation: (Rule) => Rule.required().max(400),
-            }),
-          ],
-          preview: {
-            select: { title: 'title', subtitle: 'description' },
-          },
-        },
-      ],
-      validation: (Rule) => Rule.required().min(1).max(3),
-    }),
-    defineField({
       name: 'ctaEyebrow',
       title: 'Eyebrow',
       type: 'string',
@@ -189,11 +143,6 @@ export const aboutPage = defineType({
     biography: [
       'My first memory of baking was with my grandma as a young child making cookies together. My family has a tradition of baking box cakes for each of our birthdays, which inspired me to learn to bake them from scratch. I soon went on to teach myself everything I know now. My journey started in middle school and followed me all the way through university. I always loved baking for friends and family and showing my creativity through trying new recipes.',
       'During my last year in undergrad, I created Star Sweets as a way to spread my love for baking beyond my close circle. I wanted the opportunity to bring light to someone’s special day and make them feel like a star. While my studies have brought me to dental school, my passion for baking has only burned brighter and I can’t wait to see what it brings to my dental career.',
-    ],
-    valuesEyebrow: 'Your values',
-    valuesHeading: '[Add a heading for what matters to you]',
-    values: [
-      { _key: 'value-one', title: 'There are no boundaries for imagination', description: 'Thinking outside the box is where uniqueness and creativity live. My goal for each cake is to stand apart and shine in their own way.' },
     ],
     ctaEyebrow: "Let's make something memorable",
     ctaHeading: 'Ready to plan your cake?',

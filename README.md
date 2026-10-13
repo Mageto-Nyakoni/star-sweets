@@ -31,6 +31,19 @@ Until Instagram is connected, `/gallery` shows six image placeholders with lorem
 
 The `.env` file is ignored by Git. Keep the name exactly `INSTAGRAM_ACCESS_TOKEN`; a `PUBLIC_` prefix would expose the token to browsers.
 
+### Edit the gallery in Sanity
+
+You can change the text under the Gallery heading in Sanity even while the page shows placeholder cards. Once Instagram is connected, you can also write each card's description or hide a post without deleting it from Instagram:
+
+1. Open the [Star Sweets Sanity Studio](https://star-sweets.sanity.studio/) and select **Instagram Gallery** in the left menu.
+2. Edit **Gallery description** for the text below the page heading.
+3. Under **Post descriptions and visibility**, open the post you want to edit. Each entry shows its Instagram link and post code. Write a **Description shown on the gallery card**, or enable **Hide this post from the gallery**.
+4. Click **Publish**, then refresh `/gallery`. Sanity may take a short time to update its cached public data. To restore a hidden post, turn off its hide switch or remove its entry, then publish again.
+
+Instagram supplies only the post image and link. The site never requests or displays Instagram captions. Cards without a Sanity description show no description. The temporary lorem ipsum cards remain visible until the Instagram token is connected; `/gallery?preview=1` always keeps lorem ipsum text for layout review. This setting does not change the separate **Past Orders Gallery** content used on the home and order pages. The website reads published settings from Sanity, so no Sanity write token is needed for this feature. If Sanity cannot be reached while Instagram is connected, the gallery shows an unavailable message instead of displaying posts that may have been hidden.
+
+The site reads the Instagram feed directly, while Sanity stores the editable descriptions and visibility settings. Run `npm run gallery:sync` from the project folder when you add new Instagram posts. The command adds recent posts to the Sanity list without changing descriptions or hidden settings you have already saved. It needs `INSTAGRAM_ACCESS_TOKEN`, `SANITY_PROJECT_ID`, and `SANITY_WRITE_TOKEN` in the local `.env` file. Refresh Sanity Studio after it finishes.
+
 ### 3. Connect the deployed site
 
 In Vercel, open the Star Sweets project, go to **Settings → Environment Variables**, and add `INSTAGRAM_ACCESS_TOKEN` with the same token. Select the **Production** environment, save it, and redeploy so the server receives the new value. Add it to **Preview** as well if you want preview deployments to show the gallery.
@@ -38,3 +51,9 @@ In Vercel, open the Star Sweets project, go to **Settings → Environment Variab
 ### Keep it working
 
 The page requests up to 24 recent posts and caches a successful response for 15 minutes per running server instance. The token is not refreshed automatically. Before it expires, generate or refresh it in Meta, replace `INSTAGRAM_ACCESS_TOKEN` locally and in Vercel, and redeploy. If the gallery stays empty, check that the token belongs to `@star.sweets25`, has `instagram_business_basic`, and has not expired. The server log will show a failed Instagram request without printing the token.
+
+## Cupcake inspiration in the order form
+
+The cupcake picker uses **Past Orders Gallery** photos in Sanity, separate from the Instagram gallery. To add a photo, open a Past Orders Gallery entry (or create one), choose **Cupcakes** under **Show in order form for**, add a caption and photo, then publish. Photos without that choice stay in the cake picker. Until a cupcake photo is published, customers can still upload their own cupcake reference images.
+
+An order can include up to three selected styles and five uploaded images for each of cakes and cupcakes. All uploaded reference images together must be 4 MB or smaller. Cupcake selections and uploads appear in the order document and both order emails.

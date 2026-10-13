@@ -193,7 +193,6 @@
 .home-about-copy > p,
 .about-hero > p:last-child,
 .about-story p,
-.about-values-grid p,
 .home-order-band > p {
   color: var(--ss-berry);
   line-height: 1.7;
@@ -338,6 +337,16 @@
   justify-content: center;
   gap: 1.15rem;
   margin-top: 1.25rem;
+}
+
+.work-gallery-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.work-gallery-cta .home-text-link {
+  margin-top: 0;
 }
 
 .work-carousel-controls button {
@@ -577,51 +586,11 @@ body.work-dialog-open {
   grid-template-columns: minmax(16rem, 24rem) minmax(0, 1fr);
   align-items: center;
   gap: 4rem;
-  padding: 0 1.5rem 5rem;
+  padding: 0 1.5rem 2rem;
 }
 
 .about-story p:not(.home-eyebrow) {
   margin-top: 1rem;
-}
-
-.about-values {
-  padding: 5rem max(1.5rem, calc((100vw - 69rem) / 2));
-  background: var(--ss-blush);
-}
-
-.about-values-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rem;
-  margin-top: 2.25rem;
-}
-
-.about-values-grid article {
-  padding-top: 1rem;
-  border-top: 2px solid var(--ss-pink-dk);
-}
-
-.about-values-grid article:only-child {
-  grid-column: 1 / -1;
-  max-width: 36rem;
-}
-
-.about-values-grid span {
-  color: var(--ss-red);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.about-values-grid h3 {
-  margin-top: 0.75rem;
-  color: var(--ss-cherry);
-  font-family: 'Playfair Display', serif;
-  font-size: 1.35rem;
-  font-weight: 600;
-}
-
-.about-values-grid p {
-  margin-top: 0.5rem;
 }
 
 .about-order-band {
@@ -629,7 +598,7 @@ body.work-dialog-open {
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  padding: 5rem 1.5rem;
+  padding: 3rem 1.5rem 5rem;
 }
 
 @media (max-width: 900px) {
@@ -686,14 +655,9 @@ body.work-dialog-open {
     font-size: 2rem;
   }
 
-  .work-section,
-  .about-values {
+  .work-section {
     padding-top: 4rem;
     padding-bottom: 4rem;
-  }
-
-  .about-values-grid {
-    grid-template-columns: 1fr;
   }
 
   .work-dialog-card {

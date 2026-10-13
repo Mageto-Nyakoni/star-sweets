@@ -65,18 +65,20 @@ export async function fetchAboutPage() {
       storyEyebrow,
       storyHeading,
       biography,
-      valuesEyebrow,
-      valuesHeading,
-      values[] {
-        _key,
-        title,
-        description
-      },
       ctaEyebrow,
       ctaHeading,
       ctaLabel,
       seoTitle,
       seoDescription
+    }`
+  );
+}
+
+export async function fetchInstagramGallerySettings() {
+  return getClient().fetch(
+    `*[_type == "instagramGallerySettings" && _id == "instagramGallerySettings"][0] {
+      intro,
+      posts[] { postUrl, description, isHidden }
     }`
   );
 }
@@ -108,7 +110,15 @@ export async function fetchCakeOrderOptions() {
         description,
         priceModifier
       },
-      "gallery": *[_type == "inspirationGallery" && isActive != false] | order(sortOrder asc, _createdAt desc) {
+      "gallery": *[_type == "inspirationGallery" && isActive != false && coalesce(inspirationFor, "cake") == "cake"] | order(sortOrder asc, _createdAt desc) {
+        _id,
+        caption,
+        tags,
+        cakeDetails,
+        addOns,
+        "imageUrl": image.asset->url
+      },
+      "cupcakeGallery": *[_type == "inspirationGallery" && isActive != false && inspirationFor == "cupcake"] | order(sortOrder asc, _createdAt desc) {
         _id,
         caption,
         tags,

@@ -1,0 +1,170 @@
+---
+const { items = [], kind } = Astro.props;
+const isCupcake = kind === 'cupcake';
+const singular = isCupcake ? 'cupcake' : 'cake';
+const plural = isCupcake ? 'cupcakes' : 'cakes';
+const selectionName = isCupcake ? 'cupcakeInspirationSelections' : 'inspirationSelections';
+const uploadName = isCupcake ? 'cupcakeReferenceImages' : 'referenceImages';
+const tags = Array.from(new Set(
+  items.flatMap((item) => Array.isArray(item.tags) ? item.tags : [])
+    .map((tag) => String(tag).trim())
+    .filter(Boolean)
+)).sort((a, b) => a.localeCompare(b));
+---
+
+<div class="order-inspiration-group" data-inspiration-group={kind} data-inspiration-noun={plural} data-selection-name={selectionName}>
+  <fieldset>
+    <legend>Past {singular} gallery</legend>
+    <div class="inspiration-picker">
+      {tags.length > 0 && (
+        <div class="inspiration-filters" role="group" aria-label={`Filter past ${plural}`}>
+          <button type="button" class="is-active" data-inspiration-filter="" aria-pressed="true">All</button>
+          {tags.map((tag) => (
+            <button type="button" data-inspiration-filter={tag} aria-pressed="false">{tag}</button>
+          ))}
+        </div>
+      )}
+
+      {items.length > 0 ? (
+        <div class="inspiration-carousel" data-inspiration-carousel aria-label={`Past ${singular} inspiration`}>
+          <div class="inspiration-track" data-inspiration-track>
+            {items.map((item, index) => (
+              <article
+                class="inspiration-item"
+                data-inspiration-item
+                data-inspiration-id={item._id}
+                data-inspiration-tags={JSON.stringify(Array.isArray(item.tags) ? item.tags : [])}
+              >
+                <input
+                  id={`${kind}-inspiration-${index}`}
+                  class="inspiration-checkbox"
+                  type="checkbox"
+                  name={selectionName}
+                  value={item._id}
+                  data-label={item.caption}
+                  tabindex="-1"
+                  aria-hidden="true"
+                  disabled={isCupcake}
+                />
+                <button
+                  type="button"
+                  class="gallery-choice"
+                  data-inspiration-open
+                  aria-haspopup="dialog"
+                  aria-controls={`${kind}-inspiration-dialog-${index}`}
+                  aria-label={`View details for ${item.caption}`}
+                >
+                  <span class="inspiration-selected-badge" data-inspiration-selected-badge hidden>Selected</span>
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.caption} loading="lazy" />
+                  ) : (
+                    <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+                  )}
+                  <span class="gallery-choice-copy">
+                    <strong>{item.caption}</strong>
+                    {Array.isArray(item.tags) && item.tags.length > 0 && <small>{item.tags.join(', ')}</small>}
+                    <span class="gallery-view-details">View details <span aria-hidden="true">&rarr;</span></span>
+                  </span>
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p class="inspiration-empty">No past {singular} photos yet. You can upload your own below.</p>
+      )}
+
+      {items.length > 1 && (
+        <div class="inspiration-carousel-controls" aria-label={`Past ${singular} gallery controls`}>
+          <button type="button" data-inspiration-previous aria-label={`Show previous ${plural}`}>
+            <span aria-hidden="true">&larr;</span>
+          </button>
+          <button type="button" data-inspiration-next aria-label={`Show more ${plural}`}>
+            <span aria-hidden="true">&rarr;</span>
+          </button>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <p class="inspiration-picker-status" data-inspiration-status aria-live="polite">
+          Choose up to 3 {plural}. Open any {singular} to see its details
+        </p>
+      )}
+
+      <div class="inspiration-selected-tray" data-inspiration-selected-tray hidden>
+        <div class="inspiration-selected-heading">
+          <strong>Your inspiration</strong>
+          <span><span data-inspiration-count>0</span> of 3 selected</span>
+        </div>
+        <div class="inspiration-selected-list">
+          {items.map((item, index) => (
+            <article data-inspiration-selected-entry={item._id} hidden>
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt="" loading="lazy" />
+              ) : (
+                <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+              )}
+              <span>{item.caption}</span>
+              <button type="button" data-inspiration-remove={item._id} aria-label={`Remove ${item.caption} from your inspiration`}>
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  {items.map((item, index) => (
+    <dialog
+      id={`${kind}-inspiration-dialog-${index}`}
+      class="inspiration-dialog"
+      aria-labelledby={`${kind}-inspiration-dialog-title-${index}`}
+    >
+      <div class="inspiration-dialog-card">
+        <button type="button" class="inspiration-dialog-close" data-inspiration-dialog-close aria-label={`Close ${singular} details`}>
+          <span aria-hidden="true">&times;</span>
+        </button>
+
+        <div class="inspiration-dialog-media">
+          {item.imageUrl ? (
+            <img src={item.imageUrl} alt={item.caption} loading="lazy" />
+          ) : (
+            <span class={`gallery-placeholder style-${(index % 3) + 1}`} aria-hidden="true"></span>
+          )}
+        </div>
+
+        <div class="inspiration-dialog-copy">
+          <p class="inspiration-dialog-eyebrow">Past {singular}</p>
+          <h3 id={`${kind}-inspiration-dialog-title-${index}`}>{item.caption}</h3>
+          {Array.isArray(item.tags) && item.tags.length > 0 && (
+            <p class="inspiration-dialog-tags">{item.tags.join(' / ')}</p>
+          )}
+          <div class="inspiration-dialog-section">
+            <h4>{isCupcake ? 'Design details' : 'Cake details'}</h4>
+            <p>{item.cakeDetails || 'More details coming soon'}</p>
+          </div>
+          <div class="inspiration-dialog-section">
+            <h4>Add-ons</h4>
+            {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
+              <ul>{item.addOns.map((addOn) => <li>{addOn}</li>)}</ul>
+            ) : (
+              <p>No add-ons listed for this {singular}</p>
+            )}
+          </div>
+          <button type="button" class="inspiration-use-button" data-use-inspiration={item._id}>Use as inspiration</button>
+          <p class="inspiration-dialog-limit" data-inspiration-dialog-limit hidden>
+            You already have 3 {plural} selected. Remove one from "Your inspiration" to choose this {singular}
+          </p>
+        </div>
+      </div>
+    </dialog>
+  ))}
+
+  <label class="upload-drop">
+    <span>Upload your own {isCupcake ? 'cupcake ' : ''}inspiration</span>
+    <input type="file" name={uploadName} data-reference-images accept="image/png,image/jpeg,image/webp" multiple disabled={isCupcake} />
+    <small>PNG, JPG, or WebP. Up to 5 images, 2 MB each and 4 MB total for your order</small>
+  </label>
+  <ul class="file-list" data-reference-file-list aria-live="polite"></ul>
+</div>

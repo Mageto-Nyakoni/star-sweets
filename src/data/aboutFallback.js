@@ -13,11 +13,6 @@ export const aboutPageFallback = {
     'My first memory of baking was with my grandma as a young child making cookies together. My family has a tradition of baking box cakes for each of our birthdays, which inspired me to learn to bake them from scratch. I soon went on to teach myself everything I know now. My journey started in middle school and followed me all the way through university. I always loved baking for friends and family and showing my creativity through trying new recipes.',
     'During my last year in undergrad, I created Star Sweets as a way to spread my love for baking beyond my close circle. I wanted the opportunity to bring light to someone’s special day and make them feel like a star. While my studies have brought me to dental school, my passion for baking has only burned brighter and I can’t wait to see what it brings to my dental career.',
   ],
-  valuesEyebrow: 'Your values',
-  valuesHeading: '[Add a heading for what matters to you]',
-  values: [
-    { _key: 'value-one', title: 'There are no boundaries for imagination', description: 'Thinking outside the box is where uniqueness and creativity live. My goal for each cake is to stand apart and shine in their own way.' },
-  ],
   ctaEyebrow: "Let's make something memorable",
   ctaHeading: 'Ready to plan your cake?',
   ctaLabel: 'Start your order',
@@ -28,24 +23,11 @@ export const aboutPageFallback = {
 export function withAboutPageFallback(content) {
   if (!content) return aboutPageFallback;
 
-  const publishedValues = Array.isArray(content.values)
-    ? content.values.filter((value) =>
-      typeof value?.title === 'string'
-      && typeof value?.description === 'string'
-      && value.title.trim() !== ''
-      && value.description.trim() !== ''
-      && !value.title.trim().startsWith('[')
-      && !value.description.trim().startsWith('['))
-    : [];
-
   return {
     ...aboutPageFallback,
     ...content,
     biography: Array.isArray(content.biography) && content.biography.length
       ? content.biography.filter(Boolean)
       : aboutPageFallback.biography,
-    values: publishedValues.length
-      ? publishedValues
-      : aboutPageFallback.values,
   };
 }
