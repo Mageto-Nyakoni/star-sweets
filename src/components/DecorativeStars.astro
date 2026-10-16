@@ -1,0 +1,18 @@
+---
+const { variant = 'hero' } = Astro.props;
+const shapes = variant === 'hero'
+  ? ['sparkle', 'star', 'sparkle', 'star', 'sparkle', 'sparkle', 'star', 'sparkle', 'star']
+  : ['sparkle', 'star', 'sparkle', 'star'];
+---
+
+<div class:list={['star-field', variant === 'hero' ? 'hero-stars' : 'section-stars']} aria-hidden="true">
+  {shapes.map((shape) => (
+    <svg class:list={['hero-star', `hero-star-${shape}`]} viewBox="0 0 24 24" focusable="false">
+      {shape === 'sparkle' ? (
+        <path d="M12 2Q13 11 22 12Q13 13 12 22Q11 13 2 12Q11 11 12 2Z" />
+      ) : (
+        <path d="M12 3 14.8 8.6 21 9.5 16.5 13.9 17.6 20.1 12 17.2 6.4 20.1 7.5 13.9 3 9.5 9.2 8.6Z" />
+      )}
+    </svg>
+  ))}
+</div>

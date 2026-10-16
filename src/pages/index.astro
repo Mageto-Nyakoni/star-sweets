@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SectionAnimations from '../components/SectionAnimations.astro';
+import DecorativeStars from '../components/DecorativeStars.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
 
@@ -45,6 +46,7 @@ const visibleGalleryItems = galleryItems;
 
   <main class="home-page" data-reveal-on-scroll>
     <section class:list={['home-hero', { 'has-image': bannerImageUrl }]} style={heroStyle} aria-labelledby="home-title" data-reveal-on-load>
+      <DecorativeStars />
       <div class="home-hero-inner">
         <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" data-section-reveal />
         <p class="home-eyebrow" data-section-reveal data-reveal-delay="80">Based in Boston, MA</p>
@@ -64,6 +66,7 @@ const visibleGalleryItems = galleryItems;
         <div>
           <p class="home-eyebrow">Made by Star Sweets</p>
           <h2 id="work-title">Previous Orders and Baked Goods</h2>
+          <span class="section-divider" data-reveal-divider aria-hidden="true"></span>
         </div>
         <p class="placement-copy">Here are a few designs that could be used as inspiration!</p>
       </div>
@@ -88,7 +91,9 @@ const visibleGalleryItems = galleryItems;
                   aria-label={`View details for ${item.caption}`}
                 >
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} />
+                    <span class="work-photo-frame">
+                      <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} data-reveal-photo />
+                    </span>
                   ) : (
                     <div class="work-placeholder" aria-hidden="true">
                       <img src="/StarSweets-logo-trimmed.png" alt="" />
@@ -184,20 +189,26 @@ const visibleGalleryItems = galleryItems;
       <div data-section-reveal>
         <p class="home-eyebrow">Made for your celebration</p>
         <h2 id="order-cta-title">Have a cake idea in mind?</h2>
+        <span class="section-divider" data-reveal-divider aria-hidden="true"></span>
       </div>
       <p data-section-reveal data-reveal-delay="80">Choose your size, fillings, finish, and inspiration to get a live starting estimate.</p>
       <a href="/order" class="home-button home-button-light" data-section-reveal data-reveal-delay="160">Build your cake</a>
     </section>
 
     <section class="home-about" aria-labelledby="about-preview-title">
+      <DecorativeStars variant="section" />
       <div class="home-about-mark" data-section-reveal>
         {aboutPage.portraitUrl ? (
-          <img
-            class="about-portrait"
-            src={aboutPage.portraitUrl}
-            alt={aboutPage.portraitAlt || 'Star Sweets baker'}
-            loading="lazy"
-          />
+          <span class="baker-portrait-frame">
+            <span class="baker-portrait-crop">
+              <img
+                class="about-portrait"
+                src={aboutPage.portraitUrl}
+                alt={aboutPage.portraitAlt || 'Star Sweets baker'}
+                loading="lazy"
+              />
+            </span>
+          </span>
         ) : (
           <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
         )}
@@ -205,6 +216,7 @@ const visibleGalleryItems = galleryItems;
       <div class="home-about-copy" data-section-reveal data-reveal-delay="120">
         <p class="home-eyebrow">{aboutPage.homeEyebrow}</p>
         <h2 id="about-preview-title" class="placement-heading">{aboutPage.homeHeading}</h2>
+        <span class="section-divider" data-reveal-divider aria-hidden="true"></span>
         <p class="placement-text">{aboutPage.homeIntroduction}</p>
         <a href="/about" class="home-text-link">More About Me <span aria-hidden="true">&rarr;</span></a>
       </div>

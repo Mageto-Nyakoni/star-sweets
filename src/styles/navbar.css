@@ -20,6 +20,24 @@
   -webkit-backdrop-filter: none;
 }
 
+.navbar-home.navbar-solid {
+  background: rgba(250, 245, 238, 0.96);
+  border-bottom: 1px solid var(--ss-blush);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.navbar-home.navbar-solid .home-nav-icon {
+  color: var(--ss-maroon);
+  filter: none;
+}
+
+.navbar-home.navbar-solid .home-nav-icon:hover,
+.navbar-home.navbar-solid .home-nav-icon:focus-visible {
+  background: var(--ss-pink-lt);
+  color: var(--ss-cherry);
+}
+
 .navbar-home .home-nav-icon {
   color: #fff;
   filter: drop-shadow(0 1px 4px rgba(58, 21, 32, 0.5));

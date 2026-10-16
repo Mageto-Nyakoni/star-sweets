@@ -86,10 +86,18 @@ const instagramUrl = 'https://www.instagram.com/star.sweets25?utm_source=ig_web_
   const iconMenu  = document.getElementById('icon-menu')!;
   const iconClose = document.getElementById('icon-close')!;
 
-  // Navbar shadow on scroll
-  window.addEventListener('scroll', () => {
+  const hero = document.querySelector('.home-hero');
+
+  function updateNavbar() {
     navbar.classList.toggle('shadow-sm', window.scrollY > 10);
-  });
+    const overHeroImage = hero?.classList.contains('has-image')
+      && hero.getBoundingClientRect().bottom > navbar.offsetHeight;
+    navbar.classList.toggle('navbar-solid', navbar.classList.contains('navbar-home') && !overHeroImage);
+  }
+
+  window.addEventListener('scroll', updateNavbar, { passive: true });
+  window.addEventListener('resize', updateNavbar);
+  updateNavbar();
 
   // Mobile menu toggle
   btn.addEventListener('click', () => {

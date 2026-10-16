@@ -23,22 +23,42 @@
       observer.unobserve(section);
       section.classList.remove('section-reveal-pending');
       if (immediate) {
-        animations.get(section)?.cancel();
+        animations.get(section)?.forEach((animation) => animation.cancel());
         animations.delete(section);
         return;
       }
 
-      const animation = section.animate([
+      const delay = Number(section.getAttribute('data-reveal-delay') || 0);
+      const easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      const playing = [section.animate([
         { opacity: 0, transform: 'translateY(24px)' },
         { opacity: 1, transform: 'none' },
       ], {
         duration: 650,
-        delay: Number(section.getAttribute('data-reveal-delay') || 0),
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        delay,
+        easing,
         fill: 'backwards',
+      })];
+
+      section.querySelectorAll('[data-reveal-photo]').forEach((photo) => {
+        playing.push(photo.animate([
+          { transform: 'scale(1.04)' },
+          { transform: 'scale(1)' },
+        ], { duration: 1200, delay: delay + 60, easing, fill: 'backwards' }));
       });
-      animations.set(section, animation);
-      animation.onfinish = () => animations.delete(section);
+
+      section.querySelectorAll('[data-reveal-divider]').forEach((divider) => {
+        playing.push(divider.animate([
+          { transform: 'scaleX(0)' },
+          { transform: 'scaleX(1)' },
+        ], { duration: 850, delay: delay + 180, easing, fill: 'backwards' }));
+      });
+
+      animations.set(section, playing);
+      Promise.all(playing.map((animation) => animation.finished)).then(
+        () => animations.delete(section),
+        () => {},
+      );
     }
 
     function startReveals() {

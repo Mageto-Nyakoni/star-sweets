@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SectionAnimations from '../components/SectionAnimations.astro';
+import DecorativeStars from '../components/DecorativeStars.astro';
 import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
 
 let aboutPage = aboutPageFallback;
@@ -34,11 +35,15 @@ if (isSanityConfigured()) {
     <section class="about-story" aria-labelledby="meet-baker">
       <div class="about-brand-mark" data-section-reveal>
         {aboutPage.portraitUrl ? (
-          <img
-            class="about-portrait"
-            src={aboutPage.portraitUrl}
-            alt={aboutPage.portraitAlt || 'Star Sweets baker'}
-          />
+          <span class="baker-portrait-frame">
+            <span class="baker-portrait-crop">
+              <img
+                class="about-portrait"
+                src={aboutPage.portraitUrl}
+                alt={aboutPage.portraitAlt || 'Star Sweets baker'}
+              />
+            </span>
+          </span>
         ) : (
           <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
         )}
@@ -61,6 +66,7 @@ if (isSanityConfigured()) {
     </section>
 
     <section class="about-contact" aria-labelledby="about-contact-heading">
+      <DecorativeStars variant="section" />
       <div class="about-contact-inner" data-section-reveal>
         <p class="home-eyebrow">CONTACT ME</p>
         <h2 id="about-contact-heading"><em>Follow for more</em></h2>
