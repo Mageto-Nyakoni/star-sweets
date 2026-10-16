@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import SectionAnimations from '../components/SectionAnimations.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
 
@@ -42,16 +43,16 @@ const visibleGalleryItems = galleryItems;
 >
   <Navbar homepage />
 
-  <main class="home-page">
-    <section class:list={['home-hero', { 'has-image': bannerImageUrl }]} style={heroStyle} aria-labelledby="home-title">
+  <main class="home-page" data-reveal-on-scroll>
+    <section class:list={['home-hero', { 'has-image': bannerImageUrl }]} style={heroStyle} aria-labelledby="home-title" data-reveal-on-load>
       <div class="home-hero-inner">
-        <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" />
-        <p class="home-eyebrow">Based in Boston, MA</p>
+        <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" data-section-reveal />
+        <p class="home-eyebrow" data-section-reveal data-reveal-delay="80">Based in Boston, MA</p>
         <h1 id="home-title" class="visually-hidden">Star Sweets</h1>
-        <p class="home-hero-copy placement-copy">
+        <p class="home-hero-copy placement-copy" data-section-reveal data-reveal-delay="140">
           Pushing the boundaries of creativity with custom flavors and designs. From birthdays to graduations, these cakes are sure to make you feel like a star on your special day.
         </p>
-        <div class="home-actions">
+        <div class="home-actions" data-section-reveal data-reveal-delay="200">
           <a href="/order" class="home-button home-button-primary">Order a custom cake</a>
           <a href="#past-work" class="home-button home-button-secondary">See past work</a>
         </div>
@@ -59,7 +60,7 @@ const visibleGalleryItems = galleryItems;
     </section>
 
     <section id="past-work" class="work-section" aria-labelledby="work-title">
-      <div class="home-section-heading">
+      <div class="home-section-heading" data-section-reveal>
         <div>
           <p class="home-eyebrow">Made by Star Sweets</p>
           <h2 id="work-title">Previous Orders and Baked Goods</h2>
@@ -67,7 +68,7 @@ const visibleGalleryItems = galleryItems;
         <p class="placement-copy">Here are a few designs that could be used as inspiration!</p>
       </div>
 
-      <div class="work-carousel-shell">
+      <div class="work-carousel-shell" data-section-reveal data-reveal-delay="100">
         <div
           class="work-carousel"
           data-work-carousel
@@ -126,7 +127,7 @@ const visibleGalleryItems = galleryItems;
         )}
       </div>
 
-      <div class="work-gallery-cta">
+      <div class="work-gallery-cta" data-section-reveal>
         <a href="/gallery" class="home-text-link">Browse the full gallery <span aria-hidden="true">&rarr;</span></a>
       </div>
 
@@ -180,16 +181,16 @@ const visibleGalleryItems = galleryItems;
     </section>
 
     <section class="home-order-band" aria-labelledby="order-cta-title">
-      <div>
+      <div data-section-reveal>
         <p class="home-eyebrow">Made for your celebration</p>
         <h2 id="order-cta-title">Have a cake idea in mind?</h2>
       </div>
-      <p>Choose your size, fillings, finish, and inspiration to get a live starting estimate.</p>
-      <a href="/order" class="home-button home-button-light">Build your cake</a>
+      <p data-section-reveal data-reveal-delay="80">Choose your size, fillings, finish, and inspiration to get a live starting estimate.</p>
+      <a href="/order" class="home-button home-button-light" data-section-reveal data-reveal-delay="160">Build your cake</a>
     </section>
 
     <section class="home-about" aria-labelledby="about-preview-title">
-      <div class="home-about-mark">
+      <div class="home-about-mark" data-section-reveal>
         {aboutPage.portraitUrl ? (
           <img
             class="about-portrait"
@@ -201,7 +202,7 @@ const visibleGalleryItems = galleryItems;
           <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
         )}
       </div>
-      <div class="home-about-copy">
+      <div class="home-about-copy" data-section-reveal data-reveal-delay="120">
         <p class="home-eyebrow">{aboutPage.homeEyebrow}</p>
         <h2 id="about-preview-title" class="placement-heading">{aboutPage.homeHeading}</h2>
         <p class="placement-text">{aboutPage.homeIntroduction}</p>
@@ -212,6 +213,7 @@ const visibleGalleryItems = galleryItems;
   </main>
 
   <SiteFooter />
+  <SectionAnimations />
 
   <script>
     const galleryCarousel = document.querySelector('[data-work-carousel]');

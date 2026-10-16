@@ -543,10 +543,18 @@ body.work-dialog-open {
   object-fit: contain;
 }
 
+.home-about-mark:has(.about-portrait),
+.about-brand-mark:has(.about-portrait) {
+  min-height: 0;
+  background: transparent;
+}
+
 .home-about-mark .about-portrait,
 .about-brand-mark .about-portrait {
-  width: 100%;
-  height: clamp(16rem, 50vw, 22rem);
+  width: min(100%, 22rem);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
   object-fit: cover;
 }
 

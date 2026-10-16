@@ -73,7 +73,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           </summary>
           <fieldset aria-labelledby="order-choice-heading">
             <p class="field-note">Pick one or more</p>
-            <p class="order-service-note">I take orders in the Boston metro area. Pickup is in Quincy or Fenway</p>
+            <p class="order-service-note">Cakes are made in Boston, MA for pick-up only in Quincy Center or Fenway.</p>
             <div class="order-type-grid">
               <label class="choice-card order-type-card">
                 <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
@@ -109,7 +109,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             hidden
           >
             <strong>This cake is offered as-is</strong>
-            <p>I can't customize the 4 inch, 2 layer cake</p>
+            <p>Customization is unavailable for this size</p>
           </div>
           <button class="step-continue" type="button" data-step-continue>Continue</button>
         </details>
@@ -170,13 +170,13 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             <legend>Frosting flavor</legend>
             <div class="option-grid compact">
               <label class="choice-card">
-                <input type="radio" name="frostingFlavor" value="vanilla-swiss-meringue" data-label="Vanilla Swiss meringue buttercream" checked />
-                <span><strong>Vanilla Swiss meringue buttercream</strong></span>
+                <input type="radio" name="frostingFlavor" value="vanilla-swiss-meringue" data-label="Vanilla Swiss Meringue Buttercream" checked />
+                <span><strong>Vanilla Swiss Meringue Buttercream</strong></span>
                 <em>Included</em>
               </label>
               <label class="choice-card">
-                <input type="radio" name="frostingFlavor" value="chocolate-swiss-meringue" data-label="Chocolate Swiss meringue buttercream" />
-                <span><strong>Chocolate Swiss meringue buttercream</strong></span>
+                <input type="radio" name="frostingFlavor" value="chocolate-swiss-meringue" data-label="Chocolate Swiss Meringue Buttercream" />
+                <span><strong>Chocolate Swiss Meringue Buttercream</strong></span>
                 <em>Included</em>
               </label>
             </div>
@@ -326,39 +326,14 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             </label>
           </div>
 
-          <details class="allergy-section" data-allergy-section>
-            <summary>
-              <span id="allergy-heading">Allergies and dietary needs</span>
-              <small data-allergy-summary>None to report</small>
-            </summary>
-            <fieldset aria-labelledby="allergy-heading">
-              <p class="field-note">I can accommodate allergies and use separate equipment. List anything you need to avoid, including cross-contact concerns. I'll confirm ingredients with you by text</p>
-              <div class="allergy-options">
-                <label class="choice-card">
-                  <input type="radio" name="allergyStatus" value="none" checked required />
-                  <span><strong>None to report</strong></span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="allergyStatus" value="details" aria-controls="allergy-details" required />
-                  <span><strong>Allergy or dietary need to share</strong></span>
-                </label>
-              </div>
-              <label class="allergy-details hidden" id="allergy-details" data-allergy-details>
-                <span>What should I know?</span>
-                <textarea name="allergyDetails" rows="4" maxlength="1000" placeholder="List the ingredients or allergens to avoid and any cross-contact concerns" disabled></textarea>
-              </label>
-            </fieldset>
-          </details>
-
           <div class="pickup-section">
-            <h3>Boston metro pickup</h3>
-            <p class="field-note">Pickup is available in Quincy or Fenway for Boston metro orders. I'll confirm the exact address and time with you</p>
+            <p class="field-note">The exact address and time of pick up will be coordinated with you after order confirmation</p>
             <fieldset>
               <legend>Preferred pickup location</legend>
               <div class="pickup-options">
                 <label class="choice-card">
                   <input type="radio" name="pickupLocation" value="quincy" required />
-                  <span><strong>Quincy</strong></span>
+                  <span><strong>Quincy Center</strong></span>
                 </label>
                 <label class="choice-card">
                   <input type="radio" name="pickupLocation" value="fenway" required />
@@ -368,7 +343,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             </fieldset>
             <label class="pickup-confirmation">
               <input type="checkbox" name="bostonMetroConfirmed" value="yes" required />
-              <span>Confirm you're in the Boston metropolitan area and can pick up your order in Quincy or Fenway</span>
+              <span>I confirm I can pick up in the location selected</span>
             </label>
           </div>
           <button class="step-continue" type="button" data-step-continue>Review order</button>
@@ -387,7 +362,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           </summary>
           <div class="summary-details">
           <p class="summary-note">
-            *This is just an estimate and pricing is subject to change. I'll confirm the final price once you submit your request.
+            *This is just an estimate and pricing is subject to change. The final price will be confirmed once the request has been submitted and reviewed.
           </p>
 
           <p class="summary-note" data-pending-price-note hidden>Baker's Choice isn't included in this subtotal. I'll confirm its price with you</p>
@@ -397,9 +372,9 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <section class="order-next-steps" aria-labelledby="order-next-steps-heading">
             <h3 id="order-next-steps-heading">What happens next</h3>
             <ol>
-              <li>I'll review your date, order details, and any allergy notes.</li>
+              <li>I'll review your date and order details.</li>
               <li>I'll text you within 24 hours to discuss the details, final price, and payment. Your order is confirmed once we agree by text.</li>
-              <li>I'll send the exact pickup address and time for Quincy or Fenway.</li>
+              <li>I'll send the exact pickup address and time for Quincy Center or Fenway.</li>
             </ol>
           </section>
 
@@ -485,11 +460,9 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       }));
       const choiceStep = form.querySelector('.order-start');
       const reviewStep = form.querySelector('[data-review-step]');
-      const allergySection = form.querySelector('[data-allergy-section]');
       const mobileEstimate = form.querySelector('[data-mobile-estimate]');
       const mobileEstimateLabel = mobileEstimate.querySelector('[data-mobile-estimate-label]');
       const mobileEstimateTotal = mobileEstimate.querySelector('[data-mobile-estimate-total]');
-      const allergyDetailsPanel = form.querySelector('[data-allergy-details]');
       const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -708,16 +681,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           input.disabled = !selected;
           if (!selected) input.value = '';
         });
-      }
-
-      function syncAllergyDetails() {
-        const hasDetails = checked('allergyStatus')?.value === 'details';
-        const input = form.elements.allergyDetails;
-        allergyDetailsPanel.classList.toggle('hidden', !hasDetails);
-        allergySection.querySelector('[data-allergy-summary]').textContent = hasDetails
-          ? 'Allergy or dietary need' : 'None to report';
-        input.disabled = !hasDetails || form.classList.contains('is-starting');
-        if (!hasDetails) input.value = '';
       }
 
       function setCustomizationAvailability() {
@@ -986,7 +949,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const contact = form.querySelector('[data-contact-section]');
         contact.classList.toggle('hidden', !hasSelection);
         contact.querySelectorAll('input').forEach((input) => { input.disabled = !hasSelection; });
-        syncAllergyDetails();
         form.querySelectorAll('[data-order-panel]').forEach((panel) => {
           const enabled = panel.dataset.orderPanel === 'cupcakes' ? includeCupcakes : includeBakery;
           panel.classList.toggle('hidden', !enabled);
@@ -1098,8 +1060,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const eventDate = form.elements.eventDate.value;
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.trim();
-        const allergyStatus = checked('allergyStatus')?.value;
-        const allergyDetails = form.elements.allergyDetails.value.trim();
         const cakeFlavor = checked('cakeFlavor')?.value;
         const pickupLocation = checked('pickupLocation')?.value;
 
@@ -1143,10 +1103,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         if (phone.replace(/\D/g, '').length < 10 || phone.replace(/\D/g, '').length > 15) {
           errors.push('Enter a mobile number with 10 to 15 digits so I can text you');
         }
-        if (!allergyStatus) errors.push('Tell me whether you have any allergies or dietary needs');
-        if (allergyStatus === 'details' && !allergyDetails) errors.push('Describe your allergy or dietary need');
-        if (!pickupLocation) errors.push('Choose Quincy or Fenway for pickup');
-        if (!checked('bostonMetroConfirmed')) errors.push('Confirm that you are in the Boston metro area and can pick up your order');
+        if (!pickupLocation) errors.push('Choose Quincy Center or Fenway for pickup');
+        if (!checked('bostonMetroConfirmed')) errors.push('Confirm you can pick up in the location selected');
         if (!customizationsAreRestricted()) {
           if (!cakeFlavor) errors.push('Choose a cake flavor');
           if (!checked('frostingFlavor')) errors.push('Choose a frosting flavor');
@@ -1169,10 +1127,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       }
 
       form.addEventListener('change', (event) => {
-        if (event.target.name === 'allergyStatus') {
-          syncAllergyDetails();
-          if (event.target.value === 'none') allergySection.open = false;
-        }
         if (['cakeSize', 'includeCake', 'includeCupcakes', 'includeBakery'].includes(event.target.name)) {
           if (event.target.name === 'includeCupcakes' && event.target.checked) {
             form.elements['quantity-cupcakes-dozen'].value = '1';
@@ -1270,7 +1224,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           cakePicker.resetView();
           cupcakePicker.resetView();
           formSteps.forEach((panel) => { panel.open = false; });
-          allergySection.open = false;
           syncOrderSections();
           showOrderConfirmation();
         } catch (error) {

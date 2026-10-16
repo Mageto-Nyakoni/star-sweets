@@ -50,9 +50,9 @@ export const cakeOrder = defineType({
     }),
     defineField({
       name: 'bostonMetroConfirmed',
-      title: 'Boston Metro Pickup Confirmed',
+      title: 'Pickup Confirmed',
       type: 'boolean',
-      description: 'The customer confirmed that they are in the Boston metropolitan area and can pick up the order.',
+      description: 'The customer confirmed they can pick up in the location selected.',
       readOnly: true,
     }),
     defineField({
@@ -62,7 +62,7 @@ export const cakeOrder = defineType({
       description: 'Exact pickup address and time are confirmed after reviewing the order.',
       options: {
         list: [
-          { title: 'Quincy', value: 'quincy' },
+          { title: 'Quincy Center', value: 'quincy' },
           { title: 'Fenway', value: 'fenway' },
         ],
       },

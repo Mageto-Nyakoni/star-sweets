@@ -132,7 +132,6 @@ async function submit(fields, origin = 'http://localhost:4321', options = {}) {
         ...(options.key === null ? {} : { 'Idempotency-Key': options.key || randomUUID() }),
       }, body: form({
         customerName: 'Test Customer', eventDate: '2099-12-31', email: 'customer@example.com', phone: '617-555-0100',
-        allergyStatus: 'none',
         bostonMetroConfirmed: 'yes', pickupLocation: 'quincy',
         frostingFlavor: fields.cakeSize && fields.cakeSize !== 'restricted' ? 'vanilla-swiss-meringue' : undefined,
         ...fields,
@@ -158,20 +157,20 @@ test('bakery-only orders save quantities, cents, and details in both emails', as
   }
 });
 
-test('Boston metro confirmation and pickup choice are saved and sent in both emails', async () => {
-  for (const [location, label] of [['quincy', 'Quincy'], ['fenway', 'Fenway']]) {
+test('pickup confirmation and choice are saved and sent in both emails', async () => {
+  for (const [location, label] of [['quincy', 'Quincy Center'], ['fenway', 'Fenway']]) {
     const result = await submit({ 'quantity-brownie-single': 1, pickupLocation: location });
     assert.equal(result.status, 201, JSON.stringify(result.result));
     assert.equal(result.saved[0].bostonMetroConfirmed, true);
     assert.equal(result.saved[0].pickupLocation, location);
     for (const email of result.emails) {
-      assert.match(email.htmlContent, /Boston metropolitan area \(confirmed\)/);
+      assert.match(email.htmlContent, /I confirm I can pick up in the location selected/);
       assert.match(email.htmlContent, new RegExp(`Pickup location<\\/strong><\\/td><td[^>]*>${label}`));
     }
   }
 });
 
-test('orders require Boston metro confirmation and a valid pickup location', async () => {
+test('orders require pickup confirmation and a valid pickup location', async () => {
   for (const fields of [
     { bostonMetroConfirmed: null },
     { bostonMetroConfirmed: 'no' },
@@ -185,32 +184,23 @@ test('orders require Boston metro confirmation and a valid pickup location', asy
   }
 });
 
-test('allergy details are saved and included safely in both emails', async () => {
-  const result = await submit({
-    'quantity-brownie-single': 1,
-    allergyStatus: 'details',
-    allergyDetails: 'Avoid <peanuts> & sesame; ask about cross-contact',
-  });
+test('orders submit without allergy fields and omit allergy notes from notifications', async () => {
+  const result = await submit({ 'quantity-brownie-single': 1 });
   assert.equal(result.status, 201, JSON.stringify(result.result));
-  assert.equal(result.saved[0].allergyStatus, 'details');
-  assert.equal(result.saved[0].allergyDetails, 'Avoid <peanuts> & sesame; ask about cross-contact');
+  assert.equal(result.saved[0].allergyStatus, undefined);
+  assert.equal(result.saved[0].allergyDetails, undefined);
   for (const email of result.emails) {
-    assert.match(email.htmlContent, /Avoid &lt;peanuts&gt; &amp; sesame; ask about cross-contact/);
+    assert.doesNotMatch(email.htmlContent, /Allergies and dietary needs/);
     assert.match(email.htmlContent, /within 24 hours/);
   }
   assert.match(result.emails[1].htmlContent, /payment arrangements/);
   assert.match(result.emails[1].htmlContent, /agree by text/);
 });
 
-test('text number and an explicit allergy answer are required', async () => {
+test('a valid text number is required', async () => {
   for (const fields of [
     { phone: null },
     { phone: '555' },
-    { allergyStatus: null },
-    { allergyStatus: 'unknown' },
-    { allergyStatus: 'details' },
-    { allergyStatus: 'none', allergyDetails: 'Peanuts' },
-    { allergyStatus: 'details', allergyDetails: 'a'.repeat(1001) },
   ]) {
     const result = await submit({ 'quantity-brownie-single': 1, ...fields });
     assert.equal(result.status, 400, JSON.stringify({ fields, result: result.result }));

@@ -1,0 +1,81 @@
+<style is:global>
+  @media (prefers-reduced-motion: no-preference) {
+    [data-section-reveal].section-reveal-pending {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  const sections = document.querySelectorAll('[data-section-reveal]');
+  const scrollSections = Array.from(sections).filter((section) => !section.closest('[data-reveal-on-load]'));
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (!motionPreference.matches && 'IntersectionObserver' in window && 'animate' in Element.prototype) {
+    const animations = new Map();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) reveal(entry.target);
+      });
+    }, { rootMargin: '0px 0px -32px 0px' });
+
+    function reveal(section, immediate = false) {
+      observer.unobserve(section);
+      section.classList.remove('section-reveal-pending');
+      if (immediate) {
+        animations.get(section)?.cancel();
+        animations.delete(section);
+        return;
+      }
+
+      const animation = section.animate([
+        { opacity: 0, transform: 'translateY(24px)' },
+        { opacity: 1, transform: 'none' },
+      ], {
+        duration: 650,
+        delay: Number(section.getAttribute('data-reveal-delay') || 0),
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'backwards',
+      });
+      animations.set(section, animation);
+      animation.onfinish = () => animations.delete(section);
+    }
+
+    function startReveals() {
+      scrollSections.forEach((section) => {
+        const bounds = section.getBoundingClientRect();
+        if (motionPreference.matches || bounds.bottom <= 0 || section.contains(document.activeElement)) {
+          reveal(section, true);
+        } else if (bounds.top < window.innerHeight) {
+          reveal(section);
+        } else {
+          section.classList.add('section-reveal-pending');
+          observer.observe(section);
+        }
+      });
+    }
+
+    sections.forEach((section) => {
+      if (section.closest('[data-reveal-on-load]')) reveal(section);
+    });
+
+    if (document.querySelector('[data-reveal-on-scroll]')) {
+      scrollSections.forEach((section) => section.classList.add('section-reveal-pending'));
+      window.addEventListener('scroll', startReveals, { once: true, passive: true });
+    } else {
+      startReveals();
+    }
+
+    document.addEventListener('focusin', (event) => {
+      if (!(event.target instanceof Element)) return;
+      const section = event.target.closest('[data-section-reveal]');
+      if (section) reveal(section, true);
+    });
+
+    motionPreference.addEventListener('change', (event) => {
+      if (!event.matches) return;
+      observer.disconnect();
+      sections.forEach((section) => reveal(section, true));
+    });
+  }
+</script>

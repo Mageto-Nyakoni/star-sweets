@@ -182,13 +182,11 @@
 }
 
 .order-section > summary::-webkit-details-marker,
-.allergy-section > summary::-webkit-details-marker,
 .summary-inner > summary::-webkit-details-marker {
   display: none;
 }
 
 .order-section > summary::after,
-.allergy-section > summary::after,
 .summary-inner > summary::after {
   position: absolute;
   right: 0.1rem;
@@ -201,13 +199,11 @@
 }
 
 .order-section[open] > summary::after,
-.allergy-section[open] > summary::after,
 .summary-inner[open] > summary::after {
   content: '−';
 }
 
 .order-section > summary:focus-visible,
-.allergy-section > summary:focus-visible,
 .summary-inner > summary:focus-visible {
   outline: 3px solid rgba(196, 83, 106, 0.4);
   outline-offset: 4px;
@@ -296,58 +292,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 0.85rem;
   row-gap: 1.25rem;
-}
-
-.order-form .allergy-section {
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(140, 26, 26, 0.14);
-}
-
-.allergy-section > summary {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-right: 2rem;
-  color: var(--ss-berry);
-  cursor: pointer;
-  list-style: none;
-}
-
-.allergy-section > summary span {
-  font-weight: 800;
-}
-
-.allergy-section > summary small {
-  color: var(--ss-mist);
-  font-size: 0.82rem;
-  text-align: right;
-}
-
-.allergy-section[open] > summary {
-  margin-bottom: 1rem;
-}
-
-.allergy-section fieldset > .field-note {
-  margin: 0 0 1rem;
-}
-
-.allergy-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.allergy-options .choice-card {
-  grid-template-columns: auto minmax(0, 1fr);
-  min-height: 3.5rem;
-}
-
-.allergy-details {
-  display: block;
-  margin-top: 1rem;
 }
 
 .pickup-section {
@@ -1774,7 +1718,6 @@ body.inspiration-dialog-open {
   }
 
   .field-grid,
-  .allergy-options,
   .pickup-options,
   .order-type-grid,
   .option-grid,

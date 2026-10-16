@@ -28,7 +28,7 @@ const FROSTING_FLAVOR_LABELS = {
   'chocolate-swiss-meringue': 'Chocolate Swiss meringue buttercream',
 } as const;
 const PICKUP_LOCATION_LABELS = {
-  quincy: 'Quincy',
+  quincy: 'Quincy Center',
   fenway: 'Fenway',
 } as const;
 const PRODUCTION_ORDER_ORIGINS = new Set([
@@ -451,15 +451,6 @@ export const POST: APIRoute = async ({ request }) => {
     const eventDate = textValue(formData, 'eventDate', 10);
     const email = textValue(formData, 'email', 254).toLowerCase();
     const phone = textValue(formData, 'phone', 80);
-    const allergyStatus = textValue(formData, 'allergyStatus', 20);
-    const allergyDetailsValue = formData.get('allergyDetails');
-    if (allergyDetailsValue !== null && typeof allergyDetailsValue !== 'string') {
-      throw new FormError('Please enter your allergy details as text.');
-    }
-    if (typeof allergyDetailsValue === 'string' && allergyDetailsValue.length > 1000) {
-      throw new FormError('Please keep allergy details under 1,000 characters.');
-    }
-    const allergyDetails = typeof allergyDetailsValue === 'string' ? allergyDetailsValue.trim() : '';
     const bostonMetroConfirmed = formData.getAll('bostonMetroConfirmed').length === 1
       && formData.get('bostonMetroConfirmed') === 'yes';
     const pickupLocation = textValue(formData, 'pickupLocation', 20);
@@ -487,9 +478,9 @@ export const POST: APIRoute = async ({ request }) => {
       throw new FormError(error instanceof Error ? error.message : 'Invalid bakery selections.');
     }
     if (!customerName || !eventDate) throw new FormError('Please complete your name and event date.');
-    if (!bostonMetroConfirmed) throw new FormError('Confirm that you are in the Boston metro area and can pick up your order.');
+    if (!bostonMetroConfirmed) throw new FormError('Confirm you can pick up in the location selected.');
     if (!Object.hasOwn(PICKUP_LOCATION_LABELS, pickupLocation)) {
-      throw new FormError('Choose Quincy or Fenway for pickup.');
+      throw new FormError('Choose Quincy Center or Fenway for pickup.');
     }
     if (!sizeId && !bakeryOrder.items.length) throw new FormError('Choose at least one item to order.');
     if (inspirationIds.length > MAX_INSPIRATION_SELECTIONS) {
@@ -503,15 +494,6 @@ export const POST: APIRoute = async ({ request }) => {
       throw new FormError('Please provide a mobile number with 10 to 15 digits so I can text you.');
     }
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
-    if (allergyStatus !== 'none' && allergyStatus !== 'details') {
-      throw new FormError('Please tell me whether you have any allergies or dietary needs.');
-    }
-    if (allergyStatus === 'details' && !allergyDetails) {
-      throw new FormError('Please describe your allergy or dietary need.');
-    }
-    if (allergyStatus === 'none' && allergyDetails) {
-      throw new FormError('Please select the allergy option that matches your details.');
-    }
     const parsedEventDate = dateOnlyToUtc(eventDate);
     if (!parsedEventDate) throw new FormError('Please choose a valid event date.');
     const firstAvailableEventDate = minimumEventDate();
@@ -628,8 +610,6 @@ export const POST: APIRoute = async ({ request }) => {
       customerName,
       email: email || undefined,
       phone: phone || undefined,
-      allergyStatus,
-      allergyDetails: allergyStatus === 'details' ? allergyDetails : undefined,
       eventDate,
       bostonMetroConfirmed,
       pickupLocation,
@@ -676,11 +656,10 @@ export const POST: APIRoute = async ({ request }) => {
     const rows = orderRows([
       ['Customer', customerName],
       ['Event date', eventDate],
-      ['Service area', 'Boston metropolitan area (confirmed)'],
+      ['Pickup confirmation', 'I confirm I can pick up in the location selected'],
       ['Pickup location', PICKUP_LOCATION_LABELS[pickupLocation as keyof typeof PICKUP_LOCATION_LABELS]],
       ['Email', email],
       ['Phone', phone],
-      ['Allergies and dietary needs', allergyStatus === 'details' ? allergyDetails : 'None reported'],
       ...bakeryOrder.items.map((item): [string, string] => [
         `${item.quantity} × ${item.name} (${item.portion})`,
         item.lineTotal === null ? 'Price TBD' : `${dollars(item.unitPrice!)} each · ${dollars(item.lineTotal)}`,

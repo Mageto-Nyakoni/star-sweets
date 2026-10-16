@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import SectionAnimations from '../components/SectionAnimations.astro';
 import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
 
 let aboutPage = aboutPageFallback;
@@ -23,15 +24,15 @@ if (isSanityConfigured()) {
 >
   <Navbar />
 
-  <main class="about-page">
+  <main class="about-page" data-reveal-on-load>
     <header class="about-hero">
-      <p class="home-eyebrow">{aboutPage.heroEyebrow}</p>
-      <h1>{aboutPage.heroTitle}</h1>
-      <p class="placement-text">{aboutPage.heroIntroduction}</p>
+      <p class="home-eyebrow" data-section-reveal>{aboutPage.heroEyebrow}</p>
+      <h1 data-section-reveal data-reveal-delay="80">{aboutPage.heroTitle}</h1>
+      <p class="placement-text" data-section-reveal data-reveal-delay="160">{aboutPage.heroIntroduction}</p>
     </header>
 
     <section class="about-story" aria-labelledby="meet-baker">
-      <div class="about-brand-mark">
+      <div class="about-brand-mark" data-section-reveal>
         {aboutPage.portraitUrl ? (
           <img
             class="about-portrait"
@@ -42,7 +43,7 @@ if (isSanityConfigured()) {
           <img src="/StarSweets-logo-trimmed.png" alt="Star Sweets" />
         )}
       </div>
-      <div>
+      <div data-section-reveal data-reveal-delay="120">
         <p class="home-eyebrow">{aboutPage.storyEyebrow}</p>
         <h2 id="meet-baker" class="placement-heading">{aboutPage.storyHeading}</h2>
         {aboutPage.biography.map((paragraph) => (
@@ -52,15 +53,15 @@ if (isSanityConfigured()) {
     </section>
 
     <section class="about-order-band">
-      <div>
+      <div data-section-reveal>
         <p class="home-eyebrow">{aboutPage.ctaEyebrow}</p>
         <h2>{aboutPage.ctaHeading}</h2>
       </div>
-      <a href="/order" class="home-button home-button-primary">{aboutPage.ctaLabel}</a>
+      <a href="/order" class="home-button home-button-primary" data-section-reveal data-reveal-delay="120">{aboutPage.ctaLabel}</a>
     </section>
 
     <section class="about-contact" aria-labelledby="about-contact-heading">
-      <div class="about-contact-inner">
+      <div class="about-contact-inner" data-section-reveal>
         <p class="home-eyebrow">CONTACT ME</p>
         <h2 id="about-contact-heading"><em>Follow for more</em></h2>
         <div class="about-contact-links">
@@ -72,4 +73,5 @@ if (isSanityConfigured()) {
   </main>
 
   <SiteFooter />
+  <SectionAnimations />
 </Layout>
