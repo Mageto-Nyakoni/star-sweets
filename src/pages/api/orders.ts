@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { createClient } from '@sanity/client';
 import { readBakeryOrder } from '../../data/bakeryMenu';
 import { cakeSizeHasNoCustomizations } from '../../lib/orderRules';
+import { adminEmailTemplate, customerEmailTemplate, dollars, orderRows, type OrderEmailRow } from '../../lib/orderEmails';
 
 export const prerender = false;
 
@@ -194,31 +195,6 @@ function sanityArrayKey() {
   return crypto.randomUUID().replaceAll('-', '');
 }
 
-function dollars(amount = 0) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>'"]/g, (character) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    "'": '&#39;',
-    '"': '&quot;',
-  }[character] || character));
-}
-
-function orderRows(rows: Array<[string, string | undefined]>) {
-  return rows
-    .filter(([, value]) => Boolean(value))
-    .map(([label, value]) => `<tr><td style="width:34%;padding:11px 14px;border-bottom:1px solid #ead8d7;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.45;vertical-align:top"><strong>${escapeHtml(label)}</strong></td><td style="padding:11px 14px;border-bottom:1px solid #ead8d7;color:#3a1520;font-family:Arial,sans-serif;font-size:14px;line-height:1.45;vertical-align:top">${escapeHtml(value || '')}</td></tr>`)
-    .join('');
-}
-
 function dateOnlyToUtc(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
@@ -249,116 +225,6 @@ function minimumEventDate() {
   }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
   const today = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
   return new Date(today + MIN_EVENT_LEAD_DAYS * MS_PER_DAY);
-}
-
-function displayEventDate(value: string) {
-  const date = dateOnlyToUtc(value);
-  if (!date) return value;
-
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
-function emailShell({
-  preheader,
-  eyebrow,
-  title,
-  intro,
-  content,
-}: {
-  preheader: string;
-  eyebrow: string;
-  title: string;
-  intro: string;
-  content: string;
-}) {
-  return `<!doctype html>
-<html lang="en">
-  <body style="margin:0;padding:0;background:#faf5ee;color:#3a1520">
-    <span style="display:none!important;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(preheader)}</span>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#faf5ee">
-      <tr>
-        <td align="center" style="padding:32px 16px">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:#ffffff;border:1px solid #ead8d7;border-radius:18px;overflow:hidden">
-            <tr>
-              <td style="height:7px;background:#8c1a1a;font-size:0;line-height:0">&nbsp;</td>
-            </tr>
-            <tr>
-              <td style="padding:28px 32px 18px">
-                <p style="margin:0 0 22px;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:bold;letter-spacing:.2px">Star Sweets</p>
-                <p style="margin:0 0 8px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.7px;text-transform:uppercase">${escapeHtml(eyebrow)}</p>
-                <h1 style="margin:0 0 12px;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.15;font-weight:normal">${escapeHtml(title)}</h1>
-                <p style="margin:0;color:#6b2535;font-family:Arial,sans-serif;font-size:15px;line-height:1.65">${escapeHtml(intro)}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 32px 32px">${content}</td>
-            </tr>
-            <tr>
-              <td style="padding:20px 32px;background:#f5eae8;color:#9b7b85;font-family:Arial,sans-serif;font-size:12px;line-height:1.5;text-align:center">Star Sweets &middot; Made thoughtfully for every celebration</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-}
-
-function adminEmailTemplate({
-  customerName,
-  eventDate,
-  rows,
-  orderLink,
-}: {
-  customerName: string;
-  eventDate: string;
-  rows: string;
-  orderLink: string;
-}) {
-  const formattedDate = displayEventDate(eventDate);
-  const studioButton = orderLink
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px"><tr><td style="border-radius:999px;background:#8c1a1a"><a href="${escapeHtml(orderLink)}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none">Open in Sanity Studio</a></td></tr></table>`
-    : '';
-
-  return emailShell({
-    preheader: `New order request from ${customerName} for ${formattedDate}.`,
-    eyebrow: 'New order request',
-    title: 'A new celebration is taking shape.',
-    intro: `${customerName} sent an order request for ${formattedDate}. Review the details below, then text the customer within 24 hours to confirm availability, final pricing, and payment arrangements.`,
-    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fffaf7">${rows}</table>${studioButton}`,
-  });
-}
-
-function customerEmailTemplate({
-  customerName,
-  eventDate,
-  calculatedTotal,
-  pricingPending,
-  rows,
-}: {
-  customerName: string;
-  eventDate: string;
-  calculatedTotal: number;
-  pricingPending: boolean;
-  rows: string;
-}) {
-  const formattedDate = displayEventDate(eventDate);
-  const estimate = pricingPending
-    ? calculatedTotal > 0 ? `${dollars(calculatedTotal)} + Baker’s Choice price TBD` : 'Price TBD'
-    : dollars(calculatedTotal);
-
-  return emailShell({
-    preheader: `I received your Star Sweets order request for ${formattedDate}.`,
-    eyebrow: 'Request received',
-    title: 'Your order request is in!',
-    intro: `Thanks, ${customerName}. I'll review your request and text you within 24 hours to discuss the details, final price, and payment.`,
-    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:4px 0 18px;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7"><tr><td style="padding:16px 18px;border-bottom:1px solid #ead8d7"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">Event date</p><p style="margin:0;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:19px">${escapeHtml(formattedDate)}</p></td></tr><tr><td style="padding:16px 18px"><p style="margin:0 0 5px;color:#c4536a;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase">${pricingPending ? 'Priced subtotal' : 'Starting estimate'}</p><p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold">${escapeHtml(estimate)}</p></td></tr></table><div style="padding:14px 16px;border-left:3px solid #e899b4;background:#fde8ef;color:#6b2535;font-family:Arial,sans-serif;font-size:13px;line-height:1.55">${pricingPending ? 'Baker’s Choice pricing is TBD and excluded from the subtotal. ' : ''}This is a request. I'll confirm your order, final price, payment arrangements, and pickup after we agree by text.</div><table role="presentation" width="100%" style="margin-top:18px;border-collapse:collapse">${rows}</table>`,
-  });
 }
 
 async function sendBrevoEmail(apiKey: string, message: BrevoMessage) {
@@ -653,7 +519,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
     }
 
-    const rows = orderRows([
+    const details: OrderEmailRow[] = [
       ['Customer', customerName],
       ['Event date', eventDate],
       ['Pickup confirmation', 'I confirm I can pick up in the location selected'],
@@ -688,7 +554,8 @@ export const POST: APIRoute = async ({ request }) => {
         bakeryOrder.pricingPending
           ? `${dollars(calculatedTotal)} · Baker’s Choice price TBD, excluded from subtotal`
           : dollars(calculatedTotal)],
-    ]);
+    ];
+    const rows = orderRows(details);
     const studioUrl = import.meta.env.SANITY_STUDIO_URL?.replace(/\/$/, '');
     const orderLink = studioUrl ? `${studioUrl}/structure/cakeOrder;${order._id}` : '';
 
@@ -706,8 +573,8 @@ export const POST: APIRoute = async ({ request }) => {
           await sendBrevoEmail(brevoApiKey, {
             sender: { name: 'Star Sweets', email: fromEmail },
             to: [{ email, name: customerName }],
-            subject: 'Star Sweets received your order request',
-            htmlContent: customerEmailTemplate({ customerName, eventDate, calculatedTotal, pricingPending: bakeryOrder.pricingPending, rows }),
+            subject: 'Your Request Is In! | Star Sweets',
+            htmlContent: customerEmailTemplate({ customerName, eventDate, calculatedTotal, pricingPending: bakeryOrder.pricingPending, details }),
           });
         } catch (error) {
           console.error('Customer confirmation email failed:', error instanceof Error ? error.message : error);

@@ -83,10 +83,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
                 <input type="checkbox" name="includeCupcakes" value="yes" aria-controls="cupcakes-options" />
                 <span><strong>Cupcakes</strong></span>
               </label>
-              <label class="choice-card order-type-card">
-                <input type="checkbox" name="includeBakery" value="yes" aria-controls="bakery-options" />
-                <span><strong>Other baked goods</strong></span>
-              </label>
             </div>
           </fieldset>
           <button class="step-continue" type="button" data-step-continue>Continue</button>
@@ -238,7 +234,6 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         </details>
         {[
           { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens. If you have a look in mind, tell me" },
-          { key: 'bakery', title: 'Cookies, breads, and pastries', categories: ['Cookies', 'Breads', 'Pastries'], description: "Add what you'd like. The quantities are for the portions shown" },
         ].map((group) => (
           <details class="order-section order-reveal hidden" data-form-step data-order-panel={group.key} id={`${group.key}-options`}>
             <summary class="section-copy">

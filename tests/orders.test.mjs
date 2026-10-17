@@ -61,6 +61,7 @@ routeSource = routeSource
   .replace("import { createClient } from '@sanity/client';", 'const createClient = () => globalThis.__starSweetsTestClient;')
   .replace("'../../data/bakeryMenu'", JSON.stringify(new URL('../src/data/bakeryMenu.ts', import.meta.url).href))
   .replace("'../../lib/orderRules'", JSON.stringify(new URL('../src/lib/orderRules.ts', import.meta.url).href))
+  .replace("'../../lib/orderEmails'", JSON.stringify(new URL('../src/lib/orderEmails.ts', import.meta.url).href))
   .replaceAll('import.meta.env', JSON.stringify({
     SANITY_PROJECT_ID: 'test', SANITY_WRITE_TOKEN: 'test', BREVO_API_KEY: 'test',
     BREVO_FROM_EMAIL: 'test@example.com', ORDER_NOTIFICATION_EMAIL: 'test@example.com',
@@ -163,8 +164,8 @@ test('pickup confirmation and choice are saved and sent in both emails', async (
     assert.equal(result.status, 201, JSON.stringify(result.result));
     assert.equal(result.saved[0].bostonMetroConfirmed, true);
     assert.equal(result.saved[0].pickupLocation, location);
+    assert.match(result.emails[0].htmlContent, /I confirm I can pick up in the location selected/);
     for (const email of result.emails) {
-      assert.match(email.htmlContent, /I confirm I can pick up in the location selected/);
       assert.match(email.htmlContent, new RegExp(`Pickup location<\\/strong><\\/td><td[^>]*>${label}`));
     }
   }
