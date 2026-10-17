@@ -163,22 +163,6 @@ const visibleGalleryItems = galleryItems;
               {Array.isArray(item.tags) && item.tags.length > 0 && (
                 <p class="work-dialog-tags">{item.tags.join(' / ')}</p>
               )}
-
-              <section class="work-dialog-section" aria-labelledby={`work-dialog-details-${index}`}>
-                <h3 id={`work-dialog-details-${index}`}>Cake details</h3>
-                <p>{item.cakeDetails || 'More cake details coming soon.'}</p>
-              </section>
-
-              <section class="work-dialog-section" aria-labelledby={`work-dialog-addons-${index}`}>
-                <h3 id={`work-dialog-addons-${index}`}>Add-ons</h3>
-                {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
-                  <ul>
-                    {item.addOns.map((addOn) => <li>{addOn}</li>)}
-                  </ul>
-                ) : (
-                  <p>No add-ons listed for this order.</p>
-                )}
-              </section>
             </div>
           </div>
         </dialog>
@@ -218,7 +202,7 @@ const visibleGalleryItems = galleryItems;
         <h2 id="about-preview-title" class="placement-heading">{aboutPage.homeHeading}</h2>
         <span class="section-divider" data-reveal-divider aria-hidden="true"></span>
         <p class="placement-text">{aboutPage.homeIntroduction}</p>
-        <a href="/about" class="home-text-link">More About Me <span aria-hidden="true">&rarr;</span></a>
+        <a href="/about" class="home-text-link">More About Emily <span aria-hidden="true">&rarr;</span></a>
       </div>
     </section>
 

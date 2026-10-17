@@ -46,7 +46,7 @@ if (showSamplePosts) {
 
 <Layout
   title="Gallery | Star Sweets"
-  description="Browse cakes and baked goods previously made by Star Sweets, with photos from our Instagram."
+  description="Browse past cakes and baked goods from Star Sweets, with photos from Instagram."
 >
   <Navbar />
 
@@ -96,9 +96,9 @@ if (showSamplePosts) {
         <div class="gallery-empty">
           <span class="gallery-empty-star" aria-hidden="true">✳</span>
           <h3>{galleryUnavailable ? 'The gallery is temporarily unavailable.' : 'More creations are coming soon.'}</h3>
-          <p>{galleryUnavailable ? 'You can still browse my work on Instagram or start planning your own cake.' : 'In the meantime, you can browse my latest work on Instagram or start planning your own cake.'}</p>
+          <p>{galleryUnavailable ? "You can still browse Emily's work on Instagram or start planning your own cake." : "In the meantime, you can browse Emily's latest work on Instagram or start planning your own cake."}</p>
           <div class="gallery-empty-actions">
-            <a class="home-button home-button-primary" href={instagramUrl} target="_blank" rel="noopener noreferrer">See my Instagram</a>
+            <a class="home-button home-button-primary" href={instagramUrl} target="_blank" rel="noopener noreferrer">See Emily's Instagram</a>
             <a class="home-button home-button-secondary" href="/order">Build your cake</a>
           </div>
         </div>

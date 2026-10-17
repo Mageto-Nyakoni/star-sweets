@@ -128,7 +128,7 @@ export function adminEmailTemplate({
     preheader: `New order request from ${customerName} for ${formattedDate}.`,
     eyebrow: 'New order request',
     title: 'A new celebration is taking shape.',
-    intro: `${customerName} sent an order request for ${formattedDate}. Review the details below, then text the customer within 24 hours to confirm availability, final pricing, and payment arrangements.`,
+    intro: `${customerName} sent an order request for ${formattedDate}. Emily will review the details below and text the customer within 24 hours to confirm availability, final pricing, and payment arrangements.`,
     content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fffaf7">${rows}</table>${studioButton}`,
   });
 }
@@ -159,10 +159,10 @@ export function customerEmailTemplate({
       ? ['Cake details', 'This size is offered as-is'] : [label, value]));
 
   return emailShell({
-    preheader: "Thanks for your request! I'll text you within 24 hours to talk details.",
+    preheader: "Thanks for your request! Emily will text you within 24 hours to talk details.",
     eyebrow: 'A sweet start',
     title: 'Your Request Is In!',
-    intro: `Thanks, ${customerName}! Your request has landed in my inbox. I'll review the details and text you within 24 hours.`,
+    intro: `Thanks, ${customerName}! Your request has landed in Emily's inbox. She will review the details and text you within 24 hours.`,
     content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #ead8d7;border-radius:12px;border-collapse:separate;border-spacing:0;background:#fffaf7">
       <tr><td style="padding:20px;border-bottom:1px solid #ead8d7">
         <p style="margin:0 0 7px;color:#6b2535;font-family:Arial,sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase">Event date</p>
@@ -171,17 +171,17 @@ export function customerEmailTemplate({
       <tr><td style="padding:20px">
         <p style="margin:0 0 7px;color:#6b2535;font-family:Arial,sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase">${pricingPending ? 'Priced subtotal' : 'Starting estimate'}</p>
         <p style="margin:0;color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.3">${escapeHtml(estimate)}</p>
-        <p style="margin:10px 0 0;color:#6b2535;font-family:Arial,sans-serif;font-size:12px;line-height:1.6">${pricingPending ? "Baker's Choice pricing is TBD and excluded from this subtotal. " : ''}This is an estimate. I'll confirm the final price after reviewing your request.</p>
+        <p style="margin:10px 0 0;color:#6b2535;font-family:Arial,sans-serif;font-size:12px;line-height:1.6">${pricingPending ? "Baker's Choice pricing is TBD and excluded from this subtotal. " : ''}This is an estimate. Emily will confirm the final price after reviewing your request.</p>
       </td></tr>
     </table>
     <h2 style="margin:28px 0 14px;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:normal">What happens next</h2>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%">
-      <tr><td width="32" valign="top" style="padding:0 10px 18px 0;color:#c4536a;font-family:Georgia,serif;font-size:23px">01</td><td style="padding:0 0 18px;color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.65"><strong style="color:#3a1520;font-weight:600">Let's talk details.</strong><br>We'll go over availability, your order details, the final price, and payment arrangements.</td></tr>
-      <tr><td width="32" valign="top" style="padding:0 10px 0 0;color:#c4536a;font-family:Georgia,serif;font-size:23px">02</td><td style="color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.65"><strong style="color:#3a1520;font-weight:600">Then we'll make it official.</strong><br>Your order is confirmed after we agree by text. I'll coordinate the exact pickup address and time with you.</td></tr>
+      <tr><td width="32" valign="top" style="padding:0 10px 18px 0;color:#c4536a;font-family:Georgia,serif;font-size:23px">01</td><td style="padding:0 0 18px;color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.65"><strong style="color:#3a1520;font-weight:600">Emily will talk through the details.</strong><br>Emily will go over availability, your order details, the final price, and payment arrangements with you.</td></tr>
+      <tr><td width="32" valign="top" style="padding:0 10px 0 0;color:#c4536a;font-family:Georgia,serif;font-size:23px">02</td><td style="color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.65"><strong style="color:#3a1520;font-weight:600">Then Emily will make it official.</strong><br>Your order is confirmed after you and Emily agree by text. Emily will coordinate the exact pickup address and time with you.</td></tr>
     </table>
     <h2 style="margin:28px 0 12px;color:#3a1520;font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:normal">Your request details</h2>
     <table width="100%" cellspacing="0" cellpadding="0" border="0" aria-label="Your request details" style="width:100%;border:1px solid #ead8d7;border-radius:10px;border-collapse:separate;border-spacing:0">${summaryRows}</table>
-    <p style="margin:24px 0 0;color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">I can't wait to hear what you're celebrating!<br><span style="color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:23px;font-style:italic">Emily</span></p>`,
+    <p style="margin:24px 0 0;color:#6b2535;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">Thanks for thinking of Star Sweets for your celebration!<br><span style="color:#8c1a1a;font-family:Georgia,'Times New Roman',serif;font-size:23px;font-style:italic">Emily</span></p>`,
   });
 }
 

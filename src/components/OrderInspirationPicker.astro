@@ -149,18 +149,6 @@ const tags = Array.from(new Set(
           {Array.isArray(item.tags) && item.tags.length > 0 && (
             <p class="inspiration-dialog-tags">{item.tags.join(' / ')}</p>
           )}
-          <div class="inspiration-dialog-section">
-            <h4>{isCupcake ? 'Design details' : 'Cake details'}</h4>
-            <p>{item.cakeDetails || 'More details coming soon'}</p>
-          </div>
-          <div class="inspiration-dialog-section">
-            <h4>Add-ons</h4>
-            {Array.isArray(item.addOns) && item.addOns.length > 0 ? (
-              <ul>{item.addOns.map((addOn) => <li>{addOn}</li>)}</ul>
-            ) : (
-              <p>No add-ons listed for this {singular}</p>
-            )}
-          </div>
           <button type="button" class="inspiration-use-button" data-use-inspiration={item._id}>Use as inspiration</button>
           <p class="inspiration-dialog-limit" data-inspiration-dialog-limit hidden>
             You already have 3 {plural} selected. Remove one from "Your inspiration" to choose this {singular}
@@ -178,6 +166,6 @@ const tags = Array.from(new Set(
   <ul class="file-list" data-reference-file-list aria-live="polite"></ul>
   <label class="inspiration-comments">
     <span>Comments about your {singular} inspiration (optional)</span>
-    <textarea name={commentName} rows="3" maxlength="2000" placeholder="Tell me what you like or what you would change" disabled={isCupcake}></textarea>
+    <textarea name={commentName} rows="3" maxlength="2000" placeholder="Describe what you like or what you would change" disabled={isCupcake}></textarea>
   </label>
 </div>

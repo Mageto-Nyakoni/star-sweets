@@ -302,7 +302,7 @@ export const POST: APIRoute = async ({ request }) => {
   const notificationEmail = import.meta.env.ORDER_NOTIFICATION_EMAIL;
 
   if (!projectId || !writeToken || !brevoApiKey || !fromEmail || !notificationEmail) {
-    return json({ error: 'The form is temporarily unavailable. Please contact me directly.' }, 503);
+    return json({ error: 'The form is temporarily unavailable. Please contact Emily directly.' }, 503);
   }
 
   try {
@@ -357,7 +357,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
     const phoneDigits = phone.replace(/\D/g, '');
     if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-      throw new FormError('Please provide a mobile number with 10 to 15 digits so I can text you.');
+      throw new FormError('Please provide a mobile number with 10 to 15 digits for order updates by text.');
     }
     if (email && !EMAIL_RE.test(email)) throw new FormError('Please enter a valid email address.');
     const parsedEventDate = dateOnlyToUtc(eventDate);
@@ -391,10 +391,10 @@ export const POST: APIRoute = async ({ request }) => {
       if (existingOrder.submissionFingerprint !== submissionFingerprint) {
         return json({ error: 'This request was already used for a different order. Please refresh the form and try again.' }, 409);
       }
-      return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
+      return json({ message: "Your request is in. Emily will text you within 24 hours to discuss the details, final price, and payment." }, 201);
     }
     if (!await reserveSubmission(client, request, writeToken)) {
-      return json({ error: 'Too many order requests right now. Please try again later or contact me directly.' }, 429);
+      return json({ error: 'Too many order requests right now. Please try again later or contact Emily directly.' }, 429);
     }
     const { size, inspiration, cupcakeInspiration } = await getOrderSelections(client, sizeId, inspirationIds, cupcakeInspirationIds);
     const customizationsRestricted = !size || cakeSizeHasNoCustomizations(size.name);
@@ -516,13 +516,13 @@ export const POST: APIRoute = async ({ request }) => {
       if (order.submissionFingerprint !== submissionFingerprint) {
         return json({ error: 'This request was already used for a different order. Please refresh the form and try again.' }, 409);
       }
-      return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
+      return json({ message: "Your request is in. Emily will text you within 24 hours to discuss the details, final price, and payment." }, 201);
     }
 
     const details: OrderEmailRow[] = [
       ['Customer', customerName],
       ['Event date', eventDate],
-      ['Pickup confirmation', 'I confirm I can pick up in the location selected'],
+      ['Pickup confirmation', 'The customer confirmed pickup at the selected location'],
       ['Pickup location', PICKUP_LOCATION_LABELS[pickupLocation as keyof typeof PICKUP_LOCATION_LABELS]],
       ['Email', email],
       ['Phone', phone],
@@ -588,7 +588,7 @@ export const POST: APIRoute = async ({ request }) => {
       await client.patch(order._id).set({ notificationStatus: 'failed', notificationError }).commit();
     }
 
-    return json({ message: "Your request is in. I'll text you within 24 hours to discuss the details, final price, and payment." }, 201);
+    return json({ message: "Your request is in. Emily will text you within 24 hours to discuss the details, final price, and payment." }, 201);
   } catch (error) {
     if (error instanceof FormError) return json({ error: error.message }, 400);
     console.error('Order submission failed:', error);

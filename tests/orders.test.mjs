@@ -164,7 +164,7 @@ test('pickup confirmation and choice are saved and sent in both emails', async (
     assert.equal(result.status, 201, JSON.stringify(result.result));
     assert.equal(result.saved[0].bostonMetroConfirmed, true);
     assert.equal(result.saved[0].pickupLocation, location);
-    assert.match(result.emails[0].htmlContent, /I confirm I can pick up in the location selected/);
+    assert.match(result.emails[0].htmlContent, /The customer confirmed pickup at the selected location/);
     for (const email of result.emails) {
       assert.match(email.htmlContent, new RegExp(`Pickup location<\\/strong><\\/td><td[^>]*>${label}`));
     }

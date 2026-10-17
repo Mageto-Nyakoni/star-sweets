@@ -7,7 +7,7 @@ const outputDirectory = resolve(process.argv[2] || '.astro/email-preview');
 const details = [
   ['Customer', 'Jamie Rivera'],
   ['Event date', '2026-10-30'],
-  ['Pickup confirmation', 'I confirm I can pick up in the location selected'],
+  ['Pickup confirmation', 'The customer confirmed pickup at the selected location'],
   ['Pickup location', 'Fenway'],
   ['Email', 'jamie@example.com'],
   ['Phone', '617-555-0100'],

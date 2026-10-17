@@ -159,7 +159,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
                 disabled
               ></textarea>
             </label>
-            <p class="field-note">A custom flavor adds $10. I'll let you know if I can make it</p>
+            <p class="field-note">A custom flavor adds $10. Emily will let you know if she can make it</p>
           </div>
 
           <fieldset>
@@ -233,7 +233,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <button class="step-continue" type="button" data-step-continue>Continue</button>
         </details>
         {[
-          { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens. If you have a look in mind, tell me" },
+          { key: 'cupcakes', title: 'Create your cupcakes', categories: ['Cupcakes'], description: "Choose your flavor and number of dozens, then share any design ideas." },
         ].map((group) => (
           <details class="order-section order-reveal hidden" data-form-step data-order-panel={group.key} id={`${group.key}-options`}>
             <summary class="section-copy">
@@ -276,10 +276,10 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
                     <textarea name="cupcakeVisualSuggestions" rows="3" maxlength="2000" disabled
                       placeholder="Share colors, a theme, or a look you like"></textarea>
                   </label>
-                  <p class="field-note">Cupcakes come in vanilla or chocolate. Share the colors or style you have in mind, and I'll confirm the design with you</p>
+                  <p class="field-note">Cupcakes come in vanilla or chocolate. Share your preferred colors or style. The design will be confirmed by text.</p>
                 </div>
               )}
-              {category === 'Cookies' && <p class="field-note">Baker's Choice isn't in the total yet. I'll confirm the price with you</p>}
+              {category === 'Cookies' && <p class="field-note">Baker's Choice isn't in the total yet. Emily will confirm the price with you</p>}
             </fieldset>
             ))}
             {group.key === 'cupcakes' && (
@@ -297,7 +297,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <summary class="section-copy">
             <p class="step-label">1</p>
             <h2 id="contact-heading">Contact, date, and pickup</h2>
-            <p class="field-note">I'll need your name, event date, and a mobile number for texts. Please order at least one week ahead</p>
+            <p class="field-note">Emily will need your name, event date, and a mobile number for texts. Please order at least one week ahead</p>
           </summary>
 
           <div class="field-grid">
@@ -317,7 +317,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             <label>
               <span>Mobile number for texts</span>
               <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required aria-describedby="text-number-note" />
-              <small id="text-number-note" class="field-note">I'll text you here to confirm your order and payment details</small>
+              <small id="text-number-note" class="field-note">Emily will text you here to confirm your order and payment details</small>
             </label>
           </div>
 
@@ -338,7 +338,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             </fieldset>
             <label class="pickup-confirmation">
               <input type="checkbox" name="bostonMetroConfirmed" value="yes" required />
-              <span>I confirm I can pick up in the location selected</span>
+              <span>Confirm pickup at the selected location</span>
             </label>
           </div>
           <button class="step-continue" type="button" data-step-continue>Review order</button>
@@ -360,16 +360,16 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             *This is just an estimate and pricing is subject to change. The final price will be confirmed once the request has been submitted and reviewed.
           </p>
 
-          <p class="summary-note" data-pending-price-note hidden>Baker's Choice isn't included in this subtotal. I'll confirm its price with you</p>
+          <p class="summary-note" data-pending-price-note hidden>Baker's Choice isn't included in this subtotal. Emily will confirm its price with you</p>
 
           <dl id="summary-lines" class="summary-lines"></dl>
 
           <section class="order-next-steps" aria-labelledby="order-next-steps-heading">
             <h3 id="order-next-steps-heading">What happens next</h3>
             <ol>
-              <li>I'll review your date and order details.</li>
-              <li>I'll text you within 24 hours to discuss the details, final price, and payment. Your order is confirmed once we agree by text.</li>
-              <li>I'll send the exact pickup address and time for Quincy Center or Fenway.</li>
+              <li>Emily will review your date and order details.</li>
+              <li>Emily will text you within 24 hours to discuss the details, final price, and payment. Your order is confirmed once you and Emily agree by text.</li>
+              <li>Emily will send the exact pickup address and time for Quincy Center or Fenway.</li>
             </ol>
           </section>
 
@@ -427,7 +427,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         <button class="order-confirmation-close" type="button" data-confirmation-close aria-label="Close confirmation">&times;</button>
         <img class="order-confirmation-logo" src="/StarSweets-logo-trimmed.png" alt="Star Sweets" width="216" height="135" />
         <h2 id="order-confirmation-title">Your Request Is In!</h2>
-        <p id="order-confirmation-copy">I've saved your request. I'll text you within 24 hours to confirm the order details, final price, and payment arrangements. I'll confirm your order and pickup after we agree by text.</p>
+        <p id="order-confirmation-copy">Emily has received your request. She will text you within 24 hours to confirm the order details, final price, and payment arrangements. Emily will confirm your order and pickup after you and she agree by text.</p>
         <button class="order-confirmation-done" type="button" data-confirmation-close>Done</button>
       </div>
     </dialog>
@@ -1096,7 +1096,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           }
         }
         if (phone.replace(/\D/g, '').length < 10 || phone.replace(/\D/g, '').length > 15) {
-          errors.push('Enter a mobile number with 10 to 15 digits so I can text you');
+          errors.push('Enter a mobile number with 10 to 15 digits for order updates by text');
         }
         if (!pickupLocation) errors.push('Choose Quincy Center or Fenway for pickup');
         if (!checked('bostonMetroConfirmed')) errors.push('Confirm you can pick up in the location selected');

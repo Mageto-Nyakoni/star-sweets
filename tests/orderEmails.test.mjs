@@ -16,7 +16,7 @@ test('customer email keeps selected details and clearly distinguishes a request 
   const html = customerEmailTemplate(sample);
   assert.match(html, /Your Request Is In!/);
   assert.match(html, /within 24 hours/);
-  assert.match(html, /Your order is confirmed after we agree by text/);
+  assert.match(html, /Your order is confirmed after you and Emily agree by text/);
   assert.match(html, /October 30, 2026/);
   assert.match(html, /Fenway/);
   assert.match(html, /4 inch, 2 layers/);
