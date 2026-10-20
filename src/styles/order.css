@@ -64,12 +64,8 @@
   font-weight: 400;
 }
 
-.order-title-wave[data-stable-cakes] [data-wave-cake-slot] {
+.order-title-wave[data-stable-emojis] [data-wave-emoji-slot] {
   opacity: 0;
-}
-
-.order-title-cake {
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

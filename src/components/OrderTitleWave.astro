@@ -1,5 +1,5 @@
 ---
-const phraseWidth = 1100;
+const phraseWidth = 1200;
 const repeatCount = 8;
 ---
 
@@ -10,47 +10,63 @@ const repeatCount = 8;
   <text>
     <textPath href="#order-title-path">
       {Array.from({ length: repeatCount }, () => (
-        <tspan data-wave-segment textLength={phraseWidth} lengthAdjust="spacing">{'Order Something Sweet\u00a0'}<tspan data-wave-cake-slot>🎂</tspan>{'\u00a0\u00a0'}</tspan>
+        <tspan data-wave-segment textLength={phraseWidth} lengthAdjust="spacing"><tspan data-wave-emoji-slot="cake">🎂</tspan>{'\u00a0Order Something Sweet\u00a0'}<tspan data-wave-emoji-slot="star">⭐️</tspan>{'\u00a0\u00a0'}</tspan>
       ))}
       <animate attributeName="startOffset" from="0" to={-phraseWidth} dur="24s" begin="0s" repeatCount="indefinite" />
     </textPath>
   </text>
-  {Array.from({ length: repeatCount }, (_, index) => (
-    <g data-wave-cake={index} visibility="hidden">
-      <text class="order-title-cake" text-anchor="middle">🎂</text>
+  {Array.from({ length: repeatCount }, (_, index) => ['star', 'cake'].map((emoji) => (
+    <g data-wave-repeat={index} data-wave-emoji={emoji} visibility="hidden">
+      <image x="-64" y="-96" width="128" height="128" />
       <animateMotion calcMode="linear" keyTimes="0;1" dur="24s" begin="0s" repeatCount="indefinite" rotate="0">
         <mpath href="#order-title-path" />
       </animateMotion>
     </g>
-  ))}
+  )))}
 </svg>
 
 <script>
-  async function stabilizeWaveCakes() {
+  async function stabilizeWaveEmojis() {
     await document.fonts.ready;
     const wave = document.querySelector('.order-title-wave');
     const path = wave?.querySelector('#order-title-path');
     const segment = wave?.querySelector('[data-wave-segment]');
-    const slot = segment?.querySelector('[data-wave-cake-slot]');
     if (!(wave instanceof SVGSVGElement) || !(path instanceof SVGPathElement)
-      || !(segment instanceof SVGTSpanElement) || !(slot instanceof SVGTSpanElement)) return;
+      || !(segment instanceof SVGTSpanElement)) return;
 
     const period = Number(wave.dataset.wavePeriod);
     const pathLength = path.getTotalLength();
-    const cakeIndex = segment.textContent?.indexOf('🎂') ?? -1;
-    if (cakeIndex < 0) return;
-    const cakeOffset = segment.getSubStringLength(0, cakeIndex) + slot.getComputedTextLength() / 2;
+    for (const slot of segment.querySelectorAll('[data-wave-emoji-slot]')) {
+      if (!(slot instanceof SVGTSpanElement)) continue;
+      const emoji = slot.textContent ?? '';
+      const emojiIndex = segment.textContent?.indexOf(emoji) ?? -1;
+      if (emojiIndex < 0) continue;
+      const emojiOffset = (emojiIndex === 0 ? 0 : segment.getSubStringLength(0, emojiIndex)) + slot.getComputedTextLength() / 2;
 
-    // Move each emoji as one upright object, outside textPath's glyph rotation.
-    wave.querySelectorAll('[data-wave-cake]').forEach((cake) => {
-      const start = Number(cake.getAttribute('data-wave-cake')) * period + cakeOffset;
-      const end = start - period;
-      if (end < 0 || start > pathLength) return;
-      cake.querySelector('animateMotion')?.setAttribute('keyPoints', `${start / pathLength};${end / pathLength}`);
-      cake.setAttribute('visibility', 'visible');
-    });
-    wave.setAttribute('data-stable-cakes', '');
+      // Paint the platform's emoji once. Moving live color-font text in SVG can
+      // re-rasterize it on pixel boundaries, making it shimmer even without rotation.
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 512;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.scale(4, 4);
+      context.font = '88px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+      context.textAlign = 'center';
+      context.fillText(emoji, 64, 96);
+      const emojiImage = canvas.toDataURL('image/png');
+
+      // Translate the same fixed image along the text's path and shared SVG clock.
+      wave.querySelectorAll(`[data-wave-emoji="${slot.dataset.waveEmojiSlot}"]`).forEach((item) => {
+        const start = Number(item.getAttribute('data-wave-repeat')) * period + emojiOffset;
+        const end = start - period;
+        if (end < 0 || start > pathLength) return;
+        item.querySelector('image')?.setAttribute('href', emojiImage);
+        item.querySelector('animateMotion')?.setAttribute('keyPoints', `${start / pathLength};${end / pathLength}`);
+        item.setAttribute('visibility', 'visible');
+      });
+    }
+    wave.setAttribute('data-stable-emojis', '');
   }
 
-  void stabilizeWaveCakes();
+  void stabilizeWaveEmojis();
 </script>
