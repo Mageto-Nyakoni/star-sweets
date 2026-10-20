@@ -1,22 +1,25 @@
 ---
 const phraseWidth = 1200;
 const repeatCount = 8;
+const textOffset = 128;
+const textWidth = 900;
+const emojis = [{ glyph: '🎂', offset: 48 }, { glyph: '⭐️', offset: 1110 }];
 ---
 
 <svg class="order-title-wave" viewBox="0 0 1440 250" aria-hidden="true" focusable="false" data-wave-period={phraseWidth}>
   <defs>
     <path id="order-title-path" d="M -1440 160 C -1200 80 -960 80 -720 160 S -240 240 0 160 S 480 80 720 160 S 1200 240 1440 160 S 1920 80 2160 160 S 2640 240 2880 160 S 3360 80 3600 160 S 4080 240 4320 160" />
   </defs>
-  <text>
-    <textPath href="#order-title-path">
-      {Array.from({ length: repeatCount }, () => (
-        <tspan data-wave-segment textLength={phraseWidth} lengthAdjust="spacing"><tspan data-wave-emoji-slot="cake">🎂</tspan>{'\u00a0Order Something Sweet\u00a0'}<tspan data-wave-emoji-slot="star">⭐️</tspan>{'\u00a0\u00a0'}</tspan>
-      ))}
-      <animate attributeName="startOffset" from="0" to={-phraseWidth} dur="24s" begin="0s" repeatCount="indefinite" />
-    </textPath>
-  </text>
-  {Array.from({ length: repeatCount }, (_, index) => ['star', 'cake'].map((emoji) => (
-    <g data-wave-repeat={index} data-wave-emoji={emoji} visibility="hidden">
+  {Array.from({ length: repeatCount }, (_, index) => (
+    <text textLength={textWidth} lengthAdjust="spacing">
+      <textPath href="#order-title-path" startOffset={index * phraseWidth + textOffset}>
+        {'Order Something Sweet'}
+        <animate attributeName="startOffset" from={index * phraseWidth + textOffset} to={(index - 1) * phraseWidth + textOffset} dur="24s" begin="0s" repeatCount="indefinite" />
+      </textPath>
+    </text>
+  ))}
+  {Array.from({ length: repeatCount }, (_, index) => emojis.map((emoji) => (
+    <g data-wave-repeat={index} data-wave-emoji={emoji.glyph} data-wave-offset={emoji.offset} visibility="hidden">
       <image x="-64" y="-96" width="128" height="128" />
       <animateMotion calcMode="linear" keyTimes="0;1" dur="24s" begin="0s" repeatCount="indefinite" rotate="0">
         <mpath href="#order-title-path" />
@@ -30,42 +33,39 @@ const repeatCount = 8;
     await document.fonts.ready;
     const wave = document.querySelector('.order-title-wave');
     const path = wave?.querySelector('#order-title-path');
-    const segment = wave?.querySelector('[data-wave-segment]');
-    if (!(wave instanceof SVGSVGElement) || !(path instanceof SVGPathElement)
-      || !(segment instanceof SVGTSpanElement)) return;
+    if (!(wave instanceof SVGSVGElement) || !(path instanceof SVGPathElement)) return;
 
     const period = Number(wave.dataset.wavePeriod);
     const pathLength = path.getTotalLength();
-    for (const slot of segment.querySelectorAll('[data-wave-emoji-slot]')) {
-      if (!(slot instanceof SVGTSpanElement)) continue;
-      const emoji = slot.textContent ?? '';
-      const emojiIndex = segment.textContent?.indexOf(emoji) ?? -1;
-      if (emojiIndex < 0) continue;
-      const emojiOffset = (emojiIndex === 0 ? 0 : segment.getSubStringLength(0, emojiIndex)) + slot.getComputedTextLength() / 2;
-
-      // Paint the platform's emoji once. Moving live color-font text in SVG can
-      // re-rasterize it on pixel boundaries, making it shimmer even without rotation.
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 512;
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      context.scale(4, 4);
-      context.font = '88px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-      context.textAlign = 'center';
-      context.fillText(emoji, 64, 96);
-      const emojiImage = canvas.toDataURL('image/png');
+    const images = new Map<string, string>();
+    // Explicit path distances reserve space for each emoji independently of
+    // browser-specific SVG text measurements and Unicode character indexing.
+    for (const item of wave.querySelectorAll('[data-wave-emoji]')) {
+      const emoji = item.getAttribute('data-wave-emoji') ?? '';
+      let emojiImage = images.get(emoji);
+      if (!emojiImage) {
+        // Paint the platform's emoji once. Moving live color-font text in SVG can
+        // re-rasterize it on pixel boundaries, making it shimmer even without rotation.
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 512;
+        const context = canvas.getContext('2d');
+        if (!context) return;
+        context.scale(4, 4);
+        context.font = '88px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+        context.textAlign = 'center';
+        context.fillText(emoji, 64, 96);
+        emojiImage = canvas.toDataURL('image/png');
+        images.set(emoji, emojiImage);
+      }
 
       // Translate the same fixed image along the text's path and shared SVG clock.
-      wave.querySelectorAll(`[data-wave-emoji="${slot.dataset.waveEmojiSlot}"]`).forEach((item) => {
-        const start = Number(item.getAttribute('data-wave-repeat')) * period + emojiOffset;
-        const end = start - period;
-        if (end < 0 || start > pathLength) return;
-        item.querySelector('image')?.setAttribute('href', emojiImage);
-        item.querySelector('animateMotion')?.setAttribute('keyPoints', `${start / pathLength};${end / pathLength}`);
-        item.setAttribute('visibility', 'visible');
-      });
+      const start = Number(item.getAttribute('data-wave-repeat')) * period + Number(item.getAttribute('data-wave-offset'));
+      const end = start - period;
+      if (end < 0 || start > pathLength) continue;
+      item.querySelector('image')?.setAttribute('href', emojiImage);
+      item.querySelector('animateMotion')?.setAttribute('keyPoints', `${start / pathLength};${end / pathLength}`);
+      item.setAttribute('visibility', 'visible');
     }
-    wave.setAttribute('data-stable-emojis', '');
   }
 
   void stabilizeWaveEmojis();

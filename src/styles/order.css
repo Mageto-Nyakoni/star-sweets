@@ -64,10 +64,6 @@
   font-weight: 400;
 }
 
-.order-title-wave[data-stable-emojis] [data-wave-emoji-slot] {
-  opacity: 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .order-intro .order-title {
     overflow: visible;
