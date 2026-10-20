@@ -29,5 +29,17 @@ const {
   </head>
   <body>
     <slot />
+    <script>
+      const page = document.documentElement;
+      let scrollbarIdleTimer: number | undefined;
+
+      window.addEventListener('scroll', () => {
+        page.classList.add('is-scrolling');
+        window.clearTimeout(scrollbarIdleTimer);
+        scrollbarIdleTimer = window.setTimeout(() => {
+          page.classList.remove('is-scrolling');
+        }, 800);
+      }, { passive: true });
+    </script>
   </body>
 </html>

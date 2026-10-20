@@ -21,7 +21,26 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar       { width: 6px; }
-::-webkit-scrollbar-track { background: var(--ss-cream); }
-::-webkit-scrollbar-thumb { background: var(--ss-pink); border-radius: 99px; }
+/* Keep the scrollbar gutter steady and show the thumb only during scrolling. */
+html[data-theme] {
+  --page-scrollbar-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--page-scrollbar-color) transparent;
+}
+
+html.is-scrolling {
+  --page-scrollbar-color: var(--ss-red);
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--page-scrollbar-color);
+}

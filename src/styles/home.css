@@ -62,8 +62,12 @@
 
 .home-hero.has-image {
   background-image: var(--home-hero-image);
-  background-position: center;
+  background-position: var(--home-hero-position, center);
   background-size: cover;
+}
+
+.home-hero-photo {
+  display: none;
 }
 
 .home-hero.has-image::before {
@@ -417,8 +421,8 @@
   flex: 0 0 calc((100% - 2rem) / 3);
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--ss-blush);
-  border-radius: 6px;
+  border: 1px solid rgba(140, 26, 26, 0.14);
+  border-radius: 8px;
   background: #fff;
   opacity: 0.46;
   filter: saturate(0.72);
@@ -477,6 +481,7 @@
   aspect-ratio: 5 / 4;
   overflow: hidden;
   flex-shrink: 0;
+  background: var(--ss-blush);
 }
 
 .work-photo-frame > img {
@@ -624,8 +629,8 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 60%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .work-dialog-placeholder {
@@ -917,7 +922,81 @@ body.work-dialog-open {
 
 @media (max-width: 680px) {
   .home-hero {
-    min-height: 30rem;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--ss-cream);
+  }
+
+  .home-hero.has-image {
+    background-image: none;
+  }
+
+  .home-hero.has-image::before,
+  .home-hero .star-field {
+    display: none;
+  }
+
+  .home-hero-photo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: var(--home-hero-position, center);
+    background: var(--ss-blush);
+  }
+
+  .home-hero-inner {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .home-hero:not(.has-image) .home-hero-inner {
+    padding-top: 5.5rem;
+  }
+
+  .home-hero-logo {
+    display: block;
+    width: 9rem;
+    margin: 0 auto 1rem;
+  }
+
+  .home-hero.has-image .home-hero-inner {
+    padding-top: 4.5rem;
+  }
+
+  .home-hero.has-image .home-hero-logo {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin: 0;
+    translate: -50% -50%;
+  }
+
+  .home-hero .home-eyebrow {
+    text-align: center;
+  }
+
+  .home-hero.has-image .home-hero-copy,
+  .home-hero.has-image .home-eyebrow {
+    color: var(--ss-berry);
+  }
+
+  .home-hero-copy {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .home-hero .home-actions {
+    margin-top: 1.5rem;
+  }
+
+  .home-hero .home-button-secondary {
+    border-color: var(--ss-maroon);
+    background: transparent;
+    color: var(--ss-maroon);
   }
 
   .home-hero-inner,

@@ -87,11 +87,13 @@ const instagramUrl = 'https://www.instagram.com/star.sweets25?utm_source=ig_web_
   const iconClose = document.getElementById('icon-close')!;
 
   const hero = document.querySelector('.home-hero');
+  const heroPhoto = hero?.querySelector('.home-hero-photo');
 
   function updateNavbar() {
     navbar.classList.toggle('shadow-sm', window.scrollY > 10);
+    const photoArea = window.matchMedia('(max-width: 680px)').matches ? heroPhoto : hero;
     const overHeroImage = hero?.classList.contains('has-image')
-      && hero.getBoundingClientRect().bottom > navbar.offsetHeight;
+      && photoArea && photoArea.getBoundingClientRect().bottom > navbar.offsetHeight;
     navbar.classList.toggle('navbar-solid', navbar.classList.contains('navbar-home') && !overHeroImage);
   }
 

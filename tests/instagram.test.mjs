@@ -152,11 +152,29 @@ test('uses Sanity descriptions and visibility without showing Instagram captions
     { postUrl: 'https://fakeinstagram.com/p/cake-three/', isHidden: true },
   ] });
   assert.deepEqual(result, [
-    { ...posts[0], description: 'Strawberry cake' },
-    { ...posts[2], description: '' },
+    { ...posts[0], description: 'Strawberry cake', imagePosition: '50% 50%' },
+    { ...posts[2], description: '', imagePosition: '50% 50%' },
   ]);
   assert.equal(instagramPostKey('https://m.instagram.com/reel/cake-two/?utm_source=copy'), 'cake-two');
   assert.equal(instagramPostKey('https://www.instagram.com/star.sweets25/'), null);
+});
+
+test('applies per-post framing without changing links or hidden-post filtering', () => {
+  const posts = [
+    { permalink: 'https://www.instagram.com/p/cake-one/', imageUrl: 'https://example.com/one.jpg' },
+    { permalink: 'https://www.instagram.com/p/cake-two/', imageUrl: 'https://example.com/two.jpg' },
+    { permalink: 'https://www.instagram.com/p/cake-three/', imageUrl: 'https://example.com/three.jpg' },
+  ];
+  const result = applyInstagramGallerySettings(posts, { posts: [
+    { postUrl: posts[0].permalink, focalPointX: 0, focalPointY: 100 },
+    { postUrl: posts[1].permalink, isHidden: true, focalPointX: 30 },
+    { postUrl: posts[2].permalink, focalPointX: '20%; color: red', focalPointY: 25 },
+  ] });
+
+  assert.deepEqual(result, [
+    { ...posts[0], description: '', imagePosition: '0% 100%' },
+    { ...posts[2], description: '', imagePosition: '50% 25%' },
+  ]);
 });
 
 test('imports missing posts without changing existing Sanity edits or adding duplicates', () => {
@@ -165,6 +183,8 @@ test('imports missing posts without changing existing Sanity edits or adding dup
     postUrl: 'https://www.instagram.com/p/cake-one/',
     description: 'Custom description',
     isHidden: true,
+    focalPointX: 20,
+    focalPointY: 35,
   }];
   const feed = [
     { permalink: 'https://www.instagram.com/p/cake-two/' },

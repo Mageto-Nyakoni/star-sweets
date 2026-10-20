@@ -1,0 +1,45 @@
+---
+interface Props {
+  kind: 'cake' | 'cupcake';
+}
+const { kind } = Astro.props;
+
+const topPiping = Array.from({ length: 30 }, (_, index) => {
+  const angle = (index / 30) * Math.PI * 2;
+  return { x: 72 + Math.cos(angle) * 48, y: 32 + Math.sin(angle) * 20 };
+});
+const bottomPiping = Array.from({ length: 17 }, (_, index) => {
+  const angle = (index / 16) * Math.PI;
+  return { x: 72 + Math.cos(angle) * 48, y: 84 + Math.sin(angle) * 20 };
+});
+---
+
+<svg class="order-type-illustration" viewBox="0 0 144 120" aria-hidden="true" focusable="false">
+  {kind === 'cake' ? (
+    <>
+      <ellipse class="order-art-top" cx="72" cy="87" rx="52" ry="22" />
+      <path class="order-art-side" d="M24 32v52c0 11 21.5 20 48 20s48-9 48-20V32" />
+      <path class="order-art-shade" d="M102 46v52c11-4 18-9 18-14V32Z" />
+      <ellipse class="order-art-top" cx="72" cy="32" rx="48" ry="20" />
+      <path class="order-art-detail" d="M24 54c7 14 17 17 24 5 10 25 38 25 48 0 7 12 17 9 24-5" />
+      <path class="order-art-detail" d="M48 59c13 8 35 8 48 0" />
+      {bottomPiping.map(({ x, y }) => (
+        <ellipse class="order-art-piping" cx={x} cy={y} rx="3.8" ry="4.2" />
+      ))}
+      {topPiping.map(({ x, y }) => (
+        <circle class="order-art-piping" cx={x} cy={y} r="4.3" />
+      ))}
+      {[48, 96].map((x) => (
+        <path class="order-art-star" d={`M${x} 56l1.5 5 4.5 1.5-4.5 1.5-1.5 5-1.5-5-4.5-1.5 4.5-1.5Z`} />
+      ))}
+    </>
+  ) : (
+    <>
+      <path class="order-art-wrapper" d="m36 65 10 40q26 12 52 0l10-40" />
+      <path class="order-art-detail" d="m48 72 7 34m10-31 2 34m13-34-2 34m17-37-7 34" />
+      <path class="order-art-top" d="M36 69c-11-8-3-20 9-23-4-10 7-20 20-24 10-3 13-11 9-17 18 5 21 17 17 26 14 3 19 14 14 22 12 8 10 19-2 22-21 6-51 3-67-6Z" />
+      <path class="order-art-detail" d="M45 46c12 6 36 8 53 0M40 61c17 6 42 8 63 2M65 22c9 6 16 6 24 4" />
+      <path class="order-art-sprinkle" d="m53 37 4-2m24 25 4 2m-21-9 4-2m12-13 3 2" />
+    </>
+  )}
+</svg>

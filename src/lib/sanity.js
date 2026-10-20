@@ -77,7 +77,8 @@ export async function fetchAboutPage() {
 export async function fetchHomePage() {
   return getClient().fetch(
     `*[_type == "homePage" && _id == "homePage"][0] {
-      "bannerImageUrl": bannerImage.asset->url
+      "bannerImageUrl": bannerImage.asset->url,
+      "bannerHotspot": bannerImage.hotspot
     }`
   );
 }
@@ -86,7 +87,7 @@ export async function fetchInstagramGallerySettings() {
   return getClient().fetch(
     `*[_type == "instagramGallerySettings" && _id == "instagramGallerySettings"][0] {
       intro,
-      posts[] { postUrl, description, isHidden }
+      posts[] { postUrl, description, isHidden, focalPointX, focalPointY }
     }`
   );
 }
@@ -124,7 +125,8 @@ export async function fetchCakeOrderOptions() {
         tags,
         cakeDetails,
         addOns,
-        "imageUrl": image.asset->url
+        "imageUrl": image.asset->url,
+        "hotspot": image.hotspot
       },
       "cupcakeGallery": *[_type == "inspirationGallery" && isActive != false && inspirationFor == "cupcake"] | order(sortOrder asc, _createdAt desc) {
         _id,
@@ -132,7 +134,8 @@ export async function fetchCakeOrderOptions() {
         tags,
         cakeDetails,
         addOns,
-        "imageUrl": image.asset->url
+        "imageUrl": image.asset->url,
+        "hotspot": image.hotspot
       }
     }`
   );

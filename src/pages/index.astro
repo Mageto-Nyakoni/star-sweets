@@ -6,10 +6,12 @@ import SectionAnimations from '../components/SectionAnimations.astro';
 import DecorativeStars from '../components/DecorativeStars.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { aboutPageFallback, withAboutPageFallback } from '../data/aboutFallback.js';
+import { hotspotPosition } from '../lib/imageFraming.js';
 
 let galleryItems = fallbackOrderOptions.gallery;
 let aboutPage = aboutPageFallback;
 let bannerImageUrl;
+let bannerPosition = hotspotPosition();
 
 const { isSanityConfigured, fetchAboutPage, fetchCakeOrderOptions, fetchHomePage } = await import('../lib/sanity.js');
 
@@ -31,10 +33,13 @@ if (isSanityConfigured()) {
 
   if (homeResult.status === 'fulfilled') {
     bannerImageUrl = homeResult.value?.bannerImageUrl;
+    bannerPosition = hotspotPosition(homeResult.value?.bannerHotspot);
   }
 }
 
-const heroStyle = bannerImageUrl ? `--home-hero-image: url("${bannerImageUrl}")` : undefined;
+const heroStyle = bannerImageUrl
+  ? `--home-hero-image: url("${bannerImageUrl}"); --home-hero-position: ${bannerPosition}`
+  : undefined;
 const visibleGalleryItems = galleryItems;
 ---
 
@@ -46,6 +51,7 @@ const visibleGalleryItems = galleryItems;
 
   <main class="home-page" data-reveal-on-scroll>
     <section class:list={['home-hero', { 'has-image': bannerImageUrl }]} style={heroStyle} aria-labelledby="home-title" data-reveal-on-load>
+      {bannerImageUrl && <img class="home-hero-photo" src={bannerImageUrl} alt="A custom cake made by Star Sweets" fetchpriority="high" />}
       <DecorativeStars />
       <div class="home-hero-inner">
         <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" data-section-reveal />
@@ -92,7 +98,7 @@ const visibleGalleryItems = galleryItems;
                 >
                   {item.imageUrl ? (
                     <span class="work-photo-frame">
-                      <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} data-reveal-photo />
+                      <img src={item.imageUrl} alt={item.caption} loading={index > 2 ? 'lazy' : 'eager'} style={{ objectPosition: hotspotPosition(item.hotspot) }} data-reveal-photo />
                     </span>
                   ) : (
                     <div class="work-placeholder" aria-hidden="true">

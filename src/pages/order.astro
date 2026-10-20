@@ -4,6 +4,8 @@ import Navbar from '../components/Navbar.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import OrderInspirationPicker from '../components/OrderInspirationPicker.astro';
 import CakeSizeGuide from '../components/CakeSizeGuide.astro';
+import OrderTypeIllustration from '../components/OrderTypeIllustration.astro';
+import OrderTitleWave from '../components/OrderTitleWave.astro';
 import { cakeOrderOptions as fallbackOrderOptions } from '../data/orderFallback.js';
 import { bakeryMenu } from '../data/bakeryMenu';
 
@@ -46,11 +48,13 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
 
   <main class="order-page">
     <section class="order-intro" aria-labelledby="order-title">
-      <div>
-        <p class="order-kicker">Made to order</p>
-        <h1 id="order-title">Order something sweet</h1>
+      <h1 id="order-title" class="order-title">
+        <span class="order-title-label">Order Something Sweet</span>
+        <OrderTitleWave />
+      </h1>
+      <div class="order-intro-copy">
         <p>
-          Pick what you'd like. You'll see the estimate change as you go
+          Cakes are made to order. Pick what you'd like and see the estimate update as you go
         </p>
       </div>
     </section>
@@ -66,24 +70,26 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       />
 
       <div class="order-form">
-        <details class="order-section order-start" data-form-step>
+        <details class="order-section order-start" data-form-step open>
           <summary class="section-copy">
             <p class="step-label">1</p>
-            <h2 id="order-choice-heading">What do you want to order?</h2>
+            <h2 id="order-choice-heading">What would you like?</h2>
           </summary>
           <fieldset aria-labelledby="order-choice-heading">
-            <p class="field-note">Pick one or more</p>
-            <p class="order-service-note">Cakes are made in Boston, MA for pick-up only in Quincy Center or Fenway.</p>
+            <p class="field-note">Pick one or both</p>
             <div class="order-type-grid">
               <label class="choice-card order-type-card">
-                <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
+                <OrderTypeIllustration kind="cake" />
                 <span><strong>Cakes</strong></span>
+                <input type="checkbox" name="includeCake" value="yes" aria-controls="cake-options" />
               </label>
               <label class="choice-card order-type-card">
-                <input type="checkbox" name="includeCupcakes" value="yes" aria-controls="cupcakes-options" />
+                <OrderTypeIllustration kind="cupcake" />
                 <span><strong>Cupcakes</strong></span>
+                <input type="checkbox" name="includeCupcakes" value="yes" aria-controls="cupcakes-options" />
               </label>
             </div>
+            <p class="order-service-note">Made in Boston, MA. Pickup in Quincy Center or Fenway.</p>
           </fieldset>
           <button class="step-continue" type="button" data-step-continue>Continue</button>
         </details>
@@ -114,8 +120,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <summary class="section-copy">
             <p class="step-label">4</p>
             <h2 id="customization-heading">Customize your cake</h2>
-            <p class="field-note">Vanilla, chocolate, and red velvet are included. Each custom option adds $10</p>
           </summary>
+          <p class="field-note section-description">Vanilla, chocolate, and red velvet are included. Each custom option adds $10</p>
 
           <fieldset>
             <legend>Cake flavor</legend>
@@ -224,8 +230,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <summary class="section-copy">
             <p class="step-label">5</p>
             <h2 id="inspiration-heading">Cake inspiration</h2>
-            <p class="field-note" data-inspiration-section-note>Optional · Photos and notes</p>
           </summary>
+          <p class="field-note section-description" data-inspiration-section-note>Optional · Photos and notes</p>
 
           <div class="inspiration-section-content">
             <OrderInspirationPicker kind="cake" items={cakeGalleryItems} />
@@ -239,8 +245,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
             <summary class="section-copy">
               <p class="step-label"></p>
               <h2 id={`${group.key}-heading`}>{group.title}</h2>
-              <p class="field-note">{group.description}</p>
             </summary>
+            <p class="field-note section-description">{group.description}</p>
             {group.categories.map((category) => (
             <fieldset>
               <legend>{category}</legend>
@@ -297,8 +303,8 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           <summary class="section-copy">
             <p class="step-label">1</p>
             <h2 id="contact-heading">Contact, date, and pickup</h2>
-            <p class="field-note">Emily will need your name, event date, and a mobile number for texts. Please order at least one week ahead</p>
           </summary>
+          <p class="field-note section-description">Emily will need your name, event date, and a mobile number for texts. Please order at least one week ahead</p>
 
           <div class="field-grid">
             <label>
@@ -349,13 +355,13 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
       <aside class="order-summary order-reveal hidden" aria-labelledby="summary-heading">
         <details class="summary-inner" data-form-step data-review-step>
           <summary class="summary-toggle">
-            <p class="summary-source">
-              {orderSource === 'sanity' ? 'Live menu pricing' : 'Menu pricing · cake prices are samples'}
-            </p>
             <h2 id="summary-heading">Estimate</h2>
             <output id="order-total" for="cake-builder">$0</output>
           </summary>
           <div class="summary-details">
+          <p class="summary-source">
+            {orderSource === 'sanity' ? 'Live menu pricing' : 'Menu pricing · cake prices are samples'}
+          </p>
           <p class="summary-note">
             *This is just an estimate and pricing is subject to change. The final price will be confirmed once the request has been submitted and reviewed.
           </p>
@@ -490,7 +496,10 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const { animations, closing, bodies } = activeStepTransition;
         activeStepTransition = null;
         animations.forEach((animation) => animation.cancel());
-        closing.forEach((panel) => { panel.open = false; });
+        closing.forEach((panel) => {
+          panel.open = false;
+          delete panel.dataset.closing;
+        });
         form.style.overflowAnchor = '';
         bodies.forEach((body) => {
           body.style.height = '';
@@ -519,6 +528,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
         const timing = { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' };
 
         closing.forEach((panel) => {
+          panel.dataset.closing = 'true';
           const body = stepBodies.get(panel);
           const height = body.getBoundingClientRect().height;
           if (step && (panel.compareDocumentPosition(step) & Node.DOCUMENT_POSITION_FOLLOWING)) {
@@ -1219,6 +1229,7 @@ const cupcakeGalleryItems = Array.isArray(orderOptions.cupcakeGallery) ? orderOp
           cakePicker.resetView();
           cupcakePicker.resetView();
           formSteps.forEach((panel) => { panel.open = false; });
+          choiceStep.open = true;
           syncOrderSections();
           showOrderConfirmation();
         } catch (error) {

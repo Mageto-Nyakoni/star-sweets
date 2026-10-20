@@ -43,6 +43,20 @@ export const instagramGallerySettings = defineType({
             validation: (Rule) => Rule.max(180),
           }),
           defineField({
+            name: 'focalPointX',
+            title: 'Photo focus: horizontal (%)',
+            description: '0 is the left edge, 50 is the center, and 100 is the right edge. Leave blank to center the photo.',
+            type: 'number',
+            validation: (Rule) => Rule.min(0).max(100),
+          }),
+          defineField({
+            name: 'focalPointY',
+            title: 'Photo focus: vertical (%)',
+            description: '0 is the top, 50 is the center, and 100 is the bottom. Leave blank to center the photo.',
+            type: 'number',
+            validation: (Rule) => Rule.min(0).max(100),
+          }),
+          defineField({
             name: 'isHidden',
             title: 'Hide this post from the gallery',
             type: 'boolean',

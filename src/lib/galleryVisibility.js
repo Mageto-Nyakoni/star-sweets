@@ -1,3 +1,5 @@
+import { imagePosition } from './imageFraming.js';
+
 export function instagramPostKey(value) {
   if (typeof value !== 'string') return null;
 
@@ -27,6 +29,7 @@ export function applyInstagramGallerySettings(posts, settings) {
       description: typeof entry?.description === 'string'
         ? entry.description.trim()
         : '',
+      imagePosition: imagePosition({ x: entry?.focalPointX, y: entry?.focalPointY }),
     }];
   });
 }

@@ -6,6 +6,8 @@ Open **Home Page** in [Star Sweets Sanity Studio](https://star-sweets.sanity.stu
 
 ## Instagram gallery
 
+Photo framing can be adjusted without replacing an image. For the homepage banner and **Past Orders Gallery**, use Sanity's image hotspot tool to mark the cake. For **Instagram Gallery** posts, set the optional horizontal and vertical photo focus percentages: 0 is left/top, 50 is center, and 100 is right/bottom. Leave them blank to keep the current centered framing. Publish after changing a focal point. Full-photo detail dialogs do not crop the image.
+
 The `/gallery` page reads recent posts from `@star.sweets25` through the Instagram API with Instagram Login. It needs one secret: an **Instagram User access token** for that account. You do not need an Instagram account ID or a Facebook Page access token for this integration. The Meta developer login and the Instagram login may belong to different accounts. An Instagram **Business or Creator** account is a professional account type; it does not mean you need to submit company registration documents for a gallery that only reads your own account. Use Meta's **Standard Access** with your Instagram account assigned a role on the developer app. Business verification can be required if you later seek Advanced Access for other people's accounts.
 
 Use **Instagram API with Instagram Login** for this automatic gallery. oEmbed takes the URL of one known public post and returns embed HTML; it does not list recent posts from your account. Meta made tokenless oEmbed requests available in June 2026, so it can be useful for manually selected embeds without app review. This gallery uses the Instagram media endpoint to list your own posts instead.

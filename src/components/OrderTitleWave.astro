@@ -1,0 +1,56 @@
+---
+const phraseWidth = 1100;
+const repeatCount = 8;
+---
+
+<svg class="order-title-wave" viewBox="0 0 1440 250" aria-hidden="true" focusable="false" data-wave-period={phraseWidth}>
+  <defs>
+    <path id="order-title-path" d="M -1440 160 C -1200 80 -960 80 -720 160 S -240 240 0 160 S 480 80 720 160 S 1200 240 1440 160 S 1920 80 2160 160 S 2640 240 2880 160 S 3360 80 3600 160 S 4080 240 4320 160" />
+  </defs>
+  <text>
+    <textPath href="#order-title-path">
+      {Array.from({ length: repeatCount }, () => (
+        <tspan data-wave-segment textLength={phraseWidth} lengthAdjust="spacing">{'Order Something Sweet\u00a0'}<tspan data-wave-cake-slot>🎂</tspan>{'\u00a0\u00a0'}</tspan>
+      ))}
+      <animate attributeName="startOffset" from="0" to={-phraseWidth} dur="24s" begin="0s" repeatCount="indefinite" />
+    </textPath>
+  </text>
+  {Array.from({ length: repeatCount }, (_, index) => (
+    <g data-wave-cake={index} visibility="hidden">
+      <text class="order-title-cake" text-anchor="middle">🎂</text>
+      <animateMotion calcMode="linear" keyTimes="0;1" dur="24s" begin="0s" repeatCount="indefinite" rotate="0">
+        <mpath href="#order-title-path" />
+      </animateMotion>
+    </g>
+  ))}
+</svg>
+
+<script>
+  async function stabilizeWaveCakes() {
+    await document.fonts.ready;
+    const wave = document.querySelector('.order-title-wave');
+    const path = wave?.querySelector('#order-title-path');
+    const segment = wave?.querySelector('[data-wave-segment]');
+    const slot = segment?.querySelector('[data-wave-cake-slot]');
+    if (!(wave instanceof SVGSVGElement) || !(path instanceof SVGPathElement)
+      || !(segment instanceof SVGTSpanElement) || !(slot instanceof SVGTSpanElement)) return;
+
+    const period = Number(wave.dataset.wavePeriod);
+    const pathLength = path.getTotalLength();
+    const cakeIndex = segment.textContent?.indexOf('🎂') ?? -1;
+    if (cakeIndex < 0) return;
+    const cakeOffset = segment.getSubStringLength(0, cakeIndex) + slot.getComputedTextLength() / 2;
+
+    // Move each emoji as one upright object, outside textPath's glyph rotation.
+    wave.querySelectorAll('[data-wave-cake]').forEach((cake) => {
+      const start = Number(cake.getAttribute('data-wave-cake')) * period + cakeOffset;
+      const end = start - period;
+      if (end < 0 || start > pathLength) return;
+      cake.querySelector('animateMotion')?.setAttribute('keyPoints', `${start / pathLength};${end / pathLength}`);
+      cake.setAttribute('visibility', 'visible');
+    });
+    wave.setAttribute('data-stable-cakes', '');
+  }
+
+  void stabilizeWaveCakes();
+</script>
