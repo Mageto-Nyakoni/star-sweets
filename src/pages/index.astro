@@ -55,7 +55,7 @@ const visibleGalleryItems = galleryItems;
       <DecorativeStars />
       <div class="home-hero-inner">
         <img src="/StarSweets-logo-trimmed.png" alt="" class="home-hero-logo" data-section-reveal />
-        <p class="home-eyebrow" data-section-reveal data-reveal-delay="80">Based in Boston, MA</p>
+        <p class="home-eyebrow home-location" data-section-reveal data-reveal-delay="80">Based in Boston, MA</p>
         <h1 id="home-title" class="visually-hidden">Star Sweets</h1>
         <p class="home-hero-copy placement-copy" data-section-reveal data-reveal-delay="140">
           Pushing the boundaries of creativity with custom flavors and designs. From birthdays to graduations, these cakes are sure to make you feel like a star on your special day.
@@ -71,7 +71,7 @@ const visibleGalleryItems = galleryItems;
       <div class="home-section-heading" data-section-reveal>
         <div>
           <p class="home-eyebrow">Made by Star Sweets</p>
-          <h2 id="work-title">Previous Orders and Baked Goods</h2>
+          <h2 id="work-title">Previous Orders</h2>
           <span class="section-divider" data-reveal-divider aria-hidden="true"></span>
         </div>
         <p class="placement-copy">Here are a few designs that could be used as inspiration!</p>
@@ -108,7 +108,6 @@ const visibleGalleryItems = galleryItems;
                   <div class="work-caption">
                     <h3>{item.caption}</h3>
                     {Array.isArray(item.tags) && item.tags.length > 0 && <p>{item.tags.join(' / ')}</p>}
-                    <span class="work-details-link">View details <span aria-hidden="true">&rarr;</span></span>
                   </div>
                 </button>
               </article>

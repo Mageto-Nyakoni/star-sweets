@@ -36,6 +36,15 @@
   text-transform: uppercase;
 }
 
+.home-location {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.5;
+  text-transform: none;
+  opacity: 0.8;
+}
+
 .placement-copy {
   font-style: normal;
 }
@@ -533,17 +542,6 @@
   line-height: 1.4;
 }
 
-.work-details-link {
-  display: inline-block;
-  margin-top: auto;
-  padding-top: 0.9rem;
-  color: var(--ss-cherry);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
 .work-carousel-controls {
   display: flex;
   justify-content: center;
@@ -935,8 +933,14 @@ body.work-dialog-open {
   }
 
   .home-hero.has-image::before,
-  .home-hero .star-field {
+  .home-hero:not(.has-image) .star-field {
     display: none;
+  }
+
+  .home-hero.has-image .hero-stars {
+    bottom: auto;
+    width: 100%;
+    aspect-ratio: 4 / 3;
   }
 
   .home-hero-photo {
