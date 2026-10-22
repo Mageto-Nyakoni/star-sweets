@@ -122,6 +122,7 @@ export async function fetchCakeOrderOptions() {
       "gallery": *[_type == "inspirationGallery" && isActive != false && coalesce(inspirationFor, "cake") == "cake"] | order(sortOrder asc, _createdAt desc) {
         _id,
         caption,
+        cakeSize,
         tags,
         cakeDetails,
         addOns,

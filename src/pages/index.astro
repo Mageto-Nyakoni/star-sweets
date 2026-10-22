@@ -106,8 +106,7 @@ const visibleGalleryItems = galleryItems;
                     </div>
                   )}
                   <div class="work-caption">
-                    <h3>{item.caption}</h3>
-                    {Array.isArray(item.tags) && item.tags.length > 0 && <p>{item.tags.join(' / ')}</p>}
+                    <p>Click for details</p>
                   </div>
                 </button>
               </article>
@@ -164,10 +163,8 @@ const visibleGalleryItems = galleryItems;
 
             <div class="work-dialog-copy">
               <p class="home-eyebrow">Previous order</p>
-              <h2 id={`work-dialog-title-${index}`}>{item.caption}</h2>
-              {Array.isArray(item.tags) && item.tags.length > 0 && (
-                <p class="work-dialog-tags">{item.tags.join(' / ')}</p>
-              )}
+              <h2 id={`work-dialog-title-${index}`}>Cake details</h2>
+              {item.cakeSize && <p class="work-dialog-tags">Size: {item.cakeSize}</p>}
             </div>
           </div>
         </dialog>

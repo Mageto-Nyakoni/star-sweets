@@ -41,6 +41,12 @@ export const inspirationGallery = defineType({
       options: { layout: 'tags' },
     }),
     defineField({
+      name: 'cakeSize',
+      title: 'Cake Size',
+      description: 'The size of this past order, for example 6 inch, 3 layers. Shown in Previous Orders details.',
+      type: 'string',
+    }),
+    defineField({
       name: 'cakeDetails',
       title: 'Order Details',
       description: 'Describe the flavor, design, or occasion shown in this order.',
