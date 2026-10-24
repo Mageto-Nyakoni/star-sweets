@@ -164,7 +164,9 @@ const visibleGalleryItems = galleryItems;
             <div class="work-dialog-copy">
               <p class="home-eyebrow">Previous order</p>
               <h2 id={`work-dialog-title-${index}`}>Cake details</h2>
-              {item.cakeSize && <p class="work-dialog-tags">Size: {item.cakeSize}</p>}
+              {(item.cakeSize || item.caption) && (
+                <p class="work-dialog-tags">{item.cakeSize ? `Size: ${item.cakeSize}` : item.caption}</p>
+              )}
             </div>
           </div>
         </dialog>
